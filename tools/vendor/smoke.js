@@ -85,6 +85,50 @@ setTimeout(() => {
   ok("examples gallery rendered cards", w.document.querySelectorAll(".excard").length === 45);
   ok("API tree rendered (Ess + natives)", w.document.querySelectorAll(".ns").length > 100);
 
+  // ---- theme toggle: auto -> dark -> light -> auto ----
+  const themeBtn = w.document.getElementById("themeBtn");
+  themeBtn.click();
+  ok("theme: force dark", w.document.documentElement.getAttribute("data-theme") === "dark");
+  themeBtn.click();
+  ok("theme: force light + persisted", w.document.documentElement.getAttribute("data-theme") === "light" && w.localStorage.getItem("m2ide.theme") === "light");
+  themeBtn.click();
+  ok("theme: back to auto", !w.document.documentElement.hasAttribute("data-theme"));
+
+  // ---- REPL: bare expression wraps in return(), history recorded ----
+  const repl = w.document.getElementById("repl");
+  repl.value = "Ess.VERSION";
+  repl.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  const rows = w.document.querySelectorAll("#results .row");
+  const last = rows[rows.length - 1];
+  ok("repl: expression auto-wrapped in return()", last && last.dataset.code.indexOf("return (Ess.VERSION") === 0, last && last.dataset.code);
+  ok("repl: history persisted", (JSON.parse(w.localStorage.getItem("m2ide.replhist.v1")) || []).pop() === "Ess.VERSION");
+  ok("repl: not-connected still friendly", /not connected/.test(last.textContent));
+
+  // ---- re-run button exists and re-fires ----
+  const before = w.document.querySelectorAll("#results .row").length;
+  last.querySelector(".rerun").click();
+  ok("results: re-run adds a fresh row", w.document.querySelectorAll("#results .row").length === before + 1);
+
+  // ---- the serializer wrap is valid Lua ----
+  let sent = null;
+  const b = new w.EssBridge("ws://x", { WebSocketImpl: function () {} });
+  b.state = "open";
+  b.ws = { send: (d) => { sent = JSON.parse(d).code; } };
+  b.run("return Ess.VERSION");
+  let wrapOk = true, wrapErr = "";
+  try { w.CM.luaparse.parse(sent, { luaVersion: "5.1" }); } catch (e) { wrapOk = false; wrapErr = e.message; }
+  ok("bridge: serializer wrap parses as Lua 5.1", wrapOk, wrapErr);
+  ok("bridge: wrap still single-line tagged protocol", /Loader\.WsSend\('<<<WSR:/.test(sent) && /__ideser/.test(sent));
+
+  // ---- panic button goes through the gated path ----
+  w.document.getElementById("panic").click();
+  const panicRow = [...w.document.querySelectorAll("#results .row")].pop();
+  ok("panic: stop-loops snippet submitted", /Ess\.Loop\.stop/.test(panicRow.dataset.code));
+
+  // ---- layout + log chrome present ----
+  ok("splitters present", !!w.document.getElementById("hsplit") && !!w.document.getElementById("vsplit"));
+  ok("log filter + latest chip present", !!w.document.getElementById("logFilter") && !!w.document.getElementById("latest"));
+
   console.log(fail ? "\n" + fail + " FAILED, " + pass + " passed" : "\nall " + pass + " passed");
   process.exit(fail ? 1 : 0);
 }, 400);

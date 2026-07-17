@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mercs2 Lua IDE</title>
 <meta name="description" content="A live in-browser Lua/Ess editor for Mercenaries 2 modding — write a script, hit Run, see the result in your running game over the lua-bridge.">
+<script>/* apply a forced theme before first paint so there's no flash */
+try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")document.documentElement.setAttribute("data-theme",__t);}catch(e){}</script>
 <style>/*__CSS__*/</style>
 </head>
 <body>
@@ -12,6 +14,7 @@
   <span class="brand">Mercs2 <b>Lua IDE</b></span>
   <span class="conn"><span class="dot" id="dot"></span><span id="state">offline</span></span>
   <button class="btn go" id="run" title="Run (Ctrl/Cmd+Enter) — runs the selection if you have one, else the whole file">Run ▷</button>
+  <button class="btn" id="panic" title="Stop every Ess.Loop and restore the time scale — the 'my script went wild' button">■ Stop loops</button>
   <span class="scriptname" id="scriptName" title="The open script — manage scripts in the sidebar"></span>
   <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) — also autosaves as you type">Save</button>
   <button class="btn" id="share" title="Copy a shareable link (script encoded in the URL)">Share</button>
@@ -48,20 +51,33 @@
     </div>
   </aside>
 
+  <div class="hsplit" id="hsplit" title="Drag to resize the sidebar"></div>
+
   <section class="work">
     <div class="editor" id="editor"></div>
+    <div class="vsplit" id="vsplit" title="Drag to resize the output panel"></div>
     <div class="output">
       <div class="tabs">
         <button class="tab on" data-t="results" id="tabResults">Results</button>
         <button class="tab" data-t="log" id="tabLog">Log &amp; telemetry</button>
         <span class="spacer"></span>
+        <input id="logFilter" class="hidden" placeholder="filter the log…" spellcheck="false">
         <span class="clr" id="clr">clear</span>
       </div>
-      <div class="feed" id="results"></div>
-      <div class="feed hidden mono" id="log"></div>
+      <div class="feedwrap">
+        <div class="feed" id="results"></div>
+        <div class="feed hidden mono" id="log"></div>
+        <button class="latest hidden" id="latest">↓ latest</button>
+      </div>
+      <div class="repl">
+        <span class="replmark">›</span>
+        <input id="repl" placeholder="run one line — Enter sends it to the game, ↑ recalls history" spellcheck="false" autocomplete="off">
+      </div>
     </div>
   </section>
 </main>
+
+<button id="themeBtn" title="Theme: auto (following your system)">◐</button>
 
 <div class="onboard" id="onboard" hidden>
   <div class="card">

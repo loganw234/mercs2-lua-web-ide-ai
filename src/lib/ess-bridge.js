@@ -40,11 +40,37 @@
 
   // Wrap user code so it emits a single, nonce-tagged result line on the HIDDEN channel (Loader.WsSend --
   // WS-only, never logged), so result plumbing doesn't pollute lua_loader_printf.log. pcall the body so the
-  // line ALWAYS fires (success OR error). Single line only -- a tostring() with its own newline truncates at
-  // the first, fine for scalars / coords / short strings.
+  // line ALWAYS fires (success OR error).
+  //
+  // IDE ADDITION (upstream candidate for the Ess repo's tools/): successful values go through a small
+  // game-side serializer instead of bare tostring(), so returning a table shows {x=1, y={...}} rather than
+  // "table: 0x...". Depth-capped (3), item-capped (40), cycle-safe, strings %q-quoted, and the final line
+  // is newline-escaped -- the single-line transport constraint still holds. Errors stay plain tostring().
+  // Lua 5.0-safe: pairs/type/tostring/table.insert/table.concat/string.format/string.gsub only.
   function wrap(code, tag) {
-    return "local __ok, __r = pcall(function()\n" + code + "\nend)\n" +
-           "Loader.WsSend('" + tag + "' .. (__ok and 'OK\\t' or 'ERR\\t') .. tostring(__r))\n";
+    var ser =
+      "local __ideser do " +
+      "local function s(v, d, seen) " +
+        "local t = type(v) " +
+        "if t == 'string' then return string.format('%q', v) end " +
+        "if t ~= 'table' then return tostring(v) end " +
+        "if seen[v] then return '<cycle>' end " +
+        "if d > 3 then return '{...}' end " +
+        "seen[v] = true " +
+        "local p, n = {}, 0 " +
+        "for k, x in pairs(v) do " +
+          "n = n + 1 " +
+          "if n > 40 then table.insert(p, '...') break end " +
+          "local ks if type(k) == 'string' then ks = k else ks = '[' .. tostring(k) .. ']' end " +
+          "table.insert(p, ks .. '=' .. s(x, d + 1, seen)) " +
+        "end " +
+        "seen[v] = nil " +
+        "return '{' .. table.concat(p, ', ') .. '}' " +
+      "end " +
+      "__ideser = function(v) return (string.gsub(s(v, 0, {}), '\\n', '\\\\n')) end end\n";
+    return ser +
+           "local __ok, __r = pcall(function()\n" + code + "\nend)\n" +
+           "Loader.WsSend('" + tag + "' .. (__ok and ('OK\\t' .. __ideser(__r)) or ('ERR\\t' .. tostring(__r))))\n";
   }
 
   function EssBridge(url, opts) {

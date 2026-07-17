@@ -10,11 +10,16 @@
   --ok:#4ec9a0; --err:#ff6b6b; --warn:#e6b455;
   --hov:#141d2e; --selrow:#1c2740; --inbg:#0a0f18; --selbg:rgba(92,200,255,.28);
 }
+/* theme: dark is the base; light applies via the OS preference (unless the user forced dark) OR the
+   user's explicit choice. The toggle (35_theme.js) stamps data-theme on <html>; "auto" removes it. */
 @media (prefers-color-scheme: light){
-  :root{ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
+  :root:not([data-theme="dark"]){ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
     --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
     --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 }
+:root[data-theme="light"]{ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
+  --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
+  --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
@@ -32,9 +37,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-app
 select.btn{padding:6px 8px}
 .url{font:12px/1 var(--efont);color:var(--ink);background:var(--inbg);border:1px solid var(--edge2);border-radius:7px;padding:6px 9px;width:190px}
 
-/* ---- layout ---- */
-.layout{flex:1;display:grid;grid-template-columns:265px 1fr;min-height:0}
-@media (max-width:760px){ .layout{grid-template-columns:1fr} .side{display:none} }
+/* ---- layout (both splits draggable -- 62_layout.js persists --sidew / --outh) ---- */
+.layout{flex:1;display:grid;grid-template-columns:var(--sidew,265px) 5px 1fr;min-height:0}
+@media (max-width:760px){ .layout{grid-template-columns:1fr} .side,.hsplit{display:none} }
+.hsplit{cursor:col-resize;background:transparent}
+.hsplit:hover,.hsplit.drag{background:var(--accent);opacity:.35}
+.vsplit{height:5px;cursor:row-resize;background:transparent;flex:none}
+.vsplit:hover,.vsplit.drag{background:var(--accent);opacity:.35}
 .side{border-right:1px solid var(--edge);background:var(--panel);display:flex;flex-direction:column;min-height:0}
 .sidehead{padding:9px;border-bottom:1px solid var(--edge)}
 
@@ -140,8 +149,10 @@ select.btn{padding:6px 8px}
 .cm-snippetField{background:rgba(92,200,255,.14);border-radius:3px}
 
 /* ---- output ---- */
-.output{height:38%;min-height:120px;display:flex;flex-direction:column;border-top:1px solid var(--edge);background:var(--panel)}
+.output{height:var(--outh,38%);min-height:120px;display:flex;flex-direction:column;border-top:1px solid var(--edge);background:var(--panel)}
 .tabs{display:flex;align-items:center;gap:2px;padding:5px 8px;border-bottom:1px solid var(--edge)}
+#logFilter{font:11px/1 var(--efont);color:var(--ink);background:var(--inbg);border:1px solid var(--edge2);border-radius:5px;padding:4px 8px;width:150px;margin-right:6px}
+#logFilter.hidden{display:none}
 .tab{font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;border-radius:6px;padding:5px 10px;cursor:pointer}
 .tab.on{color:var(--ink);background:var(--hov)}
 .clr{color:var(--dim);font:11px/1 var(--efont);cursor:pointer;border:1px solid var(--edge2);border-radius:5px;padding:3px 8px}
@@ -158,6 +169,30 @@ select.btn{padding:6px 8px}
 .res.dim{color:var(--dim)} .res.dim::before{content:"· "}
 .logline{padding:1px 0;color:var(--dim);white-space:pre-wrap;word-break:break-word}
 .logline.ws{color:var(--accent)}
+.logline .lt{color:var(--c);font-size:10px;margin-right:7px;user-select:none}
+.logline.hidden{display:none}
+
+/* row re-run + the feed area wrapper with its "jump to latest" chip */
+.feedwrap{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
+.row{position:relative;padding-right:26px}
+.rerun{position:absolute;right:2px;top:5px;font:12px/1 var(--efont);color:var(--dim);background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 6px;cursor:pointer;opacity:0}
+.row:hover .rerun{opacity:1}
+.rerun:hover{color:var(--accent);border-color:var(--edge2)}
+.latest{position:absolute;right:12px;bottom:8px;z-index:5;font:11px/1 var(--efont);color:var(--ink);background:var(--bar);border:1px solid var(--edge2);border-radius:20px;padding:6px 11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.latest:hover{border-color:var(--accent)}
+.latest.hidden{display:none}
+
+/* the REPL line */
+.repl{display:flex;align-items:center;gap:7px;padding:5px 9px;border-top:1px solid var(--edge);background:var(--bar)}
+.replmark{color:var(--go);font:700 13px/1 var(--efont)}
+#repl{flex:1;font:12px/1.4 var(--efont);color:var(--ink);background:transparent;border:0;outline:none;padding:3px 0}
+#repl::placeholder{color:var(--c)}
+
+/* the theme toggle, floating bottom-right */
+#themeBtn{position:fixed;right:12px;bottom:10px;z-index:40;width:34px;height:34px;border-radius:50%;
+  font:15px/1 var(--efont);color:var(--dim);background:var(--bar);border:1px solid var(--edge2);cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#themeBtn:hover{color:var(--ink);border-color:var(--accent)}
 
 /* ---- onboarding overlay ---- */
 .onboard{position:fixed;inset:0;background:rgba(6,10,17,.72);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}

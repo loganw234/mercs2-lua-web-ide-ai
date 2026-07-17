@@ -18,6 +18,12 @@
     else { try { localStorage.setItem(IDE.cfg.wsKey, $("url").value); } catch (e) {} IDE.bridge.connect($("url").value); }
   };
   $("run").onclick = function () { IDE.run(); };
+  $("panic").onclick = function () {
+    IDE.runCode('local n = 0\n' +
+      'for id in pairs(Ess.Loop._reg) do Ess.Loop.stop(id) n = n + 1 end\n' +
+      'if Ess.Time and Ess.Time.restoreScale then Ess.Time.restoreScale() end\n' +
+      'return "stopped " .. n .. " loop(s), time scale restored"');
+  };
   $("save").onclick = function () { save(); flash($("save"), "Saved"); };
   IDE.bus.on("save", function () { save(); flash($("save"), "Saved"); });
   $("share").onclick = function () {
@@ -46,6 +52,8 @@
       var which = t.getAttribute("data-t");
       $("results").classList.toggle("hidden", which !== "results");
       $("log").classList.toggle("hidden", which !== "log");
+      $("logFilter").classList.toggle("hidden", which !== "log");
+      $("latest").classList.add("hidden");
     };
   });
   $("clr").onclick = function () { var on = document.querySelector(".tab.on").getAttribute("data-t"); IDE.console.clear(on); };

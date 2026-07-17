@@ -40,8 +40,15 @@ You can still write, save, and browse everything with no game attached — only 
   scripts, each with a **real call site from the game** and observed argument counts). Click any call for
   docs; insert it as a snippet with tab-through argument placeholders. The same data powers autocomplete
   (`Ess.Easy.*` floats to the top).
+- **Run & inspect** — a one-line **REPL** under the output (Enter sends, ↑ recalls history; bare
+  expressions auto-wrap in `return` so `Ess.VERSION` just works), a hover **↺ re-run** on every past
+  result, and returned **tables pretty-print** as `{x=1, y={...}}` (game-side serializer: depth-capped,
+  cycle-safe) instead of `table: 0x...`.
+- **■ Stop loops** — the "my script went wild" button: stops every `Ess.Loop` and restores the time scale.
 - **Results + live log** — ok / runtime error / timeout per run, and the live `Loader.Printf` +
-  `Loader.WsSend` telemetry feed.
+  `Loader.WsSend` telemetry feed with timestamps, a substring filter, and smart follow (scroll up to pause
+  autoscroll, "↓ latest" to jump back).
+- **Comfort** — dark/light/auto theme toggle (bottom right), draggable sidebar + output splits, all persisted.
 - Zero external requests at runtime — one file, fully offline-capable.
 
 ## Build
@@ -72,7 +79,8 @@ node smoke.js                                      # headless boot + behavior te
   `/*__APP__*/` inject markers).
 - `src/styles.css` — all styling (dark/light), including the CodeMirror theme.
 - `src/lib/vendor.js` — CodeMirror 6 + luaparse, bundled to one IIFE (`window.CM`) by `tools/vendor/`.
-- `src/lib/ess-bridge.js` — the vendored WebSocket client (kept in sync with the Ess repo's `tools/`).
+- `src/lib/ess-bridge.js` — the vendored WebSocket client (kept in sync with the Ess repo's `tools/`;
+  the IDE adds a table serializer to the result wrap — an upstream candidate).
 - `src/app/*.js` — the app, one concern per file (`00_state` → `99_main`), merged in order.
 - `src/data/` — `CAPABILITIES.md` (copied from the Ess repo) + the three generated JSONs.
 - `dist/index.html` — the built standalone page (committed, so Pages + downloads need no build).

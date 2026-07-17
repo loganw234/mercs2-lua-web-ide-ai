@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mercs2 Lua IDE</title>
 <meta name="description" content="A live in-browser Lua/Ess editor for Mercenaries 2 modding — write a script, hit Run, see the result in your running game over the lua-bridge.">
+<script>/* apply a forced theme before first paint so there's no flash */
+try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")document.documentElement.setAttribute("data-theme",__t);}catch(e){}</script>
 <style>/* Mercs2 Lua IDE — all styling. Dark-first, light via prefers-color-scheme. The editor itself is
    CodeMirror 6 (vendored); everything under "editor (CodeMirror)" themes its .cm-* classes off the same
    design-token vars, so both color schemes stay in one place. */
@@ -17,11 +19,16 @@
   --ok:#4ec9a0; --err:#ff6b6b; --warn:#e6b455;
   --hov:#141d2e; --selrow:#1c2740; --inbg:#0a0f18; --selbg:rgba(92,200,255,.28);
 }
+/* theme: dark is the base; light applies via the OS preference (unless the user forced dark) OR the
+   user's explicit choice. The toggle (35_theme.js) stamps data-theme on <html>; "auto" removes it. */
 @media (prefers-color-scheme: light){
-  :root{ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
+  :root:not([data-theme="dark"]){ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
     --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
     --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 }
+:root[data-theme="light"]{ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
+  --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
+  --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column;overflow:hidden}
@@ -39,9 +46,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-app
 select.btn{padding:6px 8px}
 .url{font:12px/1 var(--efont);color:var(--ink);background:var(--inbg);border:1px solid var(--edge2);border-radius:7px;padding:6px 9px;width:190px}
 
-/* ---- layout ---- */
-.layout{flex:1;display:grid;grid-template-columns:265px 1fr;min-height:0}
-@media (max-width:760px){ .layout{grid-template-columns:1fr} .side{display:none} }
+/* ---- layout (both splits draggable -- 62_layout.js persists --sidew / --outh) ---- */
+.layout{flex:1;display:grid;grid-template-columns:var(--sidew,265px) 5px 1fr;min-height:0}
+@media (max-width:760px){ .layout{grid-template-columns:1fr} .side,.hsplit{display:none} }
+.hsplit{cursor:col-resize;background:transparent}
+.hsplit:hover,.hsplit.drag{background:var(--accent);opacity:.35}
+.vsplit{height:5px;cursor:row-resize;background:transparent;flex:none}
+.vsplit:hover,.vsplit.drag{background:var(--accent);opacity:.35}
 .side{border-right:1px solid var(--edge);background:var(--panel);display:flex;flex-direction:column;min-height:0}
 .sidehead{padding:9px;border-bottom:1px solid var(--edge)}
 
@@ -147,8 +158,10 @@ select.btn{padding:6px 8px}
 .cm-snippetField{background:rgba(92,200,255,.14);border-radius:3px}
 
 /* ---- output ---- */
-.output{height:38%;min-height:120px;display:flex;flex-direction:column;border-top:1px solid var(--edge);background:var(--panel)}
+.output{height:var(--outh,38%);min-height:120px;display:flex;flex-direction:column;border-top:1px solid var(--edge);background:var(--panel)}
 .tabs{display:flex;align-items:center;gap:2px;padding:5px 8px;border-bottom:1px solid var(--edge)}
+#logFilter{font:11px/1 var(--efont);color:var(--ink);background:var(--inbg);border:1px solid var(--edge2);border-radius:5px;padding:4px 8px;width:150px;margin-right:6px}
+#logFilter.hidden{display:none}
 .tab{font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;border-radius:6px;padding:5px 10px;cursor:pointer}
 .tab.on{color:var(--ink);background:var(--hov)}
 .clr{color:var(--dim);font:11px/1 var(--efont);cursor:pointer;border:1px solid var(--edge2);border-radius:5px;padding:3px 8px}
@@ -165,6 +178,30 @@ select.btn{padding:6px 8px}
 .res.dim{color:var(--dim)} .res.dim::before{content:"· "}
 .logline{padding:1px 0;color:var(--dim);white-space:pre-wrap;word-break:break-word}
 .logline.ws{color:var(--accent)}
+.logline .lt{color:var(--c);font-size:10px;margin-right:7px;user-select:none}
+.logline.hidden{display:none}
+
+/* row re-run + the feed area wrapper with its "jump to latest" chip */
+.feedwrap{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
+.row{position:relative;padding-right:26px}
+.rerun{position:absolute;right:2px;top:5px;font:12px/1 var(--efont);color:var(--dim);background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 6px;cursor:pointer;opacity:0}
+.row:hover .rerun{opacity:1}
+.rerun:hover{color:var(--accent);border-color:var(--edge2)}
+.latest{position:absolute;right:12px;bottom:8px;z-index:5;font:11px/1 var(--efont);color:var(--ink);background:var(--bar);border:1px solid var(--edge2);border-radius:20px;padding:6px 11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.latest:hover{border-color:var(--accent)}
+.latest.hidden{display:none}
+
+/* the REPL line */
+.repl{display:flex;align-items:center;gap:7px;padding:5px 9px;border-top:1px solid var(--edge);background:var(--bar)}
+.replmark{color:var(--go);font:700 13px/1 var(--efont)}
+#repl{flex:1;font:12px/1.4 var(--efont);color:var(--ink);background:transparent;border:0;outline:none;padding:3px 0}
+#repl::placeholder{color:var(--c)}
+
+/* the theme toggle, floating bottom-right */
+#themeBtn{position:fixed;right:12px;bottom:10px;z-index:40;width:34px;height:34px;border-radius:50%;
+  font:15px/1 var(--efont);color:var(--dim);background:var(--bar);border:1px solid var(--edge2);cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#themeBtn:hover{color:var(--ink);border-color:var(--accent)}
 
 /* ---- onboarding overlay ---- */
 .onboard{position:fixed;inset:0;background:rgba(6,10,17,.72);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
@@ -184,6 +221,7 @@ a.btn{text-decoration:none;display:inline-block}
   <span class="brand">Mercs2 <b>Lua IDE</b></span>
   <span class="conn"><span class="dot" id="dot"></span><span id="state">offline</span></span>
   <button class="btn go" id="run" title="Run (Ctrl/Cmd+Enter) — runs the selection if you have one, else the whole file">Run ▷</button>
+  <button class="btn" id="panic" title="Stop every Ess.Loop and restore the time scale — the 'my script went wild' button">■ Stop loops</button>
   <span class="scriptname" id="scriptName" title="The open script — manage scripts in the sidebar"></span>
   <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) — also autosaves as you type">Save</button>
   <button class="btn" id="share" title="Copy a shareable link (script encoded in the URL)">Share</button>
@@ -220,20 +258,33 @@ a.btn{text-decoration:none;display:inline-block}
     </div>
   </aside>
 
+  <div class="hsplit" id="hsplit" title="Drag to resize the sidebar"></div>
+
   <section class="work">
     <div class="editor" id="editor"></div>
+    <div class="vsplit" id="vsplit" title="Drag to resize the output panel"></div>
     <div class="output">
       <div class="tabs">
         <button class="tab on" data-t="results" id="tabResults">Results</button>
         <button class="tab" data-t="log" id="tabLog">Log &amp; telemetry</button>
         <span class="spacer"></span>
+        <input id="logFilter" class="hidden" placeholder="filter the log…" spellcheck="false">
         <span class="clr" id="clr">clear</span>
       </div>
-      <div class="feed" id="results"></div>
-      <div class="feed hidden mono" id="log"></div>
+      <div class="feedwrap">
+        <div class="feed" id="results"></div>
+        <div class="feed hidden mono" id="log"></div>
+        <button class="latest hidden" id="latest">↓ latest</button>
+      </div>
+      <div class="repl">
+        <span class="replmark">›</span>
+        <input id="repl" placeholder="run one line — Enter sends it to the game, ↑ recalls history" spellcheck="false" autocomplete="off">
+      </div>
     </div>
   </section>
 </main>
+
+<button id="themeBtn" title="Theme: auto (following your system)">◐</button>
 
 <div class="onboard" id="onboard" hidden>
   <div class="card">
@@ -7651,11 +7702,37 @@ var CM=(()=>{var qp=Object.create;var os=Object.defineProperty;var Kp=Object.get
 
   // Wrap user code so it emits a single, nonce-tagged result line on the HIDDEN channel (Loader.WsSend --
   // WS-only, never logged), so result plumbing doesn't pollute lua_loader_printf.log. pcall the body so the
-  // line ALWAYS fires (success OR error). Single line only -- a tostring() with its own newline truncates at
-  // the first, fine for scalars / coords / short strings.
+  // line ALWAYS fires (success OR error).
+  //
+  // IDE ADDITION (upstream candidate for the Ess repo's tools/): successful values go through a small
+  // game-side serializer instead of bare tostring(), so returning a table shows {x=1, y={...}} rather than
+  // "table: 0x...". Depth-capped (3), item-capped (40), cycle-safe, strings %q-quoted, and the final line
+  // is newline-escaped -- the single-line transport constraint still holds. Errors stay plain tostring().
+  // Lua 5.0-safe: pairs/type/tostring/table.insert/table.concat/string.format/string.gsub only.
   function wrap(code, tag) {
-    return "local __ok, __r = pcall(function()\n" + code + "\nend)\n" +
-           "Loader.WsSend('" + tag + "' .. (__ok and 'OK\\t' or 'ERR\\t') .. tostring(__r))\n";
+    var ser =
+      "local __ideser do " +
+      "local function s(v, d, seen) " +
+        "local t = type(v) " +
+        "if t == 'string' then return string.format('%q', v) end " +
+        "if t ~= 'table' then return tostring(v) end " +
+        "if seen[v] then return '<cycle>' end " +
+        "if d > 3 then return '{...}' end " +
+        "seen[v] = true " +
+        "local p, n = {}, 0 " +
+        "for k, x in pairs(v) do " +
+          "n = n + 1 " +
+          "if n > 40 then table.insert(p, '...') break end " +
+          "local ks if type(k) == 'string' then ks = k else ks = '[' .. tostring(k) .. ']' end " +
+          "table.insert(p, ks .. '=' .. s(x, d + 1, seen)) " +
+        "end " +
+        "seen[v] = nil " +
+        "return '{' .. table.concat(p, ', ') .. '}' " +
+      "end " +
+      "__ideser = function(v) return (string.gsub(s(v, 0, {}), '\\n', '\\\\n')) end end\n";
+    return ser +
+           "local __ok, __r = pcall(function()\n" + code + "\nend)\n" +
+           "Loader.WsSend('" + tag + "' .. (__ok and ('OK\\t' .. __ideser(__r)) or ('ERR\\t' .. tostring(__r))))\n";
   }
 
   function EssBridge(url, opts) {
@@ -8286,14 +8363,18 @@ IDE.bus = (function () {
 })();
 
 /* ==== 30_run.js ==== */
-/* 30_run.js -- run the selection (if any) or the whole file. Before anything leaves the page, the code
-   goes through IDE.lint: a syntax error BLOCKS the run with a plain-English message (and jumps the caret
-   there) -- a beginner should never wonder why the game ignored a script that could not have parsed.
-   Warnings never block. */
+/* 30_run.js -- the one gated path from "code" to "the game". IDE.runCode(code, opts) is used by the Run
+   button (selection or whole file), the REPL line, the Results re-run buttons, and the Stop-loops button.
+   Before anything leaves the page it goes through IDE.lint: a syntax error BLOCKS the run with a
+   plain-English message (and, for whole-file runs, jumps the caret there) -- a beginner should never
+   wonder why the game ignored a script that could not have parsed. Warnings never block. */
 (function () {
   var IDE = window.IDE;
-  function run() {
-    var sel = IDE.editor.selection(), code = (sel || IDE.editor.get()).trim();
+
+  /* opts: { jumpOnError: move the caret to a syntax error (whole-file runs only) } */
+  function runCode(code, opts) {
+    opts = opts || {};
+    code = (code || "").trim();
     if (!code) return;
 
     if (IDE.lint) {
@@ -8302,8 +8383,7 @@ IDE.bus = (function () {
         var e = v.errors[0];
         IDE.console.pending(code);
         IDE.console.result({ ok: false, error: "didn't send it — line " + e.line + ": " + e.message });
-        if (!sel) IDE.editor.jumpTo(e.line, e.col);
-        IDE.editor.relint();
+        if (opts.jumpOnError) { IDE.editor.jumpTo(e.line, e.col); IDE.editor.relint(); }
         return;
       }
     }
@@ -8317,23 +8397,92 @@ IDE.bus = (function () {
     IDE.console.pending(code);
     IDE.bridge.run(code).then(function (r) { IDE.console.result(r); });
   }
+
+  function run() {
+    var sel = IDE.editor.selection();
+    runCode(sel || IDE.editor.get(), { jumpOnError: !sel });
+  }
+
   IDE.run = run;
+  IDE.runCode = runCode;
   IDE.bus.on("run", run);
 })();
 
-/* ==== 40_console.js ==== */
-/* 40_console.js -- the two output panels: Results (your runs) and Log & telemetry (the live {type:log}/{ws}
-   feed). Result shapes come from ess-bridge.run(): {ok, value, timedOut, error}. */
+/* ==== 35_theme.js ==== */
+/* 35_theme.js -- the dark/light toggle (bottom-right). Cycles auto -> dark -> light; "auto" follows the
+   OS preference (data-theme removed), a forced choice stamps data-theme on <html>. Persisted; a tiny
+   inline <head> script applies the saved choice before first paint so there's no flash. */
 (function () {
-  var IDE = window.IDE, results = IDE.$("results"), log = IDE.$("log"), pendingRow = null;
-  function auto(el) { el.scrollTop = el.scrollHeight; }
+  var IDE = window.IDE, KEY = "m2ide.theme", btn = IDE.$("themeBtn");
+  var MODES = ["auto", "dark", "light"];
+  var ICON = { auto: "◐", dark: "☾", light: "☀" };
+  var LABEL = { auto: "auto (following your system)", dark: "dark", light: "light" };
 
+  var mode = "auto";
+  try { var saved = localStorage.getItem(KEY); if (MODES.indexOf(saved) > 0) mode = saved; } catch (e) {}
+
+  function apply() {
+    if (mode === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", mode);
+    btn.textContent = ICON[mode];
+    btn.title = "Theme: " + LABEL[mode] + " — click to switch";
+    try { mode === "auto" ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, mode); } catch (e) {}
+  }
+
+  btn.onclick = function () {
+    mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+    apply();
+  };
+  apply();
+
+  IDE.theme = { mode: function () { return mode; } };
+})();
+
+/* ==== 40_console.js ==== */
+/* 40_console.js -- the two output feeds. Results rows carry a hover re-run button (the full code is kept
+   on the row, not the truncated preview). Log lines get a dim HH:MM:SS stamp and a substring filter.
+   Autoscroll is "smart follow": scrolling up pauses it and shows a "↓ latest" chip; scrolling back to the
+   bottom (or clicking the chip) resumes. Result shapes come from ess-bridge.run(): {ok, value, timedOut,
+   error} -- successful values arrive pre-serialized by the bridge wrap (tables print as {a=1, ...}). */
+(function () {
+  var IDE = window.IDE, results = IDE.$("results"), log = IDE.$("log"), latest = IDE.$("latest"), pendingRow = null;
+
+  /* ---- smart follow ---- */
+  var follow = { results: true, log: true };
+  function feedOf(which) { return which === "log" ? log : results; }
+  function nearBottom(el) { return el.scrollHeight - el.scrollTop - el.clientHeight < 24; }
+  function auto(el) {
+    var which = el === log ? "log" : "results";
+    if (follow[which]) { el.scrollTop = el.scrollHeight; latest.classList.add("hidden"); }
+    else if (!el.classList.contains("hidden")) latest.classList.remove("hidden");
+  }
+  [results, log].forEach(function (el) {
+    el.addEventListener("scroll", function () {
+      var which = el === log ? "log" : "results";
+      follow[which] = nearBottom(el);
+      if (follow[which]) latest.classList.add("hidden");
+    });
+  });
+  latest.onclick = function () {
+    var el = document.querySelector(".feed:not(.hidden)");
+    var which = el === log ? "log" : "results";
+    follow[which] = true;
+    el.scrollTop = el.scrollHeight;
+    latest.classList.add("hidden");
+  };
+
+  /* ---- results ---- */
   function pending(codeText) {
     var row = document.createElement("div"); row.className = "row";
+    row.dataset.code = codeText;
     var c = document.createElement("span"); c.className = "code";
     c.textContent = codeText.length > 220 ? codeText.slice(0, 220) + "…" : codeText;
+    var rr = document.createElement("button"); rr.className = "rerun"; rr.textContent = "↺"; rr.title = "Run this again";
+    rr.onclick = function () { IDE.runCode(row.dataset.code); };
     var r = document.createElement("span"); r.className = "res dim"; r.textContent = "running…";
-    row.appendChild(c); row.appendChild(r); results.appendChild(row); pendingRow = r; auto(results);
+    row.appendChild(c); row.appendChild(rr); row.appendChild(r); results.appendChild(row);
+    while (results.childElementCount > 200) results.removeChild(results.firstChild);
+    pendingRow = r; auto(results);
   }
   function result(o) {
     var r = pendingRow; pendingRow = null; if (!r) return;
@@ -8343,14 +8492,80 @@ IDE.bus = (function () {
     else { r.className = "res ok"; r.textContent = (o.value === "" || o.value == null) ? "(no return value)" : o.value; }
     auto(results);
   }
+
+  /* ---- log + filter ---- */
+  var filterText = "";
+  function matches(line) { return !filterText || line.toLowerCase().indexOf(filterText) >= 0; }
   IDE.bus.on("log", function (d) {
     var el = document.createElement("div"); el.className = "logline" + (d.kind === "ws" ? " ws" : "");
-    el.textContent = d.line; log.appendChild(el);
+    var ts = document.createElement("span"); ts.className = "lt";
+    ts.textContent = new Date().toTimeString().slice(0, 8);
+    el.appendChild(ts); el.appendChild(document.createTextNode(d.line));
+    if (!matches(d.line)) el.classList.add("hidden");
+    log.appendChild(el);
     while (log.childElementCount > 600) log.removeChild(log.firstChild);
     auto(log);
   });
+  IDE.$("logFilter").addEventListener("input", function () {
+    filterText = this.value.trim().toLowerCase();
+    Array.prototype.forEach.call(log.children, function (el) {
+      el.classList.toggle("hidden", !matches(el.textContent.slice(8)));   // slice off the HH:MM:SS stamp
+    });
+  });
 
-  IDE.console = { pending: pending, result: result, clear: function (which) { (which === "log" ? log : results).innerHTML = ""; } };
+  IDE.console = { pending: pending, result: result, clear: function (which) { feedOf(which).innerHTML = ""; } };
+})();
+
+/* ==== 42_repl.js ==== */
+/* 42_repl.js -- the one-line REPL under the output panel. Enter sends the line through the same gated
+   IDE.runCode path as everything else; ArrowUp/Down walk a persisted history. A bare EXPRESSION
+   ("Ess.VERSION", "1+1") isn't a valid Lua statement, so if `return (<input>)` parses we send that form
+   instead -- a beginner poking at values always sees a result, never "unexpected symbol". */
+(function () {
+  var IDE = window.IDE, CM = window.CM, input = IDE.$("repl"), KEY = "m2ide.replhist.v1";
+
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) {}
+  var nav = hist.length, draft = "";
+
+  function parses(code) {
+    try { CM.luaparse.parse(code, { luaVersion: "5.1" }); return true; } catch (e) { return false; }
+  }
+
+  function submit() {
+    var raw = input.value.trim();
+    if (!raw) return;
+    var form = raw;
+    var ret = "return (" + raw + "\n)";
+    if (parses(ret)) form = ret;          // expression -> show its value (also surfaces call return values)
+    IDE.runCode(form);
+    hist = hist.filter(function (h) { return h !== raw; });
+    hist.push(raw);
+    if (hist.length > 50) hist = hist.slice(-50);
+    try { localStorage.setItem(KEY, JSON.stringify(hist)); } catch (e) {}
+    nav = hist.length; draft = "";
+    input.value = "";
+  }
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); submit(); return; }
+    if (e.key === "ArrowUp") {
+      if (!nav) return;
+      if (nav === hist.length) draft = input.value;
+      nav--; input.value = hist[nav];
+      e.preventDefault();
+    } else if (e.key === "ArrowDown") {
+      if (nav >= hist.length) return;
+      nav++;
+      input.value = nav === hist.length ? draft : hist[nav];
+      e.preventDefault();
+    }
+  });
+
+  IDE.repl = {
+    run: function (code) { IDE.runCode(code); },
+    fill: function (code) { input.value = code; input.focus(); }
+  };
 })();
 
 /* ==== 50_api.js ==== */
@@ -8571,6 +8786,12 @@ IDE.bus = (function () {
     else { try { localStorage.setItem(IDE.cfg.wsKey, $("url").value); } catch (e) {} IDE.bridge.connect($("url").value); }
   };
   $("run").onclick = function () { IDE.run(); };
+  $("panic").onclick = function () {
+    IDE.runCode('local n = 0\n' +
+      'for id in pairs(Ess.Loop._reg) do Ess.Loop.stop(id) n = n + 1 end\n' +
+      'if Ess.Time and Ess.Time.restoreScale then Ess.Time.restoreScale() end\n' +
+      'return "stopped " .. n .. " loop(s), time scale restored"');
+  };
   $("save").onclick = function () { save(); flash($("save"), "Saved"); };
   IDE.bus.on("save", function () { save(); flash($("save"), "Saved"); });
   $("share").onclick = function () {
@@ -8599,6 +8820,8 @@ IDE.bus = (function () {
       var which = t.getAttribute("data-t");
       $("results").classList.toggle("hidden", which !== "results");
       $("log").classList.toggle("hidden", which !== "log");
+      $("logFilter").classList.toggle("hidden", which !== "log");
+      $("latest").classList.add("hidden");
     };
   });
   $("clr").onclick = function () { var on = document.querySelector(".tab.on").getAttribute("data-t"); IDE.console.clear(on); };
@@ -8608,6 +8831,47 @@ IDE.bus = (function () {
   IDE.bus.on("editorchange", function () { clearTimeout(t); t = setTimeout(save, 700); });
 
   IDE.ui = { flash: flash, save: save };
+})();
+
+/* ==== 62_layout.js ==== */
+/* 62_layout.js -- draggable splits: the sidebar edge (--sidew) and the editor/output divider (--outh).
+   Plain pointer events, persisted to localStorage, sane clamps so nothing can be dragged into uselessness. */
+(function () {
+  var IDE = window.IDE, $ = IDE.$, KEY = "m2ide.layout.v1", rootStyle = document.documentElement.style;
+
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  if (saved.sidew) rootStyle.setProperty("--sidew", saved.sidew + "px");
+  if (saved.outh) rootStyle.setProperty("--outh", saved.outh + "px");
+
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+
+  function drag(el, onMove) {
+    el.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      el.classList.add("drag");
+      el.setPointerCapture(e.pointerId);
+      function move(ev) { onMove(ev); }
+      function up() {
+        el.classList.remove("drag");
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        persist();
+      }
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+    });
+  }
+
+  drag($("hsplit"), function (e) {
+    saved.sidew = Math.max(180, Math.min(e.clientX, window.innerWidth * 0.5));
+    rootStyle.setProperty("--sidew", saved.sidew + "px");
+  });
+  drag($("vsplit"), function (e) {
+    var work = document.querySelector(".work").getBoundingClientRect();
+    saved.outh = Math.max(120, Math.min(work.bottom - e.clientY, work.height - 120));
+    rootStyle.setProperty("--outh", saved.outh + "px");
+  });
 })();
 
 /* ==== 65_examples.js ==== */
