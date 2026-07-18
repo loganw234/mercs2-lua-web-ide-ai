@@ -18,6 +18,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "src" / "data" / "natives.json"
 DEFAULT_SRC = r"C:\Users\logan\Desktop\Mercs2_Decompiled_Lua\docs\mercs2-luacd\src"
+CALL_DOCS = ROOT / "src" / "data" / "call_docs.json"   # {"ess": {...}, "natives": {path: doc}} -- wiki-sourced, merged in below
 
 # Lua 5.0-era stdlib -- known, not "native to the engine" (the game shipped Lua 5.0: string.gfind etc.)
 LUA_STD = {
@@ -153,6 +154,20 @@ def main():
             continue
         natives[name] = e
 
+    # per-call docs: real, wiki-sourced descriptions keyed by "Ns.fn", merged in (never derived from the
+    # decompiled corpus itself) so a hover tooltip / API-panel click shows more than a call-site example.
+    call_docs = {}
+    if CALL_DOCS.exists():
+        try:
+            call_docs = json.loads(CALL_DOCS.read_text(encoding="utf-8")).get("natives", {})
+        except Exception:
+            call_docs = {}
+    doc_hits = 0
+    for name, e in natives.items():
+        if name in call_docs:
+            e["doc"] = call_docs[name]
+            doc_hits += 1
+
     # group dotted natives by namespace; bare natives under ""
     grouped = {}
     for name, e in sorted(natives.items()):
@@ -177,7 +192,7 @@ def main():
 
     n_dotted = sum(len(v) for v in grouped.values())
     print("[scrape] %d files -> %s (%d KB)" % (len(files), OUT, OUT.stat().st_size // 1024))
-    print("[scrape] %d dotted natives in %d namespaces" % (n_dotted, len(grouped)))
+    print("[scrape] %d dotted natives in %d namespaces, %d with a real per-call doc" % (n_dotted, len(grouped), doc_hits))
     for ns in sorted(grouped):
         if ns:
             print("   %-24s %d" % (ns, len(grouped[ns])))

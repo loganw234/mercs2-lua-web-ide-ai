@@ -37,7 +37,12 @@
     var tier = tierOf(c.path, !!c.native), html = "";
     html += '<div class="sig">' + esc(c.sig) + "</div>";
     html += '<span class="tier ' + tier[0] + '">' + esc(tier[1]) + "</span>";
-    if (ns.doc) html += '<div class="doc">' + esc(ns.doc) + "</div>";
+    /* per-call doc (wiki-sourced, what THIS function actually does) takes priority; the namespace doc
+       (what the whole namespace is FOR) shows as a smaller secondary note when a per-call doc exists,
+       or as the main doc when it doesn't -- the pre-per-call-doc fallback. */
+    var callDoc = c.doc || (c.native && c.native.doc);
+    if (callDoc) html += '<div class="doc">' + esc(callDoc) + "</div>";
+    if (ns.doc) html += '<div class="' + (callDoc ? "nsnote" : "doc") + '">' + esc(ns.doc) + "</div>";
     if (c.native) {
       html += '<div class="doc">The game’s own scripts call this ' + c.native.n + "×" +
               (c.native.min != null ? ", always with " + (c.native.min === c.native.max ? c.native.min : c.native.min + "–" + c.native.max) + " argument" + (c.native.max === 1 ? "" : "s") : "") + ".</div>";

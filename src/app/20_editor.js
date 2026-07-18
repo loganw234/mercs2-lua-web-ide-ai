@@ -14,7 +14,13 @@
   var luaGame = Object.assign({}, CM.lua, {
     token: function (stream, state) {
       var t = CM.lua.token(stream, state);
-      if ((t === "variable" || t == null) && GLOB[stream.current()]) return "builtin";
+      /* the base Lua mode lexes a dotted chain (Ess.Object.spawnAhead) as ONE "variable" token including
+         the dots -- current() is the whole path, not just "Ess". Check the chain's ROOT segment against
+         GLOB, not the full text, or a real Ess./Loader./native call never matches past its first dot. */
+      if (t === "variable" || t == null) {
+        var root = stream.current().split(".")[0];
+        if (GLOB[root]) return "builtin";
+      }
       return t;
     }
   });
@@ -153,11 +159,14 @@
         var dom = document.createElement("div"); dom.className = "hovertip";
         if (found) {
           var c = found.c, tier = IDE.api.tierOf(c ? c.path : found.ns.name, false);
+          var callDoc = c && c.doc;
           dom.innerHTML = '<div class="htsig">' + escHtml(c ? c.sig : found.ns.name) + "</div>" +
             '<span class="httier ' + tier[0] + '">' + escHtml(tier[1]) + "</span>" +
-            (found.ns.doc ? '<div class="htdoc">' + escHtml(found.ns.doc) + "</div>" : "");
+            (callDoc ? '<div class="htdoc">' + escHtml(callDoc) + "</div>"
+                     : (found.ns.doc ? '<div class="htdoc">' + escHtml(found.ns.doc) + "</div>" : ""));
         } else {
           dom.innerHTML = '<div class="htsig">' + escHtml(nat.path) + '</div><span class="httier native">Native</span>' +
+            (nat.entry.doc ? '<div class="htdoc">' + escHtml(nat.entry.doc) + "</div>" : "") +
             (nat.entry.example ? '<div class="htdoc">real call: ' + escHtml(nat.entry.example) + "</div>" : "");
         }
         return { dom: dom };

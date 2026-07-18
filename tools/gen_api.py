@@ -15,6 +15,7 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "src" / "data" / "CAPABILITIES.md"
 OUT = ROOT / "src" / "data" / "ess-api.json"
+CALL_DOCS = ROOT / "src" / "data" / "call_docs.json"   # {"ess": {path: doc}, "natives": {...}} -- see its own header
 
 BACKTICK = re.compile(r"`([^`]+)`")
 NS_RE = re.compile(r"^Ess(?:\.Raw|\.Easy)?\.[A-Z][A-Za-z]+$")          # Ess.Player, Ess.Easy.Airstrike
@@ -106,12 +107,29 @@ def main():
                         path = last_ns + m.group(1)
                         namespaces[last_ns]["calls"][path] = last_ns + piece
 
+    # per-call docs: real, wiki-sourced descriptions keyed by exact path, merged in (never derived from
+    # this file) so a hover tooltip / API-panel click shows more than just the bare signature. Optional --
+    # generation still works with none.
+    call_docs = {}
+    if CALL_DOCS.exists():
+        try:
+            call_docs = json.loads(CALL_DOCS.read_text(encoding="utf-8")).get("ess", {})
+        except Exception:
+            call_docs = {}
+
     # finalize
     out_ns = []
     completions = set()
+    doc_hits = 0
     for name in sorted(namespaces):
         e = namespaces[name]
-        calls = [{"path": p, "sig": e["calls"][p]} for p in sorted(e["calls"])]
+        calls = []
+        for p in sorted(e["calls"]):
+            c = {"path": p, "sig": e["calls"][p]}
+            if p in call_docs:
+                c["doc"] = call_docs[p]
+                doc_hits += 1
+            calls.append(c)
         out_ns.append({"name": name, "group": e["group"], "doc": e["doc"], "calls": calls})
         completions.add(name)
         for c in calls:
@@ -119,8 +137,8 @@ def main():
 
     data = {"namespaces": out_ns, "completions": sorted(completions)}
     OUT.write_text(json.dumps(data, indent=1), encoding="utf-8")
-    print("[gen_api] wrote %s -- %d namespaces, %d completions"
-          % (OUT.name, len(out_ns), len(completions)))
+    print("[gen_api] wrote %s -- %d namespaces, %d completions, %d calls with a real per-call doc"
+          % (OUT.name, len(out_ns), len(completions), doc_hits))
     return 0
 
 

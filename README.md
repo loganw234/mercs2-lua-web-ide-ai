@@ -38,9 +38,10 @@ You can still write, save, and browse everything with no game attached — only 
 - **Examples gallery** — 45 categorized, smoke-tested examples generated straight from the Ess repo's
   `samples/recipes/` (the framework's living documentation), from "Am I connected?" to full missions.
   One click opens any of them as a new script to play with.
-- **Two-layer API reference** — the full Ess API (~69 namespaces / 430 calls, tier-badged Easy / Core / Raw)
+- **Two-layer API reference** — the full Ess API (~74 namespaces / 440+ calls, tier-badged Easy / Core / Raw)
   *plus* the engine's own native functions (40 namespaces / ~770 calls, scraped from the decompiled base-game
-  scripts, each with a **real call site from the game** and observed argument counts). Click any call for
+  scripts, each with a **real call site from the game** and observed argument counts). Most calls carry a
+  real, specific description mined from the wiki (not just "here's the namespace") — click any call for
   docs, insert it as a snippet with tab-through argument placeholders, or just **hover** the token in the
   editor for the same doc as a tooltip. The same data powers autocomplete (`Ess.Easy.*` floats to the top).
 - **Run & inspect** — a one-line **REPL** under the output (Enter sends, ↑ recalls history; bare
@@ -76,10 +77,17 @@ python build.py           # src/* -> dist/index.html (standalone)
 Regenerating the data (only when the upstream sources change):
 
 ```
-python tools/gen_api.py         # src/data/CAPABILITIES.md          -> src/data/ess-api.json
+python tools/gen_api.py         # src/data/CAPABILITIES.md            -> src/data/ess-api.json
 python tools/gen_examples.py    # <ess repo>/samples/recipes + README -> src/data/examples.json
-python tools/scrape_natives.py  # <decompiled game lua>/src          -> src/data/natives.json
+python tools/scrape_natives.py  # <decompiled game lua>/src           -> src/data/natives.json
+python tools/gen_templates.py   # <spawn menu scripts + wiki>          -> src/data/templates.json
 ```
+
+`gen_api.py` and `scrape_natives.py` both also merge in `src/data/call_docs.json` — real, wiki-sourced
+per-call descriptions (`{"ess": {path: doc}, "natives": {path: doc}}`) that power the hover tooltip and
+the API panel's doc pane beyond the bare signature. It's a committed, hand-curated/mined artifact, not
+something either generator derives on its own — re-running either script preserves whatever's in it as
+long as the paths still match; it just won't gain new entries unless `call_docs.json` itself is updated.
 
 Regenerating the vendored editor bundle (only when bumping CodeMirror/luaparse/lz-string — needs Node):
 
@@ -89,13 +97,14 @@ node smoke.js                                      # headless boot + behavior te
 ```
 
 - `src/index.html` — page skeleton (with `/*__CSS__*/`, `/*__API__*/`, `/*__NATIVES__*/`, `/*__EXAMPLES__*/`,
-  `/*__APP__*/` inject markers).
+  `/*__TEMPLATES__*/`, `/*__BUILD__*/`, `/*__APP__*/` inject markers).
 - `src/styles.css` — all styling (dark/light), including the CodeMirror theme.
 - `src/lib/vendor.js` — CodeMirror 6 + luaparse + lz-string, bundled to one IIFE (`window.CM`) by `tools/vendor/`.
 - `src/lib/ess-bridge.js` — the vendored WebSocket client (kept in sync with the Ess repo's `tools/`;
   the IDE adds a table serializer to the result wrap — an upstream candidate).
 - `src/app/*.js` — the app, one concern per file (`00_state` → `99_main`), merged in order.
-- `src/data/` — `CAPABILITIES.md` (copied from the Ess repo) + the three generated JSONs.
+- `src/data/` — `CAPABILITIES.md` (copied from the Ess repo), `call_docs.json` (hand-curated per-call
+  docs, see above), and the four generated JSONs (`ess-api`/`natives`/`examples`/`templates`).
 - `dist/index.html` — the built standalone page (committed, so Pages + downloads need no build).
 
 `.github/workflows/pages.yml` regenerates the API, rebuilds, and deploys `dist/` to GitHub Pages on push.

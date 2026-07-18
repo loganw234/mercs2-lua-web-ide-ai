@@ -7,169 +7,197 @@
     "n": 8,
     "min": 3,
     "max": 3,
-    "example": "Ai.AddInfraction(uActionerGuid, uFaction, 5)"
+    "example": "Ai.AddInfraction(uActionerGuid, uFaction, 5)",
+    "doc": "Ai.AddInfraction(uCharacterGuid, uFactionGuid, nAmount) adds to a running \"infraction\" tally a character has against a faction, presumably feeding into relation decay."
    },
    "AddSubject": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Ai.AddSubject(uCharacterGuid)"
+    "example": "Ai.AddSubject(uCharacterGuid)",
+    "doc": "Ai.AddSubject(uGuid) registers an object with the AI subject-tracking system. Confirmed called when a player's character joins the game (resident/mrxplayer.lua)."
    },
    "Anchor": {
     "n": 9,
     "min": 0,
     "max": 0,
-    "example": "Ai.Anchor({AIGuid = uBoatCapn, AnchorRadius = 0})"
+    "example": "Ai.Anchor({AIGuid = uBoatCapn, AnchorRadius = 0})",
+    "doc": "Ai.Anchor({AIGuid = uGuid, AnchorRadius = n, ...}) pins a subject to its current position/area; AnchorRadius = 0 appears to mean it won't wander at all."
    },
    "DefaultGoal": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Ai.DefaultGoal(tParameters)"
+    "example": "Ai.DefaultGoal(tParameters)",
+    "doc": "Ai.DefaultGoal(tParameters) has no direct confirmed call sites, but resident/mrxai.lua wraps it 1:1 with Ai.Goal's calling convention (same table shape, same hibernation-gating), so it's inferred-by-analogy to share Goal's table shape rather than independently confirmed."
    },
    "Deliver": {
     "n": 2,
     "min": 6,
     "max": 6,
-    "example": "Ai.Deliver(Vehicle.GetDriver(uHeli), nDesX, nDesY, nDesZ, 0.5, bCareless)"
+    "example": "Ai.Deliver(Vehicle.GetDriver(uHeli), nDesX, nDesY, nDesZ, 0.5, bCareless)",
+    "doc": "Ai.Deliver(uDriverGuid, nX, nY, nZ, nDropHeight, bCareless) commands a helicopter's AI driver to cargo-drop at a coordinate; nDropHeight sets drop altitude and bCareless likely relaxes precision/safety checks."
    },
    "Deploy": {
     "n": 7,
     "min": 0,
     "max": 1,
-    "example": "Ai.Deploy(tParameters)"
+    "example": "Ai.Deploy(tParameters)",
+    "doc": "Ai.Deploy({Vehicle = uGuid, Role = sRole, Force = bForce, ...}) deploys/ejects occupants from a vehicle under AI control, e.g. Role = \"Passenger\", Force = true, MaintainRotorSpeed = true. Wrapped by resident/mrxai.lua with the same hibernation-gating as Goal."
    },
    "Enable": {
     "n": 5,
     "min": 2,
     "max": 2,
-    "example": "Ai.Enable(uGuid, false)"
+    "example": "Ai.Enable(uGuid, false)",
+    "doc": "Ai.Enable(uGuid, bEnabled) toggles whether the AI system drives a given object at all. Confirmed in resident/mrxactionhijack.lua and resident/mrxutil.lua."
    },
    "GetFactionGuid": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Ai.GetFactionGuid(uRusher)"
+    "example": "Ai.GetFactionGuid(uRusher)",
+    "doc": "Ai.GetFactionGuid(uGuid) resolves an individual subject's owning faction guid, for use with GetRelation/SetRelation/etc."
    },
    "GetFeeling": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Ai.GetFeeling(uGuid, uTarget)"
+    "example": "Ai.GetFeeling(uGuid, uTarget)",
+    "doc": "Ai.GetFeeling(uGuidA, uGuidB) returns a numeric per-pair \"feeling\" value between two subjects, distinct from faction-level GetRelation (appears to be per-individual). At least one caller (resident/mrxfollow.lua) treats negative values as hostile."
    },
    "GetRelation": {
     "n": 9,
     "min": 2,
     "max": 2,
-    "example": "Ai.GetRelation(uGuid, uDriver)"
+    "example": "Ai.GetRelation(uGuid, uDriver)",
+    "doc": "Ai.GetRelation(uGuidA, uGuidB) returns a numeric faction relation value (roughly -100 to 100) between two faction/subject guids. This is the literal primitive underneath MrxFactionManager's GetRelation wrapper; calling it directly bypasses that manager's HUD-meter and net-sync bookkeeping."
    },
    "GetState": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Ai.GetState({AIGuid = uRusher, State = \"NoCapture\"})"
+    "example": "Ai.GetState({AIGuid = uRusher, State = \"NoCapture\"})",
+    "doc": "Ai.GetState({AIGuid = uGuid, State = sStateName}) reads a named AI state flag for a subject (e.g. \"NoCapture\"). Table-shaped call, mirrors SetState's argument shape."
    },
    "Goal": {
     "n": 120,
     "min": 0,
     "max": 1,
-    "example": "Ai.Goal(args)"
+    "example": "Ai.Goal(args)",
+    "doc": "Ai.Goal({AIGuid = uGuid, Goal = sGoalName, Target = ..., Priority = sPriority, ...}) issues a one-shot AI task (e.g. \"PathMove\") to a subject. Confirmed table keys: AIGuid, Goal, Target, Priority (\"lowPri\"/\"hiPri\"), Mode (\"Oneway\"), Start (\"Nearest\"), Haste, Callback, CallbackData. Returns a handle that can later be passed to RemoveGoal; the full set of valid Goal names/keys isn't enumerated anywhere in the corpus."
    },
    "LivingWorld": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Ai.LivingWorld({ AIGuid = uGuid, Attrib = \"LivingWorldBehaviour\", State = false })"
+    "example": "Ai.LivingWorld({ AIGuid = uGuid, Attrib = \"LivingWorldBehaviour\", State = false })",
+    "doc": "Ai.LivingWorld({AIGuid = uGuid, Attrib = sAttribName, State = ...}) enables/disables the ambient \"living world\" behavior layer for a subject, typically disabled (State = false) before scripting custom behavior like Follow on top."
    },
    "RemoveExclusionZone": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Ai.RemoveExclusionZone()"
+    "example": "Ai.RemoveExclusionZone()",
+    "doc": "Ai.RemoveExclusionZone() clears whatever AI exclusion zone is currently active; confirmed called with zero arguments. The counterpart SetExclusionZone has no confirmed call sites."
    },
    "RemoveGoal": {
     "n": 16,
     "min": 0,
     "max": 2,
-    "example": "Ai.RemoveGoal(tParameters)"
+    "example": "Ai.RemoveGoal(tParameters)",
+    "doc": "Cancels a goal by handle. Confirmed in two shapes: Ai.RemoveGoal({AIGuid = uGuid, Handle = hHandle}) and positional Ai.RemoveGoal(uGuid, hHandle); both forms coexist in shipped scripts and which one a given engine build expects isn't resolvable from source alone."
    },
    "RemoveSubject": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Ai.RemoveSubject(uCharacterGuid)"
+    "example": "Ai.RemoveSubject(uCharacterGuid)",
+    "doc": "Ai.RemoveSubject(uGuid) unregisters a subject from the AI system; the confirmed counterpart to AddSubject, called on character teardown (resident/mrxplayer.lua)."
    },
    "Role": {
     "n": 14,
     "min": 0,
     "max": 1,
-    "example": "Ai.Role(tParameters)"
+    "example": "Ai.Role(tParameters)",
+    "doc": "Ai.Role({AIGuid = uGuid, Role = sRoleName, ...}) assigns a standing behavioral role (e.g. \"Follow\", \"Idle\") to a subject, as opposed to Goal's one-shot tasks; returns a handle. Follow example includes Target, MinDistance, MaxDistance, MoveDistance, Priority, HardPriority, Callback, CallbackData."
    },
    "SetFeeling": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Ai.SetFeeling(uGuid, uTarget, 100)"
+    "example": "Ai.SetFeeling(uGuid, uTarget, 100)",
+    "doc": "Ai.SetFeeling(uGuidA, uGuidB, nValue) sets the per-pair feeling value; confirmed used to neutralize hostility (set to 100) before starting a scripted \"Follow\" role."
    },
    "SetHaste": {
     "n": 6,
     "min": 2,
     "max": 2,
-    "example": "Ai.SetHaste(uBoatCapn, 1)"
+    "example": "Ai.SetHaste(uBoatCapn, 1)",
+    "doc": "Ai.SetHaste(uGuid, nHaste) is a numeric multiplier controlling how urgently/fast a driven subject moves; 1 appears to be normal/default speed."
    },
    "SetInfractionMultiplier": {
     "n": 6,
     "min": 2,
     "max": 2,
-    "example": "Ai.SetInfractionMultiplier(GetGuidByName(\"OC\"), 0.1)"
+    "example": "Ai.SetInfractionMultiplier(GetGuidByName(\"OC\"), 0.1)",
+    "doc": "Ai.SetInfractionMultiplier(uFactionGuid, nMultiplier) scales infraction accrual for a faction: 0 suppresses it, 1 is normal, fractional values (e.g. 0.2) soften it during scripted sequences."
    },
    "SetLaneActive": {
     "n": 3,
     "min": 3,
     "max": 3,
-    "example": "Ai.SetLaneActive(Pg.GetGuidByName(road), 1, false)"
+    "example": "Ai.SetLaneActive(Pg.GetGuidByName(road), 1, false)",
+    "doc": "Ai.SetLaneActive(uRoadGuid, nLaneIndex, bActive) enables/disables a specific numbered lane on a road object for traffic spawning/routing."
    },
    "SetPriorityTarget": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Ai.SetPriorityTarget(uHeli)"
+    "example": "Ai.SetPriorityTarget(uHeli)",
+    "doc": "Ai.SetPriorityTarget(uGuid) marks a subject as the priority target for hostile AI."
    },
    "SetRelation": {
     "n": 13,
     "min": 3,
     "max": 3,
-    "example": "Ai.SetRelation(uFaction, uGuid, 0)"
+    "example": "Ai.SetRelation(uFaction, uGuid, 0)",
+    "doc": "Ai.SetRelation(uGuidA, uGuidB, nRelation) sets the numeric faction relation between two guids, e.g. Ai.SetRelation(uFactionA, uFactionB, -100). Literal primitive underneath MrxFactionManager's SetRelation; direct calls skip its mutability checks and HUD/net-sync side effects."
    },
    "SetState": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Ai.SetState({ AIGuid = uCarmona, State = \"Vip\", Value = true })"
+    "example": "Ai.SetState({ AIGuid = uCarmona, State = \"Vip\", Value = true })",
+    "doc": "Ai.SetState({AIGuid = uGuid, State = sStateName, Value = ...}) sets a named AI state flag on a subject, e.g. State = \"Pacifist\", Value = true. Confirmed across several resident/ and vz/ scripts."
    },
    "Squad": {
     "n": 9,
     "min": 0,
     "max": 0,
-    "example": "Ai.Squad({SquadGuid = uSquad, Action = \"GetUnits\"})"
+    "example": "Ai.Squad({SquadGuid = uSquad, Action = \"GetUnits\"})",
+    "doc": "Ai.Squad({SquadGuid = uSquad, Action = sAction, ...}) performs squad-level operations. Confirmed Action \"GetUnits\" returns a table of unit guids belonging to the squad; other actions build squads from scratch but their keys are unconfirmed."
    },
    "TestDropZone": {
     "n": 5,
     "min": 0,
     "max": 0,
-    "example": null
+    "example": null,
+    "doc": "Ai.TestDropZone({Callback = fCallback, Location = {x,y,z}, InnerRadius, InnerHeightTolerance, OuterRadius, OuterHeightTolerance, HeightMax, SearchRadius, Water = bAllowWater}) tests for a valid helicopter landing/drop spot. Returns a boolean; false means no valid spot found, and callers respond with fCallback(false, \"noland\"). The best-documented table-shaped call in the namespace, used identically across mrxgunship, mrxsupportdesignator, mrxtankbuster, and pursuitcopter."
    },
    "TweakAttachedSpawners": {
     "n": 31,
     "min": 2,
     "max": 2,
-    "example": "Ai.TweakAttachedSpawners(uGuid, tProps)"
+    "example": "Ai.TweakAttachedSpawners(uGuid, tProps)",
+    "doc": "Ai.TweakAttachedSpawners(uBuildingGuid, {SpawnerState = \"on\"/\"off\", SecondsPerCycle = n, SpawnList = sList, ...}) adjusts all AI spawners attached to a building/object. Very common in resident/dangerousbuilding.lua, resident/outpost.lua, and vz/ mission scripts."
    },
    "TweakAttachedSpawnersInGroup": {
     "n": 14,
     "min": 3,
     "max": 3,
-    "example": "Ai.TweakAttachedSpawnersInGroup(uGuid, tProps.Group, tProps)"
+    "example": "Ai.TweakAttachedSpawnersInGroup(uGuid, tProps.Group, tProps)",
+    "doc": "Ai.TweakAttachedSpawnersInGroup(uBuildingGuid, sGroupName, {SpawnerState = ..., ...}) is the same as TweakAttachedSpawners but scoped to spawners tagged with a group name (\"Ground\", \"Balcony\", \"Rooftop\") instead of all spawners on the object."
    }
   },
   "Airstrike": {
@@ -177,13 +205,15 @@
     "n": 12,
     "min": 10,
     "max": 10,
-    "example": null
+    "example": null,
+    "doc": "Spawns nCount ordnance objects of vTemplate in a cone of half-angle nConeAngleDeg degrees around a direction vector, used for cluster/shrapnel spread patterns. Modules commonly stack multiple calls with widening angles and counts (e.g. a 15deg/10 ring then a 30deg/20 ring) for a denser pattern; no return value is used."
    },
    "EquipDesignator": {
     "n": 3,
     "min": 5,
     "max": 5,
-    "example": "Airstrike.EquipDesignator(self.uOwner, self.sDesignationType, nil, nil, bFireImmediately)"
+    "example": "Airstrike.EquipDesignator(self.uOwner, self.sDesignationType, nil, nil, bFireImmediately)",
+    "doc": "Equips a target-designator \"weapon\" on uOwner \u2014 the tool a player aims to call in a strike (laser/smoke/flare/satellite/beacon). sDesignationType is a per-instance string; fCallback/tCallbackArgs fire when designation completes (nil means fire-and-forget); bFireImmediately skips the aim step. Returns the equipped weapon's guid."
    },
    "FindDesignatorOwner": {
     "n": 1,
@@ -195,7 +225,8 @@
     "n": 19,
     "min": 7,
     "max": 9,
-    "example": "Airstrike.Flyby(tTemplates[sFaction], x - 50, z + 300, x, z, y + 100, 40)"
+    "example": "Airstrike.Flyby(tTemplates[sFaction], x - 50, z + 300, x, z, y + 100, 40)",
+    "doc": "Spawns a delivery aircraft (vDeliveryVehicle template string or instance field) that flies from a start point to an end point and invokes fDropCallback at the drop point, where the caller then spawns the actual ordnance. Argument order is two XZ pairs then Y \u2014 (startX, startZ, endX, endZ, Y, speed), not XYZ triples; callback/args are optional and speeds seen range 50-200. Returns the spawned jet's guid; this is the most-used call in the namespace after the two spawners."
    },
    "RefillDesignator": {
     "n": 2,
@@ -213,25 +244,29 @@
     "n": 2,
     "min": 8,
     "max": 8,
-    "example": null
+    "example": null,
+    "doc": "Drops one row of a carpet-bomb pattern along nHeading and returns the next row's start XZ coordinates so the caller can loop to place successive rows. Only one confirmed call site exists, so the exact tail arguments (a nil 6th arg, then spacing and per-row count) are less certain than for higher-traffic calls."
    },
    "SpawnDirectedObject": {
     "n": 3,
     "min": 7,
     "max": 7,
-    "example": null
+    "example": null,
+    "doc": "Spawns a directed effect/particle object (not ordnance), oriented along the given direction vector, used for oriented explosion/fireball FX. vTemplate here is a global_particle_* name rather than an ordnance-template string. Returns the spawned object's guid."
    },
    "SpawnOrdnance": {
     "n": 18,
     "min": 7,
     "max": 13,
-    "example": "Airstrike.SpawnOrdnance(sTemplate, x, y, z, 0, -100, 0, \"impact\", 1)"
+    "example": "Airstrike.SpawnOrdnance(sTemplate, x, y, z, 0, -100, 0, \"impact\", 1)",
+    "doc": "Spawns a single ordnance object (bomb/missile/shell) at a position with a velocity; vTemplate is a named engine-side ordnance template string (e.g. \"Gunship Shell\"), not a Lua data structure. The tail of the argument list is inconsistent across real call sites (some pass \"impact\"/a distance as arg 8, others insert a target uGuid first), so match the specific call site you're modeling rather than assuming one fixed signature. Returns the spawned ordnance guid."
    },
    "SpawnTargettedOrdnance": {
     "n": 6,
     "min": 11,
     "max": 13,
-    "example": null
+    "example": null,
+    "doc": "Same shape as SpawnOrdnance but always takes an explicit uTarget guid, used for homing/guided ordnance (e.g. missiles) rather than ballistic ordnance (bombs/shells). Confirmed usage: Airstrike.SpawnTargettedOrdnance(\"Vehicle AT Missile\", nSpawnX, nSpawnY, nSpawnZ, nVectorX*nSpeedScale, nSpeedScale, nVectorZ*nSpeedScale, uTarget, \"impact\", 1, nil, BombExplodes, {uBomb})."
    }
   },
   "Animation": {
@@ -273,13 +308,15 @@
     "n": 11,
     "min": 0,
     "max": 0,
-    "example": "Atmosphere.Begin()"
+    "example": "Atmosphere.Begin()",
+    "doc": "Graphics.Atmosphere.Begin() opens a scoped atmosphere-override block with no arguments, paired with one or more SetValue(sKey, nValue) calls and closed by End(). Confirmed used identically in every resident/airstrike_atomsphere_*.lua script to start a temporary bloom/lighting override for an airstrike effect."
    },
    "ChangeLineRegionSetting": {
     "n": 15,
     "min": 2,
     "max": 2,
-    "example": "Atmosphere.ChangeLineRegionSetting(Pg.GetGuidByName(\"rgn_atmo_interior\"), \"pmc\")"
+    "example": "Atmosphere.ChangeLineRegionSetting(Pg.GetGuidByName(\"rgn_atmo_interior\"), \"pmc\")",
+    "doc": "Graphics.Atmosphere.ChangeLineRegionSetting(uRegionGuid, sSettingName) applies a named weather/atmosphere preset to a specific map region. Confirmed example: applying the \"warzone\" preset to region \"rgn_atmo_caracas\"."
    },
    "EnableImmediatelyChangeMode": {
     "n": 2,
@@ -291,7 +328,8 @@
     "n": 11,
     "min": 0,
     "max": 1,
-    "example": "Atmosphere.End()"
+    "example": "Atmosphere.End()",
+    "doc": "Graphics.Atmosphere.End() closes the scoped atmosphere override opened by Begin(), restoring the prior values. Confirmed called with no arguments in every resident/airstrike_atomsphere_*.lua script."
    },
    "GetValue": {
     "n": 3,
@@ -381,7 +419,8 @@
     "n": 109,
     "min": 2,
     "max": 2,
-    "example": "Atmosphere.SetValue(\"fBloomAmount\", 1)"
+    "example": "Atmosphere.SetValue(\"fBloomAmount\", 1)",
+    "doc": "Graphics.Atmosphere.SetValue(sKey, nValue) sets a named atmosphere/bloom/lighting parameter by string key inside a Begin()/End() scope, e.g. SetValue(\"fBloomAmount\", 0.75) or SetValue(\"fLightIntensity\", 1.55). Confirmed keys include fAtmosphereForce, fAtmosphereLimit, several fBloom* keys, fLightIntensity, and fTimeRestore."
    }
   },
   "Bloom": {
@@ -389,19 +428,22 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Bloom.SetBlurRadius(0.5)"
+    "example": "Bloom.SetBlurRadius(0.5)",
+    "doc": "Graphics.Bloom.SetBlurRadius(n) sets the bloom blur radius. Confirmed called once at boot with 0.5 in resident/mrxbootstrap.lua alongside the other post-process defaults."
    },
    "SetMultiplier": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Bloom.SetMultiplier(0)"
+    "example": "Bloom.SetMultiplier(0)",
+    "doc": "Graphics.Bloom.SetMultiplier(n) sets the bloom intensity multiplier. Confirmed called at boot with 0 in resident/mrxbootstrap.lua."
    },
    "SetThreshold": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Bloom.SetThreshold(0.775)"
+    "example": "Bloom.SetThreshold(0.775)",
+    "doc": "Graphics.Bloom.SetThreshold(n) sets the bloom brightness threshold. Confirmed called at boot with 0.775 in resident/mrxbootstrap.lua."
    }
   },
   "Camera": {
@@ -409,97 +451,113 @@
     "n": 2,
     "min": 2,
     "max": 3,
-    "example": "Camera.Blend(uCamera, 1)"
+    "example": "Camera.Blend(uCamera, 1)",
+    "doc": "Starts a timed blend into a new camera state: `Camera.Blend(uCameraGuid, nBlendTime [, bFlag])`. Confirmed in real scripts, used immediately before setting position/look-at/shot to transition smoothly into a new cinematic camera state."
    },
    "GetYaw": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Camera.GetYaw(uCamera)"
+    "example": "Camera.GetYaw(uCamera)",
+    "doc": "Returns the yaw of the camera at uCameraGuid. Confirmed in real scripts, e.g. `self.nHeading = Camera.GetYaw(Player.GetCamera(self:GetOwner()))`; the camera guid must first be obtained via Player.GetCamera."
    },
    "Hold": {
     "n": 2,
     "min": 3,
     "max": 4,
-    "example": "Camera.Hold(uCamera, true, false)"
+    "example": "Camera.Hold(uCamera, true, false)",
+    "doc": "Holds the camera in place: `Camera.Hold(uCameraGuid, bHold, bFlag2 [, bFlag3])`. Confirmed in real scripts with two or three booleans, typically called right after SetLookAt/Blend during cinematics; the exact per-argument meaning beyond \"hold in place\" is unconfirmed."
    },
    "RestoreFocusParams": {
     "n": 5,
     "min": 2,
     "max": 2,
-    "example": "Camera.RestoreFocusParams(0, 0)"
+    "example": "Camera.RestoreFocusParams(0, 0)",
+    "doc": "Graphics.Camera.RestoreFocusParams(nCameraIndex, nDuration) reverts a SetFocusParams depth-of-field override back to normal over the given duration. Confirmed calls always use camera index 0."
    },
    "RestoreFovParams": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Camera.RestoreFovParams(0, 1)"
+    "example": "Camera.RestoreFovParams(0, 1)",
+    "doc": "Graphics.Camera.RestoreFovParams(nCameraIndex, nDuration) reverts a SetFovParams field-of-view override. Confirmed calls always use camera index 0."
    },
    "RestoreNearFar": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Camera.RestoreNearFar(0)"
+    "example": "Camera.RestoreNearFar(0)",
+    "doc": "Graphics.Camera.RestoreNearFar(nCameraIndex) reverts a SetNearFar clip-plane override. Confirmed calls always use camera index 0."
    },
    "SetFocusParams": {
     "n": 5,
     "min": 6,
     "max": 7,
-    "example": "Camera.SetFocusParams(0, 0, 0.1, 4, 6, 1)"
+    "example": "Camera.SetFocusParams(0, 0, 0.1, 4, 6, 1)",
+    "doc": "Graphics.Camera.SetFocusParams(nCameraIndex, nStartNear, nEndNear, nStartFar, nEndFar, nBlur, nDuration) blends a depth-of-field focus transition (near/far planes and blur) over a duration; used during hijack and turret-mount cinematics. This is Graphics.Camera, distinct from the top-level Camera namespace, and the camera index is confirmed as 0 at every call site."
    },
    "SetFovParams": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Camera.SetFovParams(nPlayerCam, nAngle, nDuration)"
+    "example": "Camera.SetFovParams(nPlayerCam, nAngle, nDuration)",
+    "doc": "Graphics.Camera.SetFovParams(nCameraIndex, nAngle, nDuration) blends the field-of-view angle to a new value over a duration. Confirmed used in hijack and briefing cinematics with camera index 0."
    },
    "SetLookAt": {
     "n": 3,
     "min": 3,
     "max": 6,
-    "example": "Camera.SetLookAt(uCamera, self._hijacker, \"bone_chest\")"
+    "example": "Camera.SetLookAt(uCamera, self._hijacker, \"bone_chest\")",
+    "doc": "Aims the camera at a target, either raw coordinates `Camera.SetLookAt(uCameraGuid, nX, nY, nZ, bLookAtDirection [, bFlag])` or an object+hardpoint pair `Camera.SetLookAt(uCameraGuid, uObjectGuid, sHardpoint, bLookAtDirection [, bFlag])`. Confirmed with both forms in `resident/mrxbriefing.lua`, and with a simpler object+hardpoint call in `resident/mrxactionhijack.lua` (e.g. aiming at bone_chest during a hijack-fail cinematic)."
    },
    "SetNearFar": {
     "n": 3,
     "min": 4,
     "max": 4,
-    "example": "Camera.SetNearFar(0, 0.3, 500, 0)"
+    "example": "Camera.SetNearFar(0, 0.3, 500, 0)",
+    "doc": "Graphics.Camera.SetNearFar(nCameraIndex, nNear, nFar, nUnknown) directly sets the near/far clip planes, as opposed to SetFocusParams' blended depth-of-field near/far. The trailing 4th argument is 0 at every confirmed call site; its meaning is unconfirmed."
    },
    "SetPitch": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Camera.SetPitch(uCamera, 0.302)"
+    "example": "Camera.SetPitch(uCamera, 0.302)",
+    "doc": "Sets the camera's pitch to a numeric value: `Camera.SetPitch(uCameraGuid, nPitch)`. Confirmed in real scripts, e.g. `Camera.SetPitch(uCamera, 0.302)` paired right after `Camera.SetYaw(uCamera, 0)` during a teleport-recovery sequence."
    },
    "SetPosition": {
     "n": 2,
     "min": 4,
     "max": 5,
-    "example": "Camera.SetPosition(uCamera, tSettings.uPositionObject, tSettings.sPositionHardpoint, true)"
+    "example": "Camera.SetPosition(uCamera, tSettings.uPositionObject, tSettings.sPositionHardpoint, true)",
+    "doc": "Positions the camera, in either a plain-coordinates form `Camera.SetPosition(uCameraGuid, nX, nY, nZ [, bFlag])` or an object+hardpoint form `Camera.SetPosition(uCameraGuid, uObjectGuid, sHardpoint [, bFlag])`. Both forms are confirmed side-by-side in `resident/mrxbriefing.lua` for cinematic camera setup; the trailing boolean's exact meaning is unconfirmed."
    },
    "SetShot": {
     "n": 1,
     "min": 5,
     "max": 5,
-    "example": null
+    "example": null,
+    "doc": "Selects a named scripted camera \"shot\" between two actors: `Camera.SetShot(uCameraGuid, sShotName, uBaseActor, uTargetActor [, bFlag])`. Confirmed in the cinematic-briefing system (`resident/mrxbriefing.lua`), used alongside Blend and Hold to frame e.g. an over-the-shoulder or two-shot between a base actor and a target actor."
    },
    "SetYaw": {
     "n": 5,
     "min": 2,
     "max": 2,
-    "example": "Camera.SetYaw(uCamera, 0)"
+    "example": "Camera.SetYaw(uCamera, 0)",
+    "doc": "Sets the camera's yaw to a numeric value: `Camera.SetYaw(uCamera, nYaw)`. Confirmed with literal values like 0 and 80 in real scripts (e.g. teleport-recovery and player-camera reset code)."
    },
    "Shake": {
     "n": 6,
     "min": 3,
     "max": 5,
-    "example": "Camera.Shake(StringToGuid(\"0x1\"), \"StopShakeCameraConstantly\", uiGuid)"
+    "example": "Camera.Shake(StringToGuid(\"0x1\"), \"StopShakeCameraConstantly\", uiGuid)",
+    "doc": "Triggers a named screen-shake effect: `Camera.Shake(uCameraGuid, sShakeName, uSourceGuid, nAmplitude, nDuration)`. Confirmed with presets `\"ShakeCameraMedium\"`, `\"ShakeCameraConstantlyRandom\"`, and a matching stop call using `\"StopShakeCameraConstantly\"`; the shake name selects an engine-defined preset not present in the decompiled Lua corpus. The camera guid is usually from Player.GetCamera(...), but one script instead passes StringToGuid(\"0x1\") (possibly a fixed/broadcast camera handle, unconfirmed)."
    },
    "StopBlending": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Camera.StopBlending(uCam)"
+    "example": "Camera.StopBlending(uCam)",
+    "doc": "Stops an in-progress camera blend: `Camera.StopBlending(uCameraGuid)`. Confirmed at one call site (`vz/vzacon001.lua`), notably guarded with an existence check (`if uCam and Camera.StopBlending then`) before calling."
    }
   },
   "Contrast": {
@@ -507,13 +565,15 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Contrast.SetLimit(0.1)"
+    "example": "Contrast.SetLimit(0.1)",
+    "doc": "Graphics.Contrast.SetLimit(n) sets the contrast limit for post-processing. Confirmed called at boot with 0.1 in resident/mrxbootstrap.lua."
    },
    "SetMultiplier": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Contrast.SetMultiplier(1.5)"
+    "example": "Contrast.SetMultiplier(1.5)",
+    "doc": "Graphics.Contrast.SetMultiplier(n) sets the contrast multiplier for post-processing. Confirmed called at boot with 1.5 in resident/mrxbootstrap.lua."
    }
   },
   "Debug": {
@@ -549,7 +609,8 @@
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Effect.CameraFade(0)"
+    "example": "Effect.CameraFade(0)",
+    "doc": "Graphics.Effect.CameraFade(nAmount) triggers a full-screen fade-to-black/fade-in effect keyed by a 0/1 amount, not tied to a specific camera guid. Confirmed called with 0 and 1 at the start/end of a hijack cinematic."
    },
    "Terrain": {
     "n": 3,
@@ -563,25 +624,29 @@
     "n": 557,
     "min": 3,
     "max": 6,
-    "example": "Event.Create(Event.TimerRelative, {0.5}, _Go)"
+    "example": "Event.Create(Event.TimerRelative, {0.5}, _Go)",
+    "doc": "Registers `callback` to run once when an event of `eventType` occurs, with a filter/parameter table whose shape depends entirely on the event type (e.g. ObjectDeath wants {targetGuid}, ObjectProximity wants {guidA, guidB, cmp, distance, bool, bool}). Returns a handle usable with Event.Delete to unregister. By far the most common event call in the codebase, used hundreds of times."
    },
    "CreatePersistent": {
     "n": 95,
     "min": 3,
     "max": 5,
-    "example": "Event.CreatePersistent(Event.TimerRelative, {8}, CheckAlarm, {uGuid})"
+    "example": "Event.CreatePersistent(Event.TimerRelative, {8}, CheckAlarm, {uGuid})",
+    "doc": "Same call shape as Event.Create (eventType, {args}, callback, {callbackArgs}) plus an optional 5th boolean argument (bImmortalEvents). Used for events that should keep listening across multiple occurrences (e.g. repeated health-drop tracking, driver enter/exit) rather than a single fire-and-forget; the exact semantic difference from Create (repeat-fire vs. surviving something Create doesn't) is not confirmed from source."
    },
    "Delete": {
     "n": 513,
     "min": 0,
     "max": 1,
-    "example": "Event.Delete(e)"
+    "example": "Event.Delete(e)",
+    "doc": "Unregisters an event previously registered via Event.Create or Event.CreatePersistent, given the handle it returned. Used pervasively for cleanup/teardown \u2014 store the handle and delete it when the listening context goes away to avoid stale callbacks firing later."
    },
    "Post": {
     "n": 52,
     "min": 0,
     "max": 2,
-    "example": "Event.Post(\"PDA Close\", {})"
+    "example": "Event.Post(\"PDA Close\", {})",
+    "doc": "Broadcasts a custom named event: takes a string name (not a numeric Event.* constant) plus a data table, e.g. Event.Post(\"SurvivalMode\", {uGuid}). Appears to be a separate custom-broadcast mechanism from the numeric Event.ScriptEvent ID; no confirmed call site shows Event.ScriptEvent listeners receiving Post-ed names, so the exact delivery relationship between the two is unconfirmed."
    }
   },
   "FanfareQueue": {
@@ -609,31 +674,36 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Graphics.GetShadowBaseDistance()"
+    "example": "Graphics.GetShadowBaseDistance()",
+    "doc": "Graphics.GetShadowBaseDistance() returns the current shadow draw distance with no arguments. Used to save off the current value before temporarily overriding it with SetShadowBaseDistance, then restoring it afterward."
    },
    "InitTinyGeometry": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Graphics.InitTinyGeometry()"
+    "example": "Graphics.InitTinyGeometry()",
+    "doc": "Graphics.InitTinyGeometry() takes no arguments; confirmed called once in resident/mrxtaskmission.lua. Presumably initializes a small/LOD geometry render pass, though exact behavior beyond the call site is unconfirmed."
    },
    "SetBoundaryEffect": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Graphics.SetBoundaryEffect(0)"
+    "example": "Graphics.SetBoundaryEffect(0)",
+    "doc": "Graphics.SetBoundaryEffect(nOpacity) controls the visual \"boundary\" (map edge / no-go zone) overlay effect opacity. Confirmed called with values like 0 and 0.25."
    },
    "SetGamma": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Graphics.SetGamma(0, 0.8, 1)"
+    "example": "Graphics.SetGamma(0, 0.8, 1)",
+    "doc": "Graphics.SetGamma(nMin, nMax, nGamma) sets the screen gamma range. Confirmed called identically at boot in shell/shellbootstrap.lua and resident/gamebootstrap.lua as Graphics.SetGamma(0, 0.8, 1)."
    },
    "SetShadowBaseDistance": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Graphics.SetShadowBaseDistance(2)"
+    "example": "Graphics.SetShadowBaseDistance(2)",
+    "doc": "Graphics.SetShadowBaseDistance(nDistance) sets the shadow draw distance. Confirmed set to small values (2 during cinematic briefings, 10 elsewhere) and restored afterward, suggesting nDistance is a multiplier/scale rather than raw world units."
    }
   },
   "Gui": {
@@ -641,91 +711,106 @@
     "n": 3,
     "min": 0,
     "max": 0,
-    "example": "Gui.ControllerInUse()"
+    "example": "Gui.ControllerInUse()",
+    "doc": "Returns whether a controller (vs mouse/keyboard) is currently in use, no arguments. Guard-checked like IsXboxController; confirmed used to branch tutorial prompt phrasing between mouse/keyboard and controller in vzacon001.lua and wift tutorial scripts."
    },
    "DoSigninCheck": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Gui.DoSigninCheck()"
+    "example": "Gui.DoSigninCheck()",
+    "doc": "Runs the platform sign-in check with no arguments; confirmed called as part of the shell/platform-signin flow in mrxguishell.lua."
    },
    "EnablePlayerMarkers": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Gui.EnablePlayerMarkers(true)"
+    "example": "Gui.EnablePlayerMarkers(true)",
+    "doc": "Toggles rendering of player markers on screen (bEnabled boolean). Confirmed used as Gui.EnablePlayerMarkers(false)/(true) in mrxbriefing.lua to hide/show player markers during cutscenes and briefings."
    },
    "FindGuiLocation": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Gui.FindGuiLocation(uPlayerGuid, uGuid)"
+    "example": "Gui.FindGuiLocation(uPlayerGuid, uGuid)",
+    "doc": "Gui.FindGuiLocation(uOwnerOrPlayerGuid, uTargetGuid) returns nX1, nY1, nX2, nY2 \u2014 a screen-space bounding box (two corner points) for a world object, confirmed used to anchor UI overlays/tutorial callouts (mrxguisatellite.lua, mrxguitutorial.lua)."
    },
    "GetLanguageName": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Gui.GetLanguageName()"
+    "example": "Gui.GetLanguageName()",
+    "doc": "Returns the current localization language name as a string, no arguments. Confirmed used in mrxsoundbanks.lua (local sLanguage = Gui.GetLanguageName()) to pick the correct localized sound bank."
    },
    "GetReticlePosition": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Gui.GetReticlePosition(oWidget:GetOwner())"
+    "example": "Gui.GetReticlePosition(oWidget:GetOwner())",
+    "doc": "Gui.GetReticlePosition(uOwnerGuid) returns nX, nY: 2D screen-space coordinates of the reticle for the given owner (e.g. oWidget:GetOwner()), confirmed with 5 call sites in mrxguihudreticle.lua. Distinct from Player.GetTargetUnderReticle, which returns the 3D world position/guid of whatever the reticle is aimed at; the two are complementary, not duplicates."
    },
    "IsPdaOnSelect": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Gui.IsPdaOnSelect()"
+    "example": "Gui.IsPdaOnSelect()",
+    "doc": "Returns a boolean with no arguments; confirmed guard-checked before use (if Gui.IsPdaOnSelect and Gui.IsPdaOnSelect() then) in mrxguipda.lua."
    },
    "IsXboxController": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Gui.IsXboxController()"
+    "example": "Gui.IsXboxController()",
+    "doc": "Returns whether an Xbox controller is in use, no arguments. Always guard-checked in real scripts (if Gui.IsXboxController and Gui.IsXboxController() then), suggesting it may not exist on all platform builds."
    },
    "LoadFont": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Gui.LoadFont(\"fanfare_36\")"
+    "example": "Gui.LoadFont(\"fanfare_36\")",
+    "doc": "Loads a font by name for HUD use, taking a single font-name string. Confirmed e.g. Gui.LoadFont(\"fanfare_36\") in mrxguihudmessage.lua."
    },
    "LoadTexture": {
     "n": 27,
     "min": 0,
     "max": 0,
-    "example": "Gui.LoadTexture(\"icon_fail\", \"texture\")"
+    "example": "Gui.LoadTexture(\"icon_fail\", \"texture\")",
+    "doc": "Loads a texture by name for HUD use (sTextureName [, sType]). Confirmed extensively, often with an explicit \"texture\" type string as the 2nd arg (e.g. 24 consecutive HUD-icon preload calls in mrxguihudactionhijack.lua), but also called with just the name elsewhere, so the 2nd argument is optional."
    },
    "OnGlobalExit": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Gui.OnGlobalExit()"
+    "example": "Gui.OnGlobalExit()",
+    "doc": "Called with no arguments as part of global game-exit teardown; confirmed in mrxstate.lua."
    },
    "OnShellLoaded": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Gui.OnShellLoaded()"
+    "example": "Gui.OnShellLoaded()",
+    "doc": "Called with no arguments as part of the shell-load lifecycle; confirmed guard-checked (if Gui.OnShellLoaded then Gui.OnShellLoaded() end) in mrxguishell.lua."
    },
    "SetPickupMarkerSize": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Gui.SetPickupMarkerSize(18, true)"
+    "example": "Gui.SetPickupMarkerSize(18, true)",
+    "doc": "Sets the on-screen size of pickup markers (nSize, bFlag). Confirmed real usage passes the same numeric size with the boolean flag flipped back-to-back (e.g. SetPickupMarkerSize(18, false) then (18, true) in hero.lua); the exact meaning of the flag is unconfirmed, possibly a near/far or friendly/enemy marker-set selector."
    },
    "SetPickupMarkerVisibleDistance": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Gui.SetPickupMarkerVisibleDistance(20, false)"
+    "example": "Gui.SetPickupMarkerVisibleDistance(20, false)",
+    "doc": "Sets the visible distance for pickup markers (nDistance, bFlag). Confirmed as Gui.SetPickupMarkerVisibleDistance(20, false) in hero.lua, at the same call site as SetPickupMarkerSize, run inside a 3-second delayed Event.TimerRelative block during survival-mode setup."
    },
    "ShowLoadingHints": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Gui.ShowLoadingHints(true)"
+    "example": "Gui.ShowLoadingHints(true)",
+    "doc": "Toggles the loading-screen hint text on/off (bShow boolean). Confirmed always guard-checked first in real scripts, e.g. if Gui.ShowLoadingHints then Gui.ShowLoadingHints(false) end in mrxgui.lua."
    }
   },
   "HijackContractManager": {
@@ -747,109 +832,127 @@
     "n": 25,
     "min": 1,
     "max": 1,
-    "example": "Human.DisableWeapons(uChar)"
+    "example": "Human.DisableWeapons(uChar)",
+    "doc": "Disables a character's weapons, given a character uGuid. Extremely common, always paired with EnableWeapons elsewhere in the same module."
    },
    "DoAction": {
     "n": 6,
     "min": 2,
     "max": 2,
-    "example": "Human.DoAction(uGuid, \"Cower\")"
+    "example": "Human.DoAction(uGuid, \"Cower\")",
+    "doc": "Plays a named scripted action/pose on a character: Human.DoAction(uGuid, sActionName). Observed action names include \"Cower\", \"Stand\", \"VerifyCamera\", \"shieldface\", and \"Proximity\"."
    },
    "Drop": {
     "n": 3,
     "min": 1,
     "max": 2,
-    "example": "Human.Drop(uChar)"
+    "example": "Human.Drop(uChar)",
+    "doc": "Makes a character drop whatever it's carrying: Human.Drop(uGuid [, bFlag]). Always called right after Human.IsCarrying returns true; the optional second boolean argument's exact effect isn't confirmed."
    },
    "EnableWeapons": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Human.EnableWeapons(uChar)"
+    "example": "Human.EnableWeapons(uChar)",
+    "doc": "Re-enables a character's weapons, given a character uGuid. Counterpart to DisableWeapons."
    },
    "ForceExitSeatNoSnap": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Human.ForceExitSeatNoSnap(uCharacter)"
+    "example": "Human.ForceExitSeatNoSnap(uCharacter)",
+    "doc": "Forces a character out of a vehicle seat without the normal snap-to-ground/exit animation, given a character uGuid."
    },
    "IsCarrying": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Human.IsCarrying(uChar)"
+    "example": "Human.IsCarrying(uChar)",
+    "doc": "Returns whether a character is currently carrying something, given a character uGuid. Always checked immediately before a paired Human.Drop call in real scripts."
    },
    "IsGrappling": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Human.IsGrappling(uCharGuid)"
+    "example": "Human.IsGrappling(uCharGuid)",
+    "doc": "Returns whether a character is currently grappling, given a character uGuid. Always checked immediately before a paired Human.StopGrappling call in real scripts."
    },
    "IsSwimming": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Human.IsSwimming(uCharacter)"
+    "example": "Human.IsSwimming(uCharacter)",
+    "doc": "Returns whether a character is currently swimming, given a character uGuid. Used e.g. to decide whether a support drop should be treated as a water pickup; one call site guards the call defensively (if Human.IsSwimming and ...), suggesting the function's presence was historically treated as uncertain."
    },
    "Knockdown": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Human.Knockdown(uCharacter, 0.5)"
+    "example": "Human.Knockdown(uCharacter, 0.5)",
+    "doc": "Knocks a character down for a given numeric duration: Human.Knockdown(uGuid, nDuration), e.g. Human.Knockdown(uCharacter, 0.5)."
    },
    "PersistTransform": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Human.PersistTransform(uGuid)"
+    "example": "Human.PersistTransform(uGuid)",
+    "doc": "Persists a character's current transform, given a character uGuid. Confirmed call sites but exact effect beyond the name isn't detailed."
    },
    "PlayRawAnimation": {
     "n": 5,
     "min": 6,
     "max": 7,
-    "example": "Human.PlayRawAnimation(uGuid, sAnim, false, false, -1, true, true)"
+    "example": "Human.PlayRawAnimation(uGuid, sAnim, false, false, -1, true, true)",
+    "doc": "Plays a raw named animation on a character with loop and blend-related flags: Human.PlayRawAnimation(uGuid, sAnimName, bLoop, bFlag2, nBlendTime, bFlag4 [, bFlag5]), optionally returning a success boolean. Exact meaning of the flags/blend-time beyond the animation name and loop flag is unconfirmed."
    },
    "Scrub": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Human.Scrub(uChar)"
+    "example": "Human.Scrub(uChar)",
+    "doc": "Called on a character uGuid immediately following a Drop/SetState(\"Upright\",\"Idle\") cleanup sequence; likely resets/clears transient character state, but the exact effect is not confirmed."
    },
    "SetAllowCorpseCleanup": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Human.SetAllowCorpseCleanup(uGuid, true)"
+    "example": "Human.SetAllowCorpseCleanup(uGuid, true)",
+    "doc": "Enables or disables corpse cleanup for a character: Human.SetAllowCorpseCleanup(uGuid, bAllow). One call site wraps the result in a debug print, implying it returns the previous state, though that's inferred rather than confirmed."
    },
    "SetFireLock": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Human.SetFireLock(uChar, true)"
+    "example": "Human.SetFireLock(uChar, true)",
+    "doc": "Locks or unlocks a character's ability to fire their weapon: Human.SetFireLock(uGuid, bLocked). Used to prevent/allow firing during a scripted shooting-gallery sequence."
    },
    "SetJostleEnabled": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Human.SetJostleEnabled(uChar, bOn)"
+    "example": "Human.SetJostleEnabled(uChar, bOn)",
+    "doc": "Toggles whether a character can be jostled, via a character uGuid and boolean: Human.SetJostleEnabled(uChar, bOn). Only one confirmed call site."
    },
    "SetPreemptiveRagdoll": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Human.SetPreemptiveRagdoll(self._hijackee)"
+    "example": "Human.SetPreemptiveRagdoll(self._hijackee)",
+    "doc": "Puts a character into a preemptive ragdoll state ahead of some scripted event, given a character uGuid. Used in hijack setup/failure paths alongside Knockdown and ForceExitSeatNoSnap."
    },
    "SetState": {
     "n": 21,
     "min": 3,
     "max": 3,
-    "example": "Human.SetState(uChar, \"Upright\", \"Idle\")"
+    "example": "Human.SetState(uChar, \"Upright\", \"Idle\")",
+    "doc": "Sets a named state on a character along with a paired string value: Human.SetState(uGuid, sStateName, sAnimOrValue). Observed states: \"InVehicle\" (paired with an animation name), \"Upright\" (paired with \"Idle\"), and \"Subdued\" (paired with \"Idle\")."
    },
    "StopGrappling": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Human.StopGrappling(uCharGuid)"
+    "example": "Human.StopGrappling(uCharGuid)",
+    "doc": "Stops a character's current grapple, given a character uGuid. Always called right after Human.IsGrappling returns true."
    }
   },
   "Inventory": {
@@ -857,43 +960,50 @@
     "n": 17,
     "min": 2,
     "max": 2,
-    "example": "Inventory.DropWeapon(uChar, weapon)"
+    "example": "Inventory.DropWeapon(uChar, weapon)",
+    "doc": "Drops a specific weapon from a character's inventory. Takes a character uGuid and a weapon uGuid: Human.Inventory.DropWeapon(uCharGuid, uWeaponGuid). Very common across mission scripts."
    },
    "EquipWeapon": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Inventory.EquipWeapon(uPlayer, tWeapons.Primary2)"
+    "example": "Inventory.EquipWeapon(uPlayer, tWeapons.Primary2)",
+    "doc": "Equips a previously-fetched weapon uGuid onto a character, swapping out whatever they're currently holding. Confirmed usage: Human.Inventory.EquipWeapon(uPlayer, uWeaponGuid), e.g. paired with GetPrimaryWeapon/GetSecondaryWeapon. This is the actually-used form; the top-level Human.EquipWeapon exists but has zero confirmed call sites."
    },
    "GetAllWeapons": {
     "n": 27,
     "min": 1,
     "max": 2,
-    "example": "Inventory.GetAllWeapons(uGuid)"
+    "example": "Inventory.GetAllWeapons(uGuid)",
+    "doc": "Returns a table of weapon guids held by the given character uGuid. Extremely common; some call sites pass an additional boolean second argument whose effect is unconfirmed."
    },
    "GetPrimaryWeapon": {
     "n": 9,
     "min": 1,
     "max": 1,
-    "example": "Inventory.GetPrimaryWeapon(uChar)"
+    "example": "Inventory.GetPrimaryWeapon(uChar)",
+    "doc": "Returns the primary weapon uGuid for a given character uGuid, e.g. Human.Inventory.GetPrimaryWeapon(Player.GetLocalCharacter())."
    },
    "GetSecondaryWeapon": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Inventory.GetSecondaryWeapon(uPlayer)"
+    "example": "Inventory.GetSecondaryWeapon(uPlayer)",
+    "doc": "Returns the secondary weapon uGuid for a given character uGuid, e.g. Human.Inventory.GetSecondaryWeapon(uPlayer)."
    },
    "ReloadAll": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Inventory.ReloadAll(uCharacter, false)"
+    "example": "Inventory.ReloadAll(uCharacter, false)",
+    "doc": "Reloads all of a character's weapons. Confirmed with a character uGuid and a boolean flag in one real call: Human.Inventory.ReloadAll(uCharacter, false); the boolean's exact meaning isn't confirmed."
    },
    "SetAllWeapons": {
     "n": 25,
     "min": 2,
     "max": 2,
-    "example": "Inventory.SetAllWeapons(uGuid, tEquipment)"
+    "example": "Inventory.SetAllWeapons(uGuid, tEquipment)",
+    "doc": "Sets a character's full weapon loadout from an array-style table of weapon uGuids, e.g. Human.Inventory.SetAllWeapons(uCharGuid, {uPrimary, uGrenade, uC4}). Some call sites instead pass a single weapon uGuid in place of the table, so the full accepted argument shapes aren't fully pinned down."
    }
   },
   "Junk": {
@@ -901,31 +1011,36 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Junk.DrawPath(uPath)"
+    "example": "Junk.DrawPath(uPath)",
+    "doc": "Junk.DrawPath(uPathGuid) draws/visualizes a path object. Confirmed in vz/meccon001.lua, called with a path GUID (resolved via Pg.GetGuidByName) immediately before passing that same GUID to Ai.Goal({Goal=\"PathMove\", Target=uPath,...}) \u2014 reads as a debug/AI-path visualization aid with no mechanical gameplay effect."
    },
    "FormatTime": {
     "n": 2,
     "min": 1,
     "max": 2,
-    "example": "Junk.FormatTime(nTime)"
+    "example": "Junk.FormatTime(nTime)",
+    "doc": "Junk.FormatTime(nTime [, bUseTenths]) formats a numeric time value into a display string. Confirmed used in resident/mrxtimer.lua and resident/mrxstatsmanager.lua feeding a displayed stats string; the optional second boolean argument appears to control whether tenths-of-a-second are included."
    },
    "InstallToHDD": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Junk.InstallToHDD()"
+    "example": "Junk.InstallToHDD()",
+    "doc": "Junk.InstallToHDD() takes no arguments. Confirmed in resident/mrxguishell.lua as the callback run when the player picks the \"install to HDD\" option in the console install-options menu; disc/HDD-install tooling, not gameplay-relevant."
    },
    "IsInstallable": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Junk.IsInstallable()"
+    "example": "Junk.IsInstallable()",
+    "doc": "Junk.IsInstallable() takes no arguments and returns a value used in a boolean context. Confirmed in mrxguishell.lua, called defensively as `if Junk.IsInstallable and Junk.IsInstallable() then` \u2014 part of the console install-menu plumbing."
    },
    "UseExistingInstall": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Junk.UseExistingInstall()"
+    "example": "Junk.UseExistingInstall()",
+    "doc": "Junk.UseExistingInstall() takes no arguments. Confirmed in the same mrxguishell.lua install-menu callback, invoked when the player selects \"Use Existing HDD Install\"; console install tooling, not gameplay-relevant."
    }
   },
   "LTILibName": {
@@ -1223,49 +1338,57 @@
     "n": 1,
     "min": 8,
     "max": 8,
-    "example": "Marker.Add(0, 2, 0, uGuid, r, g, b, 0.05)"
+    "example": "Marker.Add(0, 2, 0, uGuid, r, g, b, 0.05)",
+    "doc": "Creates a marker offset from a target object: Marker.Add(nOffsetX, nOffsetY, nOffsetZ, uGuid, nR, nG, nB, nRadius). Confirmed in real scripts (e.g. mrxtaskobjectivedeliver.lua) \u2014 offset vector, target uGuid, RGB color, then a radius-looking value. Returns a marker handle later passed to Marker.Remove."
    },
    "Add3D": {
     "n": 3,
     "min": 5,
     "max": 6,
-    "example": "Marker.Add3D(uGuid, \"global_tripwirefinish\", r, g, b)"
+    "example": "Marker.Add3D(uGuid, \"global_tripwirefinish\", r, g, b)",
+    "doc": "Attaches a 3D icon marker to an object: Marker.Add3D(uGuid, sIconName, nR, nG, nB [, nWidth]). Confirmed in real scripts (mrxtaskrace.lua) with icon names like \"global_tripwirefinish\" and \"global_airring\"; the optional trailing width was only seen paired with \"global_airring\". Returns a marker handle."
    },
    "AddBlip": {
     "n": 11,
     "min": 8,
     "max": 13,
-    "example": "Marker.AddBlip(uGuid, sIcon, 32, icon_r, icon_g, icon_b, 255, 1.25)"
+    "example": "Marker.AddBlip(uGuid, sIcon, 32, icon_r, icon_g, icon_b, 255, 1.25)",
+    "doc": "Adds a minimap/radar blip to a uGuid: Marker.AddBlip(uGuid, sTextureName, nSize, nR, nG, nB, nAlpha, ...). The one function on this namespace confirmed by live in-game testing (see wiki snippets page); real scripts (mrxfactionmanager.lua) pass a longer arg list with nil gaps after texture/size/RGBA, so the full trailing parameter set beyond those is not individually confirmed."
    },
    "AddDisc": {
     "n": 5,
     "min": 6,
     "max": 6,
-    "example": "Marker.AddDisc(uGuid, 0.5, disc_r, disc_g, disc_b, 0.1)"
+    "example": "Marker.AddDisc(uGuid, 0.5, disc_r, disc_g, disc_b, 0.1)",
+    "doc": "Draws a flat colored ring/disc on the ground: Marker.AddDisc(uGuidOrLocation, nRadius, nR, nG, nB, nThickness). Confirmed in real scripts; the first argument accepts either a uGuid or a raw location vector (e.g. mrxtaskobjectivedeliver.lua passes a vDestLoc vector directly instead of a uGuid)."
    },
    "AddTripwire": {
     "n": 1,
     "min": 8,
     "max": 8,
-    "example": "Marker.AddTripwire(x0, y0, z0, fWidth, yaw0, r, g, b)"
+    "example": "Marker.AddTripwire(x0, y0, z0, fWidth, yaw0, r, g, b)",
+    "doc": "Creates a tripwire marker at raw world coordinates: Marker.AddTripwire(nX, nY, nZ, nWidth, nYaw, nR, nG, nB). Confirmed in mrxtaskrace.lua, used for race-gate finish lines and typically paired with Add3D for the visual finish-line icon at the same location."
    },
    "HaltPulse": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Marker.HaltPulse(uGuid)"
+    "example": "Marker.HaltPulse(uGuid)",
+    "doc": "Marker.HaltPulse(uGuid) \u2014 stops a previously-started Marker.Pulse effect on the given object's marker. Confirmed in mrxfactionmanager.lua, called when tearing down a reporting-display marker."
    },
    "Pulse": {
     "n": 3,
     "min": 4,
     "max": 4,
-    "example": "Marker.Pulse(uGuid, 0, 255, 0)"
+    "example": "Marker.Pulse(uGuid, 0, 255, 0)",
+    "doc": "Marker.Pulse(uGuid, nR, nG, nB) \u2014 flashes/pulses an object's existing marker in the given RGB color. Confirmed in real scripts (mrxfactionmanager.lua, munitions.lua); paired with HaltPulse to stop the effect. Takes a uGuid, not a marker handle."
    },
    "Remove": {
     "n": 26,
     "min": 1,
     "max": 1,
-    "example": "Marker.Remove(uMarker)"
+    "example": "Marker.Remove(uMarker)",
+    "doc": "Marker.Remove(uMarker) \u2014 removes/cleans up a marker. Extremely common in real scripts; always called with the marker handle previously returned by Add, Add3D, AddBlip, AddDisc, or AddTripwire \u2014 not a raw object uGuid."
    }
   },
   "Math": {
@@ -1329,7 +1452,8 @@
     "n": 2,
     "min": 10,
     "max": 10,
-    "example": "Monochrome.SetGradient(0, 128, 0, 0, 0, 0, 0, 0.65, 0.35, 0)"
+    "example": "Monochrome.SetGradient(0, 128, 0, 0, 0, 0, 0, 0.65, 0.35, 0)",
+    "doc": "Graphics.Monochrome.SetGradient(n1..n10) takes 10 numeric arguments and is confirmed called twice back-to-back at boot (e.g. (0,128,0,0,0,0,0,0.65,0.35,0) then (128,255,0,0.65,0.35,0,1,1,1,0)), presumably defining a two-stop shadow/highlight color-grading curve. Exact per-argument meaning is not confirmed."
    }
   },
   "Net": {
@@ -1343,55 +1467,64 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.AutoClient()"
+    "example": "Net.AutoClient()",
+    "doc": "Returns whether the game should automatically connect as a client at boot. Used as `if Net.AutoClient() then Net.ConnectToServer() end` in gamebootstrap.lua and shellbootstrap.lua."
    },
    "AutoLobby": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.AutoLobby()"
+    "example": "Net.AutoLobby()",
+    "doc": "Returns whether the game should automatically enter the lobby at boot, the same boot-time chain as AutoClient/AutoServer: `elseif Net.AutoLobby() then Net.EnterLobby() end`."
    },
    "AutoServer": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.AutoServer()"
+    "example": "Net.AutoServer()",
+    "doc": "Returns whether the game should automatically start as a server at boot, part of the same boot-time branch as AutoClient: `if Net.AutoServer() then Net.StartServer(...) end`."
    },
    "BeginLayerEventGroup": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.BeginLayerEventGroup()"
+    "example": "Net.BeginLayerEventGroup()",
+    "doc": "Begins a bracketed group of layer-related network events. Called with no arguments and guarded by an existence check (`if Net.BeginLayerEventGroup then ... end`), confirmed in xQ!L.lua; paired with EndLayerEventGroup."
    },
    "ConnectToServer": {
     "n": 10,
     "min": 0,
     "max": 2,
-    "example": "Net.ConnectToServer()"
+    "example": "Net.ConnectToServer()",
+    "doc": "Connects to a server, optionally with a name and an IP-address-or-mode string (e.g. \"online\" or an empty string for LAN); called with no arguments at boot to use defaults. Returns a boolean treated as success."
    },
    "DoneReloadingLayers": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Net.DoneReloadingLayers()"
+    "example": "Net.DoneReloadingLayers()",
+    "doc": "Signals that layer reloading has completed. Called with no arguments and consistently guarded by an existence check (`if Net.DoneReloadingLayers then ... end`) across several vz mission scripts and mrxtaskcontract.lua \u2014 the recurring guard suggests it may not exist on every engine build."
    },
    "EndLayerEventGroup": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.EndLayerEventGroup()"
+    "example": "Net.EndLayerEventGroup()",
+    "doc": "Ends a bracketed group of layer-related network events. Called with no arguments and guarded by an existence check, confirmed in xQ!L.lua; paired with BeginLayerEventGroup."
    },
    "EnterFriendsLobby": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.EnterFriendsLobby()"
+    "example": "Net.EnterFriendsLobby()",
+    "doc": "Enters the friends lobby. Called with no arguments in mrxguishell.lua."
    },
    "EnterLobby": {
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Net.EnterLobby()"
+    "example": "Net.EnterLobby()",
+    "doc": "Enters the multiplayer lobby. Called with no arguments at boot time and from shell-menu lobby entry."
    },
    "ExitFriendsLobby": {
     "n": 2,
@@ -1403,91 +1536,106 @@
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Net.GetHostName()"
+    "example": "Net.GetHostName()",
+    "doc": "Returns the local host's display name. Always used as the first argument to Net.StartServer(Net.GetHostName(), ...)."
    },
    "GrantAchievement": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Net.GrantAchievement(sName)"
+    "example": "Net.GrantAchievement(sName)",
+    "doc": "Grants the named achievement (sAchievementName) locally on the machine that should actually be credited. Typically paired with a separate Net.SendCustomEvent call to notify the other side of the grant \u2014 that companion call does not grant it remotely, only informs."
    },
    "HasPlayerUnlockedCode": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.HasPlayerUnlockedCode()"
+    "example": "Net.HasPlayerUnlockedCode()",
+    "doc": "Returns whether the player has unlocked a particular code. Used with no arguments, e.g. to gate an outfit-unlock check: `if Net.HasPlayerUnlockedCode() and nCurrentOutfit ~= 2 then` in wifpmcinterior.lua."
    },
    "IsActive": {
     "n": 21,
     "min": 0,
     "max": 0,
-    "example": "Net.IsActive()"
+    "example": "Net.IsActive()",
+    "doc": "Returns whether networking/an active session is currently running. Appears to be a distinct check from IsMultiplayer/IsServer, used as a general session-active gate in several resident and vz mission scripts."
    },
    "IsClient": {
     "n": 121,
     "min": 0,
     "max": 0,
-    "example": "Net.IsClient()"
+    "example": "Net.IsClient()",
+    "doc": "Returns whether the local machine is a network client. Used both as `if Net.IsClient() then` and negated (`if not Net.IsClient() then`) to branch client-only vs. host/local-only logic."
    },
    "IsConnectedToInternet": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.IsConnectedToInternet()"
+    "example": "Net.IsConnectedToInternet()",
+    "doc": "Returns whether the platform currently has an internet connection. Called with no arguments, e.g. in mrxguipda.lua."
    },
    "IsMatchmakingInternet": {
     "n": 10,
     "min": 0,
     "max": 0,
-    "example": "Net.IsMatchmakingInternet()"
+    "example": "Net.IsMatchmakingInternet()",
+    "doc": "Returns whether matchmaking is set to internet mode versus local/LAN. Used throughout mrxguishell.lua's lobby-entry flow to branch internet vs. local matchmaking."
    },
    "IsMultiplayer": {
     "n": 13,
     "min": 0,
     "max": 0,
-    "example": "Net.IsMultiplayer()"
+    "example": "Net.IsMultiplayer()",
+    "doc": "Returns whether the current session is multiplayer. Used standalone (e.g. `if not Net.IsMultiplayer() then`) and combined with IsServer, as in `(not Net.IsMultiplayer() or Net.IsServer())`."
    },
    "IsOnlineConnected": {
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Net.IsOnlineConnected()"
+    "example": "Net.IsOnlineConnected()",
+    "doc": "Returns whether the game is currently connected online. Used together with IsMatchmakingInternet to decide whether to call Net.Stop(), e.g. `if not Net.IsMatchmakingInternet() and not Net.IsOnlineConnected() then Net.Stop() end`."
    },
    "IsPlatformConnected": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.IsPlatformConnected()"
+    "example": "Net.IsPlatformConnected()",
+    "doc": "Returns whether the platform (e.g. Live/PSN) is connected. Combined with IsMatchmakingInternet in mrxguishell.lua to gate whether StartServer should be called."
    },
    "IsReadyToTether": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.IsReadyToTether()"
+    "example": "Net.IsReadyToTether()",
+    "doc": "Returns whether the client is ready to tether. Seen guarding tether logic alongside a vehicle-guid check: `if Net.IsReadyToTether() and not uCurrentVehicleGuid then` in meccon001.lua."
    },
    "IsServer": {
     "n": 210,
     "min": 0,
     "max": 0,
-    "example": "Net.IsServer()"
+    "example": "Net.IsServer()",
+    "doc": "Returns whether the local machine is acting as the network server/host. It is the standard gate used before broadcasting a SendEvent_* call or mutating authoritative state, e.g. `if Net.IsServer() then Net.SendEvent_Fanfare(...) end`."
    },
    "LoadMissionSpiel": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": null
+    "example": null,
+    "doc": "Loads mission briefing dialogue/actor data: `Net.LoadMissionSpiel(nMissionIndex, tNetBriefingActors)`, confirmed in mrxbriefing.lua."
    },
    "QuitGame": {
     "n": 3,
     "min": 0,
     "max": 0,
-    "example": "Net.QuitGame()"
+    "example": "Net.QuitGame()",
+    "doc": "Quits the current game/session. Called with no arguments from the pause-menu quit option (mrxguipausescreen.lua) and from the end-of-game/credits flow (wifmissionflow.lua)."
    },
    "SendCustomEvent": {
     "n": 156,
     "min": 3,
     "max": 4,
-    "example": "Net.SendCustomEvent(\"MrxGuiPda\", NETEVENT_PDAOPEN, {})"
+    "example": "Net.SendCustomEvent(\"MrxGuiPda\", NETEVENT_PDAOPEN, {})",
+    "doc": "General-purpose broadcast for arbitrary mission-defined state: `Net.SendCustomEvent(sModuleName, iEventId, tArgs [, bReliable])`. sModuleName is a routing-key string matching the calling module's name, iEventId is a module-local numeric event ID, tArgs is an args table (often empty), and the optional trailing boolean requests reliable delivery. Unlike SendEvent_*, it is not consistently gated behind Net.IsServer() \u2014 some call sites fire it from either side."
    },
    "SendEvent_AddDangerousBuilding": {
     "n": 1,
@@ -1505,13 +1653,15 @@
     "n": 14,
     "min": 9,
     "max": 13,
-    "example": "Net.SendEvent_AddMarkerObjective(uGuid, tTargetData.uMarker, r, g, b, 2, \"\", 0.05, 0)"
+    "example": "Net.SendEvent_AddMarkerObjective(uGuid, tTargetData.uMarker, r, g, b, 2, \"\", 0.05, 0)",
+    "doc": "Broadcasts an objective marker to add, with color, icon, scale, flag and near/far distance parameters: `Net.SendEvent_AddMarkerObjective(uGuid, uMarkerGuid, nR, nG, nB, nVerticalOffset, nIconIndex, nScale1, nScale2, bFlag, nNearDist, nFarDist [, uiMissionNameHash])`. Confirmed gated by `Net.IsServer() and self.bNetSync` in blippable.lua and mrxtaskobjective.lua."
    },
    "SendEvent_AddPDAMission": {
     "n": 2,
     "min": 3,
     "max": 4,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a mission entry added to the PDA: `Net.SendEvent_AddPDAMission(nMissionIndex, tObjectives, bSelectedMission [, nLevel])`, confirmed in mrxmissionflow.lua."
    },
    "SendEvent_AddPdaObjective": {
     "n": 1,
@@ -1529,7 +1679,8 @@
     "n": 3,
     "min": 14,
     "max": 15,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a radar objective/blip with position, color, size, texture and sort order: `Net.SendEvent_AddRadarObjective(sName, nX, nY, nZ, nR, nG, nB, nWidth, nHeight, nTextureIndex, uGuid, bSticky, bRotate, bOriented, nSortOrder)`, confirmed in mrxguiinterface.lua."
    },
    "SendEvent_AddRandomDangerousBuilding": {
     "n": 1,
@@ -1553,7 +1704,8 @@
     "n": 1,
     "min": 8,
     "max": 8,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a card-style fanfare with faction/contact info: `Net.SendEvent_CardFanfare(sFaction, sTitle, sName, sJobTitle, sPhone1, sPhone2, sEmail, nDisplayTime)`, confirmed in mrxguihudmessage.lua."
    },
    "SendEvent_ClearObjectiveTraySlot": {
     "n": 1,
@@ -1571,31 +1723,36 @@
     "n": 1,
     "min": 8,
     "max": 8,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a fanfare popup to all clients: `Net.SendEvent_Fanfare(sType, ..., sCancelMsg, tLineList, nSlowdownDuration, 0)`. Confirmed gated by Net.IsServer() in mrxguihudmessage.lua."
    },
    "SendEvent_ForceClientTether": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.SendEvent_ForceClientTether()"
+    "example": "Net.SendEvent_ForceClientTether()",
+    "doc": "Broadcasts a forced client-tether event, called with no arguments; confirmed in vzacon001.lua."
    },
    "SendEvent_HVTFanfare": {
     "n": 1,
     "min": 6,
     "max": 6,
-    "example": "Net.SendEvent_HVTFanfare(iFanfareType, sFactionId, sDesc, iInlineIcon, nCompleted, nQuota)"
+    "example": "Net.SendEvent_HVTFanfare(iFanfareType, sFactionId, sDesc, iInlineIcon, nCompleted, nQuota)",
+    "doc": "Broadcasts a high-value-target fanfare: `Net.SendEvent_HVTFanfare(iFanfareType, sFactionId, sDesc, iInlineIcon, nCompleted, nQuota)`, confirmed in mrxtaskjobverifyset.lua."
    },
    "SendEvent_HideMovie": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Net.SendEvent_HideMovie()"
+    "example": "Net.SendEvent_HideMovie()",
+    "doc": "Broadcasts that the current cinematic movie should stop: `Net.SendEvent_HideMovie()`, confirmed gated by Net.IsServer() in mrxguicinematic.lua, paired with SendEvent_ShowMovie."
    },
    "SendEvent_JoinPOForceRequest": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Net.SendEvent_JoinPOForceRequest()"
+    "example": "Net.SendEvent_JoinPOForceRequest()",
+    "doc": "Broadcasts a join-point-of-force request, called with no arguments; confirmed in vzacon001.lua."
    },
    "SendEvent_ObjectiveMessage": {
     "n": 2,
@@ -1631,7 +1788,8 @@
     "n": 18,
     "min": 1,
     "max": 1,
-    "example": "Net.SendEvent_RemoveMarkerObjective(uMarker)"
+    "example": "Net.SendEvent_RemoveMarkerObjective(uMarker)",
+    "doc": "Broadcasts removal of an objective marker by GUID: `Net.SendEvent_RemoveMarkerObjective(uMarkerGuid)`. Widely used, single-argument call, confirmed in blippable.lua."
    },
    "SendEvent_RemoveObjective": {
     "n": 1,
@@ -1643,7 +1801,8 @@
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Net.SendEvent_RemovePDAMission(WifMissionData.GetMissionIndexFromId(sMissionName))"
+    "example": "Net.SendEvent_RemovePDAMission(WifMissionData.GetMissionIndexFromId(sMissionName))",
+    "doc": "Broadcasts removal of a PDA mission entry by index: `Net.SendEvent_RemovePDAMission(nMissionIndex)`, confirmed in mrxmissionflow.lua."
    },
    "SendEvent_RemovePdaObjective": {
     "n": 1,
@@ -1679,7 +1838,8 @@
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Net.SendEvent_RevivePlayer(1)"
+    "example": "Net.SendEvent_RevivePlayer(1)",
+    "doc": "Broadcasts a player revive by player ID: `Net.SendEvent_RevivePlayer(iPlayerId)`, confirmed in mrxplayer.lua."
    },
    "SendEvent_SetObjectiveTraySlotImage": {
     "n": 1,
@@ -1703,31 +1863,36 @@
     "n": 1,
     "min": 9,
     "max": 9,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a HUD message to a specific player: `Net.SendEvent_ShowMessage(uPlayerGuid, sTextureName, nX, nY, sHorizontalAnchor, sVerticalAnchor, nWidth, nHeight, nDisplayTime)`. Confirmed gated by `Net.IsServer() and not Player.IsLocal(uPlayerGuid)` in mrxguihudmessage.lua."
    },
    "SendEvent_ShowMovie": {
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Net.SendEvent_ShowMovie(sFile, nFadeInTime, nFadeOutTime, bSubtitles)"
+    "example": "Net.SendEvent_ShowMovie(sFile, nFadeInTime, nFadeOutTime, bSubtitles)",
+    "doc": "Broadcasts a cinematic movie to play: `Net.SendEvent_ShowMovie(sFile, nFadeInTime, nFadeOutTime, bSubtitles)`, confirmed gated by Net.IsServer() in mrxguicinematic.lua."
    },
    "SendEvent_Support": {
     "n": 1,
     "min": 11,
     "max": 11,
-    "example": null
+    "example": null,
+    "doc": "Broadcasts a support-call action with module, position, designator, target, cargo and delivery-vehicle parameters: `Net.SendEvent_Support(oModule, nX, nY, nZ, uDesignator, uTarget, uCargoToDeliver, finalDestination, uDeliveryVehicle, setBomb, bEventPost)`, confirmed in mrxsupport.lua, guarded by an existence check (`if Net.SendEvent_Support then`)."
    },
    "SendEvent_TeleportPlayer": {
     "n": 1,
     "min": 5,
     "max": 5,
-    "example": "Net.SendEvent_TeleportPlayer(uPlayer, nX, nY, nZ, nYaw)"
+    "example": "Net.SendEvent_TeleportPlayer(uPlayer, nX, nY, nZ, nYaw)",
+    "doc": "Broadcasts a player teleport to a position and yaw: `Net.SendEvent_TeleportPlayer(uPlayer, nX, nY, nZ, nYaw)`. Confirmed inside `if Net.IsServer() then`, sent only for non-local players (`if not Player.IsLocal(uPlayer) then`) in mrxutil.lua."
    },
    "SendEvent_TeleportPlayerToHardPoint": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Net.SendEvent_TeleportPlayerToHardPoint(uPlayer, uObject, sHardpoint)"
+    "example": "Net.SendEvent_TeleportPlayerToHardPoint(uPlayer, uObject, sHardpoint)",
+    "doc": "Broadcasts a player teleport to a named hardpoint on an object: `Net.SendEvent_TeleportPlayerToHardPoint(uPlayer, uObject, sHardpoint)`, confirmed in mrxutil.lua."
    },
    "SendEvent_TextFanfare": {
     "n": 1,
@@ -1745,67 +1910,78 @@
     "n": 5,
     "min": 1,
     "max": 2,
-    "example": "Net.SetBriefingCheapCinematic(0)"
+    "example": "Net.SetBriefingCheapCinematic(0)",
+    "doc": "Sets a cheap/low-cost cinematic type, with an optional index, for the briefing screen: `Net.SetBriefingCheapCinematic(nType [, nIndex])`, confirmed with 1 and 2 arguments in mrxbriefing.lua (e.g. CHEAP_CONFIRM, CHEAP_INTRO)."
    },
    "SetBriefingInterior": {
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Net.SetBriefingInterior()"
+    "example": "Net.SetBriefingInterior()",
+    "doc": "Sets, or clears when called with no arguments, the interior shown during the briefing screen: `Net.SetBriefingInterior([sInteriorName])`. Confirmed with names like \"WifPmcInterior\" and \"MrxHq\", and with no arguments presumably to clear it."
    },
    "SetBriefingStarters": {
     "n": 2,
     "min": 1,
     "max": 3,
-    "example": "Net.SetBriefingStarters(0)"
+    "example": "Net.SetBriefingStarters(0)",
+    "doc": "Sets the briefing's starter squad index, optionally with actor and unlocked-reward tables: `Net.SetBriefingStarters(nStarterIndex [, tNetStarterActors, tNetUnlockedRewards])`. Confirmed with both 1 and 3 arguments in mrxbriefing.lua."
    },
    "SetLastHeroTeleportLocation": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": "Net.SetLastHeroTeleportLocation(nX, nY, nZ, nYaw)"
+    "example": "Net.SetLastHeroTeleportLocation(nX, nY, nZ, nYaw)",
+    "doc": "Records the hero's last teleport location and yaw: `Net.SetLastHeroTeleportLocation(nX, nY, nZ, nYaw)`. Confirmed inside `if Net.IsServer() then`, called immediately before a SendEvent_TeleportPlayer call in mrxutil.lua."
    },
    "SetLoadingScreen": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Net.SetLoadingScreen(true)"
+    "example": "Net.SetLoadingScreen(true)",
+    "doc": "Shows or hides the loading screen: `Net.SetLoadingScreen(bShow)`. Confirmed with `true` (mrxbriefing.lua, mrxhq.lua, mrxutil.lua, wifpmcinterior.lua) and `false` (mrxstate.lua)."
    },
    "SetPursuitReportingState": {
     "n": 4,
     "min": 3,
     "max": 3,
-    "example": "Net.SetPursuitReportingState(uGuid, 0, sAbbrev)"
+    "example": "Net.SetPursuitReportingState(uGuid, 0, sAbbrev)",
+    "doc": "Sets a faction's pursuit-reporting state: `Net.SetPursuitReportingState(uGuid, nState, sFactionAbbrev)`. Confirmed in mrxfactionmanager.lua with nState seen as 0/1/2/3 across call sites; the exact meaning of each numeric state beyond ordinal position in the pursuit-escalation flow is unconfirmed."
    },
    "SetShootingGalleryBorder": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Net.SetShootingGalleryBorder(uBorderName)"
+    "example": "Net.SetShootingGalleryBorder(uBorderName)",
+    "doc": "Sets the active shooting-gallery border by name: `Net.SetShootingGalleryBorder(uBorderName)`, confirmed with 1 argument in mrxshootinggallery.lua."
    },
    "SetTutorialMessage": {
     "n": 2,
     "min": 0,
     "max": 1,
-    "example": "Net.SetTutorialMessage()"
+    "example": "Net.SetTutorialMessage()",
+    "doc": "Shows (with a string) or clears (with no arguments) a co-op-synced tutorial HUD popup: `Net.SetTutorialMessage([sMessage])`. Confirmed in mrxtutorialmanager.lua, gated `if Net.IsServer() and not bDontNetSync then`."
    },
    "StartServer": {
     "n": 4,
     "min": 3,
     "max": 3,
-    "example": "Net.StartServer(Net.GetHostName(), Sys.GetLevelName(), Sys.GetMasterScriptName())"
+    "example": "Net.StartServer(Net.GetHostName(), Sys.GetLevelName(), Sys.GetMasterScriptName())",
+    "doc": "Starts hosting a server: `Net.StartServer(sHostName, sLevelName, sMasterScriptName)`. Always called as `Net.StartServer(Net.GetHostName(), Sys.GetLevelName(), Sys.GetMasterScriptName())`."
    },
    "Stop": {
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Net.Stop()"
+    "example": "Net.Stop()",
+    "doc": "Tears down the current network session. Called with no arguments, e.g. in mrxguishell.lua when not connected online."
    },
    "UnloadMissionSpiel": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Net.UnloadMissionSpiel(bExitingBriefing)"
+    "example": "Net.UnloadMissionSpiel(bExitingBriefing)",
+    "doc": "Unloads mission briefing dialogue/actor data: `Net.UnloadMissionSpiel(bExitingBriefing)`, confirmed with a boolean argument in mrxbriefing.lua."
    }
   },
   "Object": {
@@ -1813,151 +1989,176 @@
     "n": 7,
     "min": 2,
     "max": 2,
-    "example": "Object.AddLabel(uGuid, \"Prisoner\")"
+    "example": "Object.AddLabel(uGuid, \"Prisoner\")",
+    "doc": "Adds a string label (sLabel) to uGuid, e.g. `Object.AddLabel(uHeli, \"Disposable\")`."
    },
    "AddQualityRef": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.AddQualityRef(uGuid, 1)"
+    "example": "Object.AddQualityRef(uGuid, 1)",
+    "doc": "Registers a quality reference (nQuality) on uGuid and returns a reference handle that call sites store and later pass to RemoveQualityRef."
    },
    "AddToDisposer": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Object.AddToDisposer(uHeli, \"Vehicle\")"
+    "example": "Object.AddToDisposer(uHeli, \"Vehicle\")",
+    "doc": "Registers uGuid with the disposer/cleanup system under a category string (sCategory), e.g. \"Vehicle\"."
    },
    "ApplyImpulse": {
     "n": 6,
     "min": 4,
     "max": 5,
-    "example": "Object.ApplyImpulse(uNewGuid, 0, -0.5, 0)"
+    "example": "Object.ApplyImpulse(uNewGuid, 0, -0.5, 0)",
+    "doc": "Applies a physics impulse to uGuid along (nX, nY, nZ) plus a trailing boolean flag, e.g. `Object.ApplyImpulse(uGuid, 0, 10000, 6 * myMass, true)`."
    },
    "ApplyPointImpulse": {
     "n": 2,
     "min": 8,
     "max": 8,
-    "example": "Object.ApplyPointImpulse(uGuid, 0, 0, 50000, 0, -0.5, -1.5, true)"
+    "example": "Object.ApplyPointImpulse(uGuid, 0, 0, 50000, 0, -0.5, -1.5, true)",
+    "doc": "Applies an impulse to uGuid using 6 numeric components plus a trailing boolean, e.g. `Object.ApplyPointImpulse(uGuid, 0, 10*myMass, 0.1*myMass, 0, 0, 0.15, true)`. Call-site patterns suggest an impulse vector plus an application-point offset, but the exact meaning of each component isn't confirmed."
    },
    "Attach": {
     "n": 5,
     "min": 3,
     "max": 3,
-    "example": "Object.Attach(uObject, sHardpoint, uGuid)"
+    "example": "Object.Attach(uObject, sHardpoint, uGuid)",
+    "doc": "Attaches uChildGuid to uParentGuid at a named hardpoint (sHardpoint). Returns a success boolean and, per at least one call site, an attachment handle for the newly attached instance."
    },
    "AttachCargoToWinch": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Object.AttachCargoToWinch(uCargo, uGuid)"
+    "example": "Object.AttachCargoToWinch(uCargo, uGuid)",
+    "doc": "Attaches uCargo to the winch of uHeli \u2014 cargo object first, then the winching vehicle."
    },
    "CloseGate": {
     "n": 12,
     "min": 1,
     "max": 1,
-    "example": "Object.CloseGate(uGuid)"
+    "example": "Object.CloseGate(uGuid)",
+    "doc": "Closes a gate object; always paired with OpenGate in the same modules."
    },
    "Detach": {
     "n": 5,
     "min": 2,
     "max": 2,
-    "example": "Object.Detach(uObject, uGuid)"
+    "example": "Object.Detach(uObject, uGuid)",
+    "doc": "Detaches uChildOrAttachmentGuid from uParentGuid, returning a success boolean."
    },
    "DetachCargoFromWinch": {
     "n": 6,
     "min": 1,
     "max": 1,
-    "example": "Object.DetachCargoFromWinch(uHeli)"
+    "example": "Object.DetachCargoFromWinch(uHeli)",
+    "doc": "Detaches whatever cargo is on the winch of uHeli, taking only the winching vehicle's uGuid."
    },
    "DisablePhysics": {
     "n": 22,
     "min": 1,
     "max": 1,
-    "example": "Object.DisablePhysics(uGuid)"
+    "example": "Object.DisablePhysics(uGuid)",
+    "doc": "Disables physics simulation on uGuid. Very common in real scripts, and always paired with EnablePhysics elsewhere in the same modules."
    },
    "EnablePhysics": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Object.EnablePhysics(uGuid)"
+    "example": "Object.EnablePhysics(uGuid)",
+    "doc": "Re-enables physics simulation on uGuid. Always found paired with DisablePhysics in the same modules."
    },
    "FadeOut": {
     "n": 13,
     "min": 3,
     "max": 3,
-    "example": "Object.FadeOut(uVeh, 1, true)"
+    "example": "Object.FadeOut(uVeh, 1, true)",
+    "doc": "Fades out uGuid over nDuration seconds, plus a trailing boolean flag, e.g. `Object.FadeOut(uVehicle, 0.2, true)`."
    },
    "GetAttachedObjects": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.GetAttachedObjects(uTruck)"
+    "example": "Object.GetAttachedObjects(uTruck)",
+    "doc": "Returns a table/list of objects attached to uGuid, e.g. `tSeats = Object.GetAttachedObjects(uTruck)` to enumerate a vehicle's seats."
    },
    "GetCashValue": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.GetCashValue(uGuid)"
+    "example": "Object.GetCashValue(uGuid)",
+    "doc": "Returns the object's cash value, e.g. used to compute a collectible's cash reward."
    },
    "GetDistanceFrom": {
     "n": 9,
     "min": 2,
     "max": 5,
-    "example": "Object.GetDistanceFrom(uGuid, uLoc)"
+    "example": "Object.GetDistanceFrom(uGuid, uLoc)",
+    "doc": "Returns the distance from uGuidA to either another object (uGuidB) or explicit coordinates (nX, nY, nZ), with an optional bIgnoreY flag to ignore vertical distance. Both call forms are confirmed in real scripts."
    },
    "GetHardpointPosition": {
     "n": 12,
     "min": 2,
     "max": 2,
-    "example": "Object.GetHardpointPosition(uVeh, \"HP_Truckbed\")"
+    "example": "Object.GetHardpointPosition(uVeh, \"HP_Truckbed\")",
+    "doc": "Returns the x, y, z world position of a named hardpoint (sHardpointName) on the object, e.g. `Object.GetHardpointPosition(uMainTruck, \"HP_Truckbed\")`."
    },
    "GetHealth": {
     "n": 39,
     "min": 1,
     "max": 1,
-    "example": "Object.GetHealth(uGuid)"
+    "example": "Object.GetHealth(uGuid)",
+    "doc": "Returns the object's current numeric health value. Extremely common in real scripts, always called with a plain uGuid."
    },
    "GetHibernationDistance": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Object.GetHibernationDistance(uGuid)"
+    "example": "Object.GetHibernationDistance(uGuid)",
+    "doc": "Returns the distance at which uGuid hibernates/streams out, e.g. compared against an AI's aggro range."
    },
    "GetLocalizedName": {
     "n": 24,
     "min": 1,
     "max": 2,
-    "example": "Object.GetLocalizedName(uGuid)"
+    "example": "Object.GetLocalizedName(uGuid)",
+    "doc": "Returns the localized/display name of uGuid; very common for HUD/display text. One call site passes an extra boolean argument whose meaning is unconfirmed."
    },
    "GetMass": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Object.GetMass(uGuid)"
+    "example": "Object.GetMass(uGuid)",
+    "doc": "Returns the object's mass as a numeric value, e.g. `local myMass = Object.GetMass(uGuid)`."
    },
    "GetMaxHealth": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Object.GetMaxHealth(uGuid)"
+    "example": "Object.GetMaxHealth(uGuid)",
+    "doc": "Returns the object's maximum health value; commonly paired with GetHealth for HUD/health-bar display."
    },
    "GetName": {
     "n": 11,
     "min": 1,
     "max": 1,
-    "example": "Object.GetName(i)"
+    "example": "Object.GetName(i)",
+    "doc": "Returns the object's internal/debug name \u2014 contrast with the player-facing GetLocalizedName."
    },
    "GetNodeHealth": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.GetNodeHealth(uGuid, sNodeName)"
+    "example": "Object.GetNodeHealth(uGuid, sNodeName)",
+    "doc": "Returns the health of a specific destructible sub-part/node on the object, identified by sNodeName."
    },
    "GetParent": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Object.GetParent(uGuid)"
+    "example": "Object.GetParent(uGuid)",
+    "doc": "Returns the parent object of uGuid; commonly used to walk up an attachment/ownership chain."
    },
    "GetPhysicsType": {
     "n": 3,
@@ -1975,163 +2176,190 @@
     "n": 199,
     "min": 1,
     "max": 2,
-    "example": "Object.GetPosition(char)"
+    "example": "Object.GetPosition(char)",
+    "doc": "Returns the x, y, z world position of the object identified by uGuid. Confirmed working via live testing and widely used in real scripts, e.g. combined with Player.GetLocalCharacter()."
    },
    "GetVelocity": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Object.GetVelocity(uDude)"
+    "example": "Object.GetVelocity(uDude)",
+    "doc": "Returns the object's current speed. Call sites treat the return value as a single scalar, not a vector."
    },
    "GetYaw": {
     "n": 38,
     "min": 1,
     "max": 1,
-    "example": "Object.GetYaw(char)"
+    "example": "Object.GetYaw(char)",
+    "doc": "Returns the object's yaw as a single number. The unit (degrees vs. radians) is unconfirmed \u2014 sample scripts disagree, one implying degrees and another implying radians via a hand-tuned correction factor, so don't trust either assumption without testing."
    },
    "HasLabel": {
     "n": 98,
     "min": 0,
     "max": 2,
-    "example": "Object.HasLabel(\"Blanco\")"
+    "example": "Object.HasLabel(\"Blanco\")",
+    "doc": "Returns whether uGuid has the given string label. Extremely common in real scripts, e.g. `Object.HasLabel(uGuid, \"PMC\")`."
    },
    "InSeat": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Object.InSeat(uGuid)"
+    "example": "Object.InSeat(uGuid)",
+    "doc": "Returns the vehicle uGuid the object is seated in, if any; the return value is treated as a vehicle handle at call sites."
    },
    "InVehicle": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Object.InVehicle(uRusher)"
+    "example": "Object.InVehicle(uRusher)",
+    "doc": "Returns the vehicle uGuid the object is currently inside, if any, e.g. `local uVeh = Object.InVehicle(uRunner)`."
    },
    "InsideBoundary": {
     "n": 8,
     "min": 2,
     "max": 3,
-    "example": "Object.InsideBoundary(char, self.uRgn)"
+    "example": "Object.InsideBoundary(char, self.uRgn)",
+    "doc": "Returns whether uGuid is inside the zone/region object uZoneGuid, with an optional bIgnoreY flag, e.g. testing a character against a named warehouse region."
    },
    "IsAlive": {
     "n": 121,
     "min": 1,
     "max": 1,
-    "example": "Object.IsAlive(char)"
+    "example": "Object.IsAlive(char)",
+    "doc": "Returns whether uGuid is alive. Extremely common check in real scripts, always a plain uGuid argument."
    },
    "IsAttached": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.IsAttached(uPlayerGuid, uDesignatorGuid)"
+    "example": "Object.IsAttached(uPlayerGuid, uDesignatorGuid)",
+    "doc": "Returns whether two objects (uGuidA, uGuidB) are attached to each other, e.g. checking a player against a designator object."
    },
    "IsAwake": {
     "n": 11,
     "min": 1,
     "max": 1,
-    "example": "Object.IsAwake(uGuid)"
+    "example": "Object.IsAwake(uGuid)",
+    "doc": "Returns whether uGuid is currently awake (not hibernated/streamed out); related to the hibernation-distance system alongside GetHibernationDistance."
    },
    "IsDisguised": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.IsDisguised(uGuid)"
+    "example": "Object.IsDisguised(uGuid)",
+    "doc": "Returns whether the character uGuid is currently disguised."
    },
    "IsHibernated": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Object.IsHibernated(self.uCar)"
+    "example": "Object.IsHibernated(self.uCar)",
+    "doc": "Returns whether uGuid is currently hibernated, e.g. `if Object.IsHibernated(self.exec.guid) then`."
    },
    "IsPlayerControlled": {
     "n": 57,
     "min": 1,
     "max": 1,
-    "example": "Object.IsPlayerControlled(veh)"
+    "example": "Object.IsPlayerControlled(veh)",
+    "doc": "Returns whether uGuid is currently player-driven rather than AI-driven. Very common, used to distinguish AI vs. player-controlled vehicles/characters."
    },
    "IsTemplate": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.IsTemplate(uVehicle)"
+    "example": "Object.IsTemplate(uVehicle)",
+    "doc": "Returns whether uGuid is a template object rather than a live instance."
    },
    "IsValid": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Object.IsValid(uGuid)"
+    "example": "Object.IsValid(uGuid)",
+    "doc": "Returns whether uGuid still refers to a valid, existing object, e.g. `if Object.IsValid(civAmbulance) then`."
    },
    "IsVisible": {
     "n": 11,
     "min": 1,
     "max": 1,
-    "example": "Object.IsVisible(uTank)"
+    "example": "Object.IsVisible(uTank)",
+    "doc": "Returns whether uGuid is currently visible."
    },
    "IsWinched": {
     "n": 7,
     "min": 1,
     "max": 1,
-    "example": "Object.IsWinched(uGuid)"
+    "example": "Object.IsWinched(uGuid)",
+    "doc": "Returns whether uGuid is currently attached/winched, e.g. `if Object.IsWinched(uGuid) then`."
    },
    "Kill": {
     "n": 27,
     "min": 1,
     "max": 1,
-    "example": "Object.Kill(gate)"
+    "example": "Object.Kill(gate)",
+    "doc": "Kills the object identified by uGuid. Presumed destructive/irreversible like other teardown calls in this codebase, though that hasn't been separately verified via live testing."
    },
    "OpenGate": {
     "n": 7,
     "min": 1,
     "max": 1,
-    "example": "Object.OpenGate(uGate)"
+    "example": "Object.OpenGate(uGate)",
+    "doc": "Opens a gate object such as a garage, e.g. `Object.OpenGate(self.garage)`."
    },
    "OutsideBoundary": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.OutsideBoundary(self.uVehicle, self.inRegion)"
+    "example": "Object.OutsideBoundary(self.uVehicle, self.inRegion)",
+    "doc": "Returns whether uGuid is outside the zone/region object uZoneGuid, e.g. checking a vehicle against its containing region."
    },
    "PlayAnimation": {
     "n": 3,
     "min": 6,
     "max": 6,
-    "example": "Object.PlayAnimation(uGuid, sAnim, false, nil, 0, true)"
+    "example": "Object.PlayAnimation(uGuid, sAnim, false, nil, 0, true)",
+    "doc": "Plays animation sAnimName on uGuid with a loop flag, channel name (sChannel, can be nil), blend time, and a trailing boolean flag. Confirmed with all 6 arguments in real scripts, e.g. hijack animations."
    },
    "PlayMaterialAnimation": {
     "n": 11,
     "min": 3,
     "max": 3,
-    "example": "Object.PlayMaterialAnimation(uGuid, \"global_weapon_beacon\", true)"
+    "example": "Object.PlayMaterialAnimation(uGuid, \"global_weapon_beacon\", true)",
+    "doc": "Plays a material animation sAnimName on uGuid with a loop flag, e.g. `Object.PlayMaterialAnimation(uGuid, \"global_gpsjammer_anim\", true)`."
    },
    "Remove": {
     "n": 71,
     "min": 1,
     "max": 2,
-    "example": "Object.Remove(v)"
+    "example": "Object.Remove(v)",
+    "doc": "Removes/destroys the object identified by uGuid. Extremely common; presumed irreversible like Kill, though not separately verified via live testing."
    },
    "RemoveLabel": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Object.RemoveLabel(uVehicle, \"garage\")"
+    "example": "Object.RemoveLabel(uVehicle, \"garage\")",
+    "doc": "Removes a string label (sLabel) from uGuid, e.g. `Object.RemoveLabel(uVehicle, \"garage\")`."
    },
    "RemoveQualityRef": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.RemoveQualityRef(uRef)"
+    "example": "Object.RemoveQualityRef(uRef)",
+    "doc": "Releases a quality reference previously obtained from AddQualityRef; takes that returned ref value, not a raw uGuid."
    },
    "Revive": {
     "n": 7,
     "min": 1,
     "max": 2,
-    "example": "Object.Revive(uGuid)"
+    "example": "Object.Revive(uGuid)",
+    "doc": "Revives uGuid, with an optional numeric second argument that call-site patterns suggest is a delay, e.g. `Object.Revive(uChar, 0.5)`."
    },
    "SetHealth": {
     "n": 7,
     "min": 2,
     "max": 2,
-    "example": "Object.SetHealth(uJeep, 8)"
+    "example": "Object.SetHealth(uJeep, 8)",
+    "doc": "Sets the object's health to nHealth, e.g. `Object.SetHealth(uJeep, 8)`. Also used to fully heal via `Object.SetHealth(uGuid, Object.GetMaxHealth(uGuid))`."
    },
    "SetHibernationDistance": {
     "n": 2,
@@ -2143,79 +2371,92 @@
     "n": 21,
     "min": 2,
     "max": 2,
-    "example": "Object.SetInfiniteAmmo(uPlayer, false)"
+    "example": "Object.SetInfiniteAmmo(uPlayer, false)",
+    "doc": "Toggles infinite ammo on uGuid. Confirmed working via live testing \u2014 note it maxes out reserve ammo, not the currently loaded magazine."
    },
    "SetInvincible": {
     "n": 23,
     "min": 2,
     "max": 3,
-    "example": "Object.SetInvincible(_uEva, true)"
+    "example": "Object.SetInvincible(_uEva, true)",
+    "doc": "Toggles invincibility on uGuid. The optional 3rd argument is a string \"reason\" tag consistently used to name the source of invincibility, e.g. \"Survival\", \"Hijack\", \"HQ\", \"Fanfare\"."
    },
    "SetModelName": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.SetModelName(uCharacterGuid, sModelName)"
+    "example": "Object.SetModelName(uCharacterGuid, sModelName)",
+    "doc": "Sets the model name (sModelName) used for uGuid."
    },
    "SetName": {
     "n": 6,
     "min": 2,
     "max": 2,
-    "example": "Object.SetName(res, sName)"
+    "example": "Object.SetName(res, sName)",
+    "doc": "Sets the object's name to sName and returns a success boolean, e.g. `local bSuccess = Object.SetName(Mendez_Spawn, \"Mendez\")`."
    },
    "SetPosition": {
     "n": 21,
     "min": 4,
     "max": 5,
-    "example": "Object.SetPosition(uGuid, x, y, z)"
+    "example": "Object.SetPosition(uGuid, x, y, z)",
+    "doc": "Sets the object's position to (x, y, z). Real scripts sometimes pass an optional 4th boolean-looking argument (e.g. `false`) whose meaning is unconfirmed."
    },
    "SetTransformToObject": {
     "n": 23,
     "min": 2,
     "max": 3,
-    "example": "Object.SetTransformToObject(uVeh, uDstPoint)"
+    "example": "Object.SetTransformToObject(uVeh, uDstPoint)",
+    "doc": "Snaps uGuid's transform to match uTargetGuid, optionally at a named hardpoint (sHardpoint) on the target. Confirmed used both with just two uGuids and with an explicit hardpoint-name string argument."
    },
    "SetUnkillable": {
     "n": 3,
     "min": 3,
     "max": 3,
-    "example": "Object.SetUnkillable(uGuid, true, \"Support\")"
+    "example": "Object.SetUnkillable(uGuid, true, \"Support\")",
+    "doc": "Toggles unkillable state on uGuid, using the same (bFlag, sReason) shape as SetInvincible, e.g. reason \"Support\"."
    },
    "SetVisible": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Object.SetVisible(uGuid, false)"
+    "example": "Object.SetVisible(uGuid, false)",
+    "doc": "Sets the visibility of uGuid to bVisible."
    },
    "SetWinchState": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Object.SetWinchState(uGuid, \"deployed\")"
+    "example": "Object.SetWinchState(uGuid, \"deployed\")",
+    "doc": "Sets the winch state of uGuid to a string state; the only confirmed value seen in real scripts is \"deployed\"."
    },
    "SetYaw": {
     "n": 17,
     "min": 2,
     "max": 2,
-    "example": "Object.SetYaw(uGuid, yaw)"
+    "example": "Object.SetYaw(uGuid, yaw)",
+    "doc": "Sets the object's yaw to nYaw. Same degrees-vs-radians unit ambiguity noted for GetYaw applies here too."
    },
    "StopAllAnimation": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Object.StopAllAnimation(uGuid)"
+    "example": "Object.StopAllAnimation(uGuid)",
+    "doc": "Stops all animation playback on uGuid."
    },
    "StopAnimationChannel": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Object.StopAnimationChannel(self._vehicle, \"hijack\")"
+    "example": "Object.StopAnimationChannel(self._vehicle, \"hijack\")",
+    "doc": "Stops animation playback on a specific named channel (sChannel) of uGuid, matching the channel argument used in PlayAnimation, e.g. `Object.StopAnimationChannel(self._vehicle, \"hijack\")`."
    },
    "StopMaterialAnimation": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Object.StopMaterialAnimation(uGuid, \"global_weapon_beacon\")"
+    "example": "Object.StopMaterialAnimation(uGuid, \"global_weapon_beacon\")",
+    "doc": "Stops a named material animation (sAnimName) on uGuid, e.g. `Object.StopMaterialAnimation(uGuid, \"global_weapon_beacon\")`."
    }
   },
   "ObjectFilter": {
@@ -2311,25 +2552,29 @@
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Pg.AchievementAddCount(sAchievementName, i - 1, 1, tAchievement.nRequiredCount)"
+    "example": "Pg.AchievementAddCount(sAchievementName, i - 1, 1, tAchievement.nRequiredCount)",
+    "doc": "Increments progress toward an achievement: AchievementAddCount(sAchievementName, nIndex, nDelta, nRequiredCount)."
    },
    "AchievementIsGranted": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Pg.AchievementIsGranted(sAchievementName, i - 1, tAchievement.nRequiredCount)"
+    "example": "Pg.AchievementIsGranted(sAchievementName, i - 1, tAchievement.nRequiredCount)",
+    "doc": "Checks whether an achievement has been granted: AchievementIsGranted(sAchievementName, nIndex, nRequiredCount); returns a boolean."
    },
    "AddContextAction": {
     "n": 20,
     "min": 2,
     "max": 8,
-    "example": "Pg.AddContextAction(uGuid, \"Dance\", false)"
+    "example": "Pg.AddContextAction(uGuid, \"Dance\", false)",
+    "doc": "Adds a context/interaction action prompt to an object: AddContextAction(uGuid, sLabelOrKey, nPriority?, ...). Only the guid and label/localization-key are confirmed as a fixed schema; trailing args vary widely (0 to 6 extra values) across call sites, likely priority/range/color/flags, and the call often returns a success boolean."
    },
    "AssetExists": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Pg.AssetExists(sLayerName, \"layer\")"
+    "example": "Pg.AssetExists(sLayerName, \"layer\")",
+    "doc": "Checks whether a named asset/layer of a given type exists: AssetExists(sLayerName, sType)."
    },
    "ClearCustomPursuit": {
     "n": 1,
@@ -2341,73 +2586,85 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Pg.ClearPursuitLock(true)"
+    "example": "Pg.ClearPursuitLock(true)",
+    "doc": "Clears a pursuit lock: ClearPursuitLock(bFlag). Confirmed to take a single boolean argument; also seen passed as a bare function reference elsewhere."
    },
    "ContractActivated": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Pg.ContractActivated(sMissionName)"
+    "example": "Pg.ContractActivated(sMissionName)",
+    "doc": "Marks a mission contract as activated: ContractActivated(sMissionName)."
    },
    "ContractCancelled": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Pg.ContractCancelled()"
+    "example": "Pg.ContractCancelled()",
+    "doc": "Marks the current mission contract as cancelled; called with no arguments."
    },
    "ContractCompleted": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Pg.ContractCompleted()"
+    "example": "Pg.ContractCompleted()",
+    "doc": "Marks the current mission contract as completed; called with no arguments."
    },
    "EnableIntersection": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Pg.EnableIntersection(false, StringToGuid(\"_maracaibo_bridge_segmentb 0x0008ab9c\"))"
+    "example": "Pg.EnableIntersection(false, StringToGuid(\"_maracaibo_bridge_segmentb 0x0008ab9c\"))",
+    "doc": "Enables or disables a road intersection: EnableIntersection(bEnable, uGuid)."
    },
    "FastCollectBuildings": {
     "n": 4,
     "min": 4,
     "max": 5,
-    "example": "Pg.FastCollectBuildings(x, y, z, 100, \"Occupied\")"
+    "example": "Pg.FastCollectBuildings(x, y, z, 100, \"Occupied\")",
+    "doc": "Collects nearby buildings within a radius: FastCollectBuildings(x, y, z, fRadius, sFilter?), e.g. filtering by \"Occupied\". Filter argument is confirmed optional by call sites both with and without it."
    },
    "FastCollectFlying": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": "Pg.FastCollectFlying(nSpawnX, nSpawnY, nSpawnZ, 200)"
+    "example": "Pg.FastCollectFlying(nSpawnX, nSpawnY, nSpawnZ, 200)",
+    "doc": "Collects nearby flying objects within a radius: FastCollectFlying(x, y, z, fRadius). The one call site found passes no filter argument."
    },
    "FastCollectGroundVehicles": {
     "n": 4,
     "min": 4,
     "max": 5,
-    "example": "Pg.FastCollectGroundVehicles(x, y, z, 5.5)"
+    "example": "Pg.FastCollectGroundVehicles(x, y, z, 5.5)",
+    "doc": "Collects nearby ground vehicles within a radius: FastCollectGroundVehicles(x, y, z, fRadius, sFilter?). The filter is confirmed optional (callable with or without it) and not strictly a string \u2014 one call site passes a filter object (oFilter) instead of a plain string."
    },
    "FastCollectHelicopters": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": "Pg.FastCollectHelicopters(x, y, z, 12)"
+    "example": "Pg.FastCollectHelicopters(x, y, z, 12)",
+    "doc": "Collects nearby helicopters within a radius: FastCollectHelicopters(x, y, z, fRadius). No filter argument observed in its call site."
    },
    "FastCollectHumans": {
     "n": 9,
     "min": 5,
     "max": 5,
-    "example": "Pg.FastCollectHumans(x, y, z, 10, \"VZ\")"
+    "example": "Pg.FastCollectHumans(x, y, z, 10, \"VZ\")",
+    "doc": "Collects nearby human/character objects within a radius: FastCollectHumans(x, y, z, fRadius, sFilter?). Filter is a string, sometimes a compound expression like \"Allied && Human\" or \"OC && Human\"; every observed call site for this function includes the filter."
    },
    "FastCollectTanks": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": "Pg.FastCollectTanks(nSpawnX, nSpawnY, nSpawnZ, 200)"
+    "example": "Pg.FastCollectTanks(nSpawnX, nSpawnY, nSpawnZ, 200)",
+    "doc": "Collects nearby tanks within a radius: FastCollectTanks(x, y, z, fRadius). The one call site found passes no filter argument."
    },
    "FindPointFromCamera": {
     "n": 46,
     "min": 2,
     "max": 5,
-    "example": "Pg.FindPointFromCamera(0, 0)"
+    "example": "Pg.FindPointFromCamera(0, 0)",
+    "doc": "Computes a world point relative to the current camera: FindPointFromCamera(nForwardOffset, nHeightOrAltitude, nUnknown, uOwner?, nAngle?); returns x, y, z. Very widely used; the third positional argument is consistently -1 or a small number across sites but its exact meaning isn't confirmed beyond that."
    },
    "GetAllLandingZones": {
     "n": 2,
@@ -2425,37 +2682,43 @@
     "n": 3,
     "min": 4,
     "max": 4,
-    "example": "Pg.GetDistantSpawnPointOnPath(uPath, uBackupPoint, 0, fDist)"
+    "example": "Pg.GetDistantSpawnPointOnPath(uPath, uBackupPoint, 0, fDist)",
+    "doc": "Finds a spawn point along a path relative to primary/secondary reference points and a minimum distance: GetDistantSpawnPointOnPath(uPath, uBackupPointOrPrimaryPt, nSecondaryPt, fDist); returns a result flag plus x, y, z, yaw."
    },
    "GetGuidByName": {
     "n": 1103,
     "min": 0,
     "max": 2,
-    "example": "Pg.GetGuidByName(s)"
+    "example": "Pg.GetGuidByName(s)",
+    "doc": "Resolves a level-designer-assigned name string to a GUID: GetGuidByName(sName), e.g. Pg.GetGuidByName(\"China\"). Extremely widely used; also reachable as a bare unqualified global GetGuidByName(...) in many scripts, apparently aliased onto _G in addition to living on Pg (same name used interchangeably in adjacent statements in vz/allcon001.lua)."
    },
    "GetLineRegionPoints": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Pg.GetLineRegionPoints(uRegion, bInvert)"
+    "example": "Pg.GetLineRegionPoints(uRegion, bInvert)",
+    "doc": "Gets the point arrays defining a line region: GetLineRegionPoints(uRegionGuid, bInvert?); returns two tables (tX, tY) of coordinates."
    },
    "GetLoadingStaticLayers": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Pg.GetLoadingStaticLayers()"
+    "example": "Pg.GetLoadingStaticLayers()",
+    "doc": "Getter counterpart of LoadingStaticLayers; returns the current loading-static-layers flag with no arguments."
    },
    "GetObjectsInArea": {
     "n": 16,
     "min": 5,
     "max": 5,
-    "example": "Pg.GetObjectsInArea(x, y, z, 1, \"RumJug\")"
+    "example": "Pg.GetObjectsInArea(x, y, z, 1, \"RumJug\")",
+    "doc": "Finds objects in a radius matching a named filter/template type: GetObjectsInArea(x, y, z, fRadius, sFilterName), e.g. \"Listening Post\", \"RumJug\", \"Vehicle\". Unlike the FastCollect* family, the filter argument appears mandatory in every observed call site."
    },
    "GetPursuitState": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Pg.GetPursuitState()"
+    "example": "Pg.GetPursuitState()",
+    "doc": "Returns the current pursuit-state value/table; called with no arguments."
    },
    "GetTetherDiameterStart": {
     "n": 2,
@@ -2467,25 +2730,29 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Pg.GetUnloadingStaticLayers()"
+    "example": "Pg.GetUnloadingStaticLayers()",
+    "doc": "Getter counterpart of UnloadingStaticLayers; returns the current unloading-static-layers flag with no arguments."
    },
    "IsPointInBoundary": {
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Pg.IsPointInBoundary(nX, nY, nZ, uGuid)"
+    "example": "Pg.IsPointInBoundary(nX, nY, nZ, uGuid)",
+    "doc": "Checks whether a world point lies within a named boundary object: IsPointInBoundary(x, y, z, uBoundaryGuid)."
    },
    "IsStaticLayer": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Pg.IsStaticLayer(sLayerName)"
+    "example": "Pg.IsStaticLayer(sLayerName)",
+    "doc": "Checks whether a named layer is a static layer: IsStaticLayer(sLayerName); used to guard both add and remove layer requests."
    },
    "LoadAsset": {
     "n": 25,
     "min": 0,
     "max": 4,
-    "example": "Pg.LoadAsset(\"pda_titles\", \"texture\")"
+    "example": "Pg.LoadAsset(\"pda_titles\", \"texture\")",
+    "doc": "Loads a named asset of a given type: LoadAsset(sAssetName, sAssetType, ...), e.g. animations or sound banks. A third argument (like a sound duck-table) is sometimes present and sometimes omitted."
    },
    "LoadGame": {
     "n": 1,
@@ -2503,43 +2770,50 @@
     "n": 1,
     "min": 5,
     "max": 5,
-    "example": null
+    "example": null,
+    "doc": "Loads a static/streaming layer by name: LoadLayer(sLayerName, bNotStatic, fCallback, tCallbackData, bClientNeedsLoadingScreen); returns a success boolean."
    },
    "LoadingStaticLayers": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Pg.LoadingStaticLayers(false)"
+    "example": "Pg.LoadingStaticLayers(false)",
+    "doc": "Setter that flags whether static layers are currently loading: LoadingStaticLayers(bFlag). Distinct from the getter GetLoadingStaticLayers despite the similar name."
    },
    "LockPursuit": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Pg.LockPursuit(uGuid, nLevel)"
+    "example": "Pg.LockPursuit(uGuid, nLevel)",
+    "doc": "Locks pursuit at a given level for a guid: LockPursuit(uGuid, nLevel)."
    },
    "ReloadLayer": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": null
+    "example": null,
+    "doc": "Reloads a layer by name: ReloadLayer(sLayerName, fCallback, tCallbackData, bClientNeedsLoadingScreen)."
    },
    "RemoveContextAction": {
     "n": 26,
     "min": 1,
     "max": 1,
-    "example": "Pg.RemoveContextAction(uGuid)"
+    "example": "Pg.RemoveContextAction(uGuid)",
+    "doc": "Removes a context action from an object: RemoveContextAction(uGuid); consistently called with just the guid, mirroring AddContextAction."
    },
    "ResetSingletonDone": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Pg.ResetSingletonDone()"
+    "example": "Pg.ResetSingletonDone()",
+    "doc": "Resets a singleton-done flag/state; called with no arguments."
    },
    "Rumble": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Pg.Rumble(self._hijacker, 0.15555)"
+    "example": "Pg.Rumble(self._hijacker, 0.15555)",
+    "doc": "Triggers controller rumble for a character: Rumble(uCharacterGuid, fLength)."
    },
    "SaveGame": {
     "n": 3,
@@ -2551,73 +2825,85 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Pg.SetBoundaryRadius(38.5)"
+    "example": "Pg.SetBoundaryRadius(38.5)",
+    "doc": "Sets the boundary radius: SetBoundaryRadius(fRadius), e.g. Pg.SetBoundaryRadius(38.5)."
    },
    "SetCustomPursuit": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Pg.SetCustomPursuit(uFaction, nDuration, tSettings)"
+    "example": "Pg.SetCustomPursuit(uFaction, nDuration, tSettings)",
+    "doc": "Sets a custom pursuit configuration for a faction: SetCustomPursuit(uFaction, nDuration, tSettings), where tSettings is a table of settings."
    },
    "SetPursuit": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Pg.SetPursuit(uFaction, nLevel, true)"
+    "example": "Pg.SetPursuit(uFaction, nLevel, true)",
+    "doc": "Sets the pursuit level for a faction: SetPursuit(uFaction, nLevel, bFlag)."
    },
    "SetPursuitLevelTimes": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Pg.SetPursuitLevelTimes(120, 300)"
+    "example": "Pg.SetPursuitLevelTimes(120, 300)",
+    "doc": "Sets timing thresholds between pursuit levels: SetPursuitLevelTimes(nTime1, nTime2), e.g. Pg.SetPursuitLevelTimes(120, 300)."
    },
    "SetPursuitSeconds": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Pg.SetPursuitSeconds(uFaction, 5, true)"
+    "example": "Pg.SetPursuitSeconds(uFaction, 5, true)",
+    "doc": "Sets a pursuit duration in seconds for a faction: SetPursuitSeconds(uFaction, nSeconds, bFlag)."
    },
    "Spawn": {
     "n": 103,
     "min": 2,
     "max": 8,
-    "example": "Pg.Spawn(sCar, x, y, z)"
+    "example": "Pg.Spawn(sCar, x, y, z)",
+    "doc": "Spawns an object/vehicle/character by template name string at a world position: Spawn(sTemplateName, x, y, z, ...). Extensively confirmed elsewhere in the wiki with real template strings, e.g. supply drop templates called as Pg.Spawn(sTemplate, x, y+200, z)."
    },
    "SpawnFromCamera": {
     "n": 6,
     "min": 3,
     "max": 7,
-    "example": "Pg.SpawnFromCamera(object, 10, 0.5)"
+    "example": "Pg.SpawnFromCamera(object, 10, 0.5)",
+    "doc": "Spawns an object relative to the current camera: SpawnFromCamera(sTemplateName, nDistance, nHeightOrScale, ...). Call-site argument counts vary from 3 to 7; trailing args include booleans and an owner/player guid, but their exact meaning beyond the first three positions is unconfirmed."
    },
    "StartHeliWaveSpawner": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Pg.StartHeliWaveSpawner({ tWave1, tWave2, tWave3, tWave4, tWave5, tWave6 })"
+    "example": "Pg.StartHeliWaveSpawner({ tWave1, tWave2, tWave3, tWave4, tWave5, tWave6 })",
+    "doc": "Starts a helicopter wave spawner from a single parameter table: StartHeliWaveSpawner(tParams); the table's internal contents are not enumerated on this page."
    },
    "StopHeliWaveSpawner": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Pg.StopHeliWaveSpawner(self)"
+    "example": "Pg.StopHeliWaveSpawner(self)",
+    "doc": "Stops a helicopter wave spawner: StopHeliWaveSpawner(oSelf); also seen passed around as a bare function reference."
    },
    "UnloadAsset": {
     "n": 22,
     "min": 0,
     "max": 2,
-    "example": "Pg.UnloadAsset(sAssetName, sAssetType)"
+    "example": "Pg.UnloadAsset(sAssetName, sAssetType)",
+    "doc": "Unloads a previously loaded asset: UnloadAsset(sAssetName, sAssetType); mirrors LoadAsset."
    },
    "UnloadLayer": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": null
+    "example": null,
+    "doc": "Unloads a layer by name: UnloadLayer(sLayerName, fCallback, tCallbackData, bClientNeedsLoadingScreen)."
    },
    "UnloadingStaticLayers": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Pg.UnloadingStaticLayers(true)"
+    "example": "Pg.UnloadingStaticLayers(true)",
+    "doc": "Setter that flags whether static layers are currently unloading: UnloadingStaticLayers(bFlag); mirrors LoadingStaticLayers."
    }
   },
   "Player": {
@@ -2625,19 +2911,22 @@
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Player.AddBoundary(uPlayerGuid, uBoundary)"
+    "example": "Player.AddBoundary(uPlayerGuid, uBoundary)",
+    "doc": "Registers a boundary zone (uBoundaryGuid) for a player (uPlayerGuid). Part of the mission/region boundary system where crossing fires a callback and can optionally be lethal."
    },
    "AddCash": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.AddCash(totalAmount)"
+    "example": "Player.AddCash(totalAmount)",
+    "doc": "Adds nAmount to the player's cash. Shares the same HUD-refresh-skipping nuance as SetCash."
    },
    "AddFuel": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.AddFuel(nAmt)"
+    "example": "Player.AddFuel(nAmt)",
+    "doc": "Adds nAmount to the player's fuel. No direct call sites; presumed counterpart to AddCash by naming symmetry, and likely (unconfirmed) shares the same HUD-refresh-skipping nuance as SetCash \u2014 prefer MrxPmc.AddFuelQty instead."
    },
    "AttachToCharacter": {
     "n": 2,
@@ -2661,13 +2950,15 @@
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Player.ClearGPS(uPlayer)"
+    "example": "Player.ClearGPS(uPlayer)",
+    "doc": "Clears GPS markers for a player, e.g. `Player.ClearGPS(Player.GetLocalPlayer())`."
    },
    "ClearPlayerDB": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Player.ClearPlayerDB()"
+    "example": "Player.ClearPlayerDB()",
+    "doc": "Clears the player database with no arguments, e.g. `Player.ClearPlayerDB()` in mrxplayer.lua."
    },
    "CreatePlayer": {
     "n": 1,
@@ -2691,97 +2982,113 @@
     "n": 26,
     "min": 0,
     "max": 0,
-    "example": "Player.GetAllCharacters()"
+    "example": "Player.GetAllCharacters()",
+    "doc": "Returns all character guids with no arguments; used as a target-filter value passed directly into proximity/collect calls."
    },
    "GetAllPlayers": {
     "n": 62,
     "min": 0,
     "max": 0,
-    "example": "Player.GetAllPlayers()"
+    "example": "Player.GetAllPlayers()",
+    "doc": "Returns a table of all players with no arguments, e.g. `tPlayers = Player.GetAllPlayers()`."
    },
    "GetAllTargetMarkerPos": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Player.GetAllTargetMarkerPos()"
+    "example": "Player.GetAllTargetMarkerPos()",
+    "doc": "Returns a table of all target marker positions with no arguments, e.g. used in mrxguipda.lua."
    },
    "GetAnyCharacter": {
     "n": 201,
     "min": 0,
     "max": 0,
-    "example": "Player.GetAnyCharacter()"
+    "example": "Player.GetAnyCharacter()",
+    "doc": "Returns a character guid used as a generic target-filter value (e.g. passed as `vTgtInclude`) in mission/objective scripts. Always called with no arguments."
    },
    "GetAvailableCostumes": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Player.GetAvailableCostumes()"
+    "example": "Player.GetAvailableCostumes()",
+    "doc": "Returns the count of costumes available to the player, no arguments. Distinct from the resident-module wrapper WifPmcInterior.GetAvailableCostumes(), which this engine function likely underlies (exact relationship unconfirmed)."
    },
    "GetCamera": {
     "n": 17,
     "min": 1,
     "max": 1,
-    "example": "Player.GetCamera(player)"
+    "example": "Player.GetCamera(player)",
+    "doc": "Given a player guid, returns that player's camera guid, e.g. `Player.GetCamera(uPlayer)`. The result is then passed into Camera.* calls."
    },
    "GetCameraXZHeading": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Player.GetCameraXZHeading(oWidget:GetOwner())"
+    "example": "Player.GetCameraXZHeading(oWidget:GetOwner())",
+    "doc": "Given a player guid, returns a heading/rotation value for that player's camera, used to rotate HUD compass elements, e.g. `Player.GetCameraXZHeading(oWidget:GetOwner())`."
    },
    "GetCash": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Player.GetCash()"
+    "example": "Player.GetCash()",
+    "doc": "Returns the player's current cash amount with no arguments. Confirmed working by live testing."
    },
    "GetCharacter": {
     "n": 65,
     "min": 1,
     "max": 1,
-    "example": "Player.GetCharacter(p)"
+    "example": "Player.GetCharacter(p)",
+    "doc": "Given a player-slot guid, returns the corresponding character guid, e.g. `Player.GetCharacter(tData.uPlayerGuid)` \u2014 the character-guid counterpart to a raw player guid."
    },
    "GetControlBindingType": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.GetControlBindingType(uPlayerGuid)"
+    "example": "Player.GetControlBindingType(uPlayerGuid)",
+    "doc": "Given a player guid, returns a string describing that player's control scheme (used for pause-screen control-scheme display)."
    },
    "GetControlledObject": {
     "n": 13,
     "min": 1,
     "max": 1,
-    "example": "Player.GetControlledObject(uPlayer)"
+    "example": "Player.GetControlledObject(uPlayer)",
+    "doc": "Given a player guid, returns the guid of the character or vehicle that player currently controls. Extremely common in real scripts."
    },
    "GetCurrentPlayers": {
     "n": 16,
     "min": 0,
     "max": 0,
-    "example": "Player.GetCurrentPlayers()"
+    "example": "Player.GetCurrentPlayers()",
+    "doc": "Returns a count with no arguments, treated in real scripts as a truthy multiplayer flag, e.g. `local isMultiplayer = Player.GetCurrentPlayers()`."
    },
    "GetFuel": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Player.GetFuel()"
+    "example": "Player.GetFuel()",
+    "doc": "Returns the player's current fuel with no arguments. Wrapped by MrxPmc.GetFuelQty(), confirmed by live testing to be a thin wrapper over this function."
    },
    "GetFuelCapacity": {
     "n": 5,
     "min": 0,
     "max": 0,
-    "example": "Player.GetFuelCapacity()"
+    "example": "Player.GetFuelCapacity()",
+    "doc": "Returns the player's fuel capacity with no arguments. No direct call sites; presumed backing store for MrxPmc.GetFuelCapacity()."
    },
    "GetLocalCharacter": {
     "n": 146,
     "min": 0,
     "max": 0,
-    "example": "Player.GetLocalCharacter()"
+    "example": "Player.GetLocalCharacter()",
+    "doc": "Returns the local player's character guid with no arguments. Confirmed working by live testing and widely used in real scripts."
    },
    "GetLocalPlayer": {
     "n": 89,
     "min": 0,
     "max": 0,
-    "example": "Player.GetLocalPlayer()"
+    "example": "Player.GetLocalPlayer()",
+    "doc": "Returns the local player-slot guid, distinct from the character guid. Takes no arguments; extremely common in real scripts."
    },
    "GetLocalPlayerId": {
     "n": 2,
@@ -2811,109 +3118,127 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Player.GetPlayerStart()"
+    "example": "Player.GetPlayerStart()",
+    "doc": "Returns the player's spawn/start location with no arguments. Real code compares the result directly to a string constant, suggesting it can return a named-location string as well as a position (which form is canonical is unconfirmed)."
    },
    "GetPrimaryCharacter": {
     "n": 65,
     "min": 0,
     "max": 0,
-    "example": "Player.GetPrimaryCharacter()"
+    "example": "Player.GetPrimaryCharacter()",
+    "doc": "Returns the primary player's character guid with no arguments. Used throughout mods, e.g. for toggling infinite ammo or function-override examples."
    },
    "GetPrimaryPlayer": {
     "n": 37,
     "min": 0,
     "max": 0,
-    "example": "Player.GetPrimaryPlayer()"
+    "example": "Player.GetPrimaryPlayer()",
+    "doc": "Returns the primary player's guid with no arguments, e.g. `Player.SetAimMode(Player.GetPrimaryPlayer(), true)`. Very common in real scripts."
    },
    "GetProfileCostume": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Player.GetProfileCostume()"
+    "example": "Player.GetProfileCostume()",
+    "doc": "Returns the player's currently selected costume index with no arguments."
    },
    "GetSecondaryCharacter": {
     "n": 118,
     "min": 0,
     "max": 0,
-    "example": "Player.GetSecondaryCharacter()"
+    "example": "Player.GetSecondaryCharacter()",
+    "doc": "Returns the secondary (co-op) player's character guid with no arguments, used when a mod needs to also affect the second player."
    },
    "GetSecondaryPlayer": {
     "n": 24,
     "min": 0,
     "max": 0,
-    "example": "Player.GetSecondaryPlayer()"
+    "example": "Player.GetSecondaryPlayer()",
+    "doc": "Returns the secondary (co-op) player's guid with no arguments. Call sites routinely guard it with `if Player.GetSecondaryPlayer() then` since it can be absent outside co-op."
    },
    "GetTargetUnderReticle": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Player.GetTargetUnderReticle(oWidget:GetOwner())"
+    "example": "Player.GetTargetUnderReticle(oWidget:GetOwner())",
+    "doc": "Given a player guid, returns `nX, nY, nZ` world coordinates plus a 4th `uGuid` return value identifying whatever is under the player's reticle (nil if nothing targeted). Confirmed used in mrxguisatellite.lua and mrxguisniperscope.lua via `oWidget:GetOwner()`."
    },
    "GetVehicleDisguise": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Player.GetVehicleDisguise()"
+    "example": "Player.GetVehicleDisguise()",
+    "doc": "Returns whether vehicle disguise is currently active, no arguments; treated as a boolean state flag, e.g. for HUD icon visibility."
    },
    "GetVehicleDisguiseState": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Player.GetVehicleDisguiseState({Player = uRider})"
+    "example": "Player.GetVehicleDisguiseState({Player = uRider})",
+    "doc": "Returns disguise state given a table argument `{Player = uGuid}` \u2014 one of only two Player.* functions confirmed to take a table instead of positional arguments."
    },
    "GetViewportId": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Player.GetViewportId(uGuid)"
+    "example": "Player.GetViewportId(uGuid)",
+    "doc": "Given a player guid, returns the viewport id, used to bind GUI widgets to the correct split-screen viewport."
    },
    "InCinematicMode": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.InCinematicMode(uPlayerGuid)"
+    "example": "Player.InCinematicMode(uPlayerGuid)",
+    "doc": "Given a player guid, returns whether that player is currently in cinematic mode; used to gate input alongside checks like Object.IsAlive."
    },
    "IsBoundaryDeath": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Player.IsBoundaryDeath(uChar)"
+    "example": "Player.IsBoundaryDeath(uChar)",
+    "doc": "Given a character guid, returns whether being outside the boundary is currently set to be lethal for that character."
    },
    "IsCoopMultiplayer": {
     "n": 5,
     "min": 0,
     "max": 0,
-    "example": "Player.IsCoopMultiplayer()"
+    "example": "Player.IsCoopMultiplayer()",
+    "doc": "Returns whether the game is in co-op multiplayer, called with no arguments, e.g. `if Player.IsCoopMultiplayer() then`."
    },
    "IsLocal": {
     "n": 44,
     "min": 1,
     "max": 1,
-    "example": "Player.IsLocal(uGuid)"
+    "example": "Player.IsLocal(uGuid)",
+    "doc": "Given a player guid, returns whether that player is local, e.g. `Net.IsServer() and not Player.IsLocal(tData[1])`."
    },
    "IsPositionOutBoundary": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": null
+    "example": null,
+    "doc": "Given a player guid and X/Y/Z coordinates, returns whether that position is outside the player's boundary; used in PDA map code."
    },
    "IsRemote": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Player.IsRemote(i)"
+    "example": "Player.IsRemote(i)",
+    "doc": "No confirmed call sites; presumed (unconfirmed) to be the inverse of IsLocal."
    },
    "RemoveAllBoundary": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.RemoveAllBoundary(uPlayerGuid)"
+    "example": "Player.RemoveAllBoundary(uPlayerGuid)",
+    "doc": "Removes all boundary zones registered for a player, given just a player guid."
    },
    "RemoveBoundary": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Player.RemoveBoundary(uPlayerGuid, uBoundary)"
+    "example": "Player.RemoveBoundary(uPlayerGuid, uBoundary)",
+    "doc": "Removes a specific boundary zone from a player, taking the same (uPlayerGuid, uBoundaryGuid) shape as AddBoundary."
    },
    "RemovePlayerJoinedCallback": {
     "n": 1,
@@ -2931,115 +3256,134 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.RequestPDAMapModeCancel(uPlayer)"
+    "example": "Player.RequestPDAMapModeCancel(uPlayer)",
+    "doc": "Requests cancellation of PDA map mode for a player, given just a player guid."
    },
    "RequestPDAMapModeExit": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": null
+    "example": null,
+    "doc": "Requests exit of PDA map mode with a completion callback, e.g. `Player.RequestPDAMapModeExit(oMinigame:GetOwner(), _RemoveSatelliteTargettingMode, {oMinigame})`."
    },
    "SetAimMode": {
     "n": 17,
     "min": 2,
     "max": 2,
-    "example": "Player.SetAimMode(Player.GetLocalPlayer(), true)"
+    "example": "Player.SetAimMode(Player.GetLocalPlayer(), true)",
+    "doc": "Enables/disables aim mode for a player, e.g. `Player.SetAimMode(Player.GetPrimaryPlayer(), true)`. Very common in real scripts."
    },
    "SetAvailableCostumes": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.SetAvailableCostumes(WifPmcInterior.GetAvailableCostumes())"
+    "example": "Player.SetAvailableCostumes(WifPmcInterior.GetAvailableCostumes())",
+    "doc": "Sets the count of available costumes; real call sites read from the WifPmcInterior resident-module getter and write into this engine setter, suggesting the two are kept in sync rather than sharing storage."
    },
    "SetBoundaryCallback": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Player.SetBoundaryCallback(uPlayerGuid, BoundaryCallback)"
+    "example": "Player.SetBoundaryCallback(uPlayerGuid, BoundaryCallback)",
+    "doc": "Registers a callback fired when a player crosses one of their registered boundary zones, e.g. `Player.SetBoundaryCallback(uPlayerGuid, BoundaryCallback)`."
    },
    "SetCash": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Player.SetCash(nTotal)"
+    "example": "Player.SetCash(nTotal)",
+    "doc": "Sets cash to an exact amount. Confirmed working by live testing, but it skips the HUD refresh that MrxPmc.AddCashQty triggers, so the on-screen number won't visibly update \u2014 prefer MrxPmc.AddCashQty/GetCashQty unless you specifically want the silent low-level write."
    },
    "SetCinematicMode": {
     "n": 6,
     "min": 2,
     "max": 5,
-    "example": "Player.SetCinematicMode(uPlayer, false)"
+    "example": "Player.SetCinematicMode(uPlayer, false)",
+    "doc": "Enables/disables cinematic mode for a player. Confirmed with a simple 2-argument form and richer forms with extra trailing arguments (e.g. bone-attach name, flags) that vary by call site \u2014 meaning beyond 'camera/cinematic attach parameters' is unconfirmed."
    },
    "SetFuel": {
     "n": 6,
     "min": 1,
     "max": 1,
-    "example": "Player.SetFuel(0)"
+    "example": "Player.SetFuel(0)",
+    "doc": "Sets fuel to an exact amount. Not directly exercised in live tests, but presumed to be the low-level setter behind MrxPmc.AddFuelQty/SetFuelCapacity; capacity generally needs to be raised before quantity when increasing fuel."
    },
    "SetFuelCapacity": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.SetFuelCapacity(GetFuelCapacity())"
+    "example": "Player.SetFuelCapacity(GetFuelCapacity())",
+    "doc": "Sets fuel capacity, taking an optional trailing flag: `(nCapacity [, bFlag])`. No direct call sites; presumed backing store for MrxPmc.SetFuelCapacity(nCapacity, bFlag) (real snippets call the wrapper as `MrxPmc.SetFuelCapacity(9999, true)`) \u2014 the argument shape is inferred, not independently confirmed."
    },
    "SetGrappleEnabled": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Player.SetGrappleEnabled(uGuid, bEnable)"
+    "example": "Player.SetGrappleEnabled(uGuid, bEnable)",
+    "doc": "Enables/disables grapple for a given guid, e.g. `Player.SetGrappleEnabled(uGuid, bEnable)`."
    },
    "SetHealthClamp": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Player.SetHealthClamp(uPlayer, true)"
+    "example": "Player.SetHealthClamp(uPlayer, true)",
+    "doc": "Enables/disables a health clamp for a player; paired with SetSurvivalMode in hero.lua."
    },
    "SetInPmc": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Player.SetInPmc(uPlayer, true)"
+    "example": "Player.SetInPmc(uPlayer, true)",
+    "doc": "Marks a player as inside/outside the PMC hub with a boolean, e.g. entering/leaving in wifpmcinterior.lua."
    },
    "SetInputEnabled": {
     "n": 5,
     "min": 2,
     "max": 3,
-    "example": "Player.SetInputEnabled(uPlayer, true)"
+    "example": "Player.SetInputEnabled(uPlayer, true)",
+    "doc": "Enables/disables player input. Confirmed with both a 2-argument form `(uPlayerGuid, bEnable)` and a 3-argument form with a trailing boolean whose meaning is unconfirmed."
    },
    "SetOutBoundary": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Player.SetOutBoundary(player, false)"
+    "example": "Player.SetOutBoundary(player, false)",
+    "doc": "Sets/clears whether a player is currently registered as outside their boundary, e.g. `Player.SetOutBoundary(secondaryPlayer, true)`."
    },
    "SetOutfit": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Player.SetOutfit(uGuid, sModelName)"
+    "example": "Player.SetOutfit(uGuid, sModelName)",
+    "doc": "Given a character guid and a model-name string, sets that character's outfit/model; used by wardrobe code in wifpmcinterior.lua."
    },
    "SetPDAMapMode": {
     "n": 3,
     "min": 2,
     "max": 9,
-    "example": "Player.SetPDAMapMode(oDesignator.uOwner, false)"
+    "example": "Player.SetPDAMapMode(oDesignator.uOwner, false)",
+    "doc": "Enables/disables PDA map mode with a long parameter list: player guid, enable flag, position, radius, min/max zoom deltas, and a minigame-use flag. Also called simply as `(uGuid, false)` to disable."
    },
    "SetPDAMapModeCallback": {
     "n": 7,
     "min": 3,
     "max": 4,
-    "example": "Player.SetPDAMapModeCallback(uPlayerGuid, false, DoNothing)"
+    "example": "Player.SetPDAMapModeCallback(uPlayerGuid, false, DoNothing)",
+    "doc": "Registers a callback for PDA map mode transitions, e.g. `Player.SetPDAMapModeCallback(self.uOwner, true, SatelliteTargettingEnd, {self})`."
    },
    "SetPDAMapModeCancelCallback": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Player.SetPDAMapModeCancelCallback(self.uOwner, SatelliteTargettingCancel, {self})"
+    "example": "Player.SetPDAMapModeCancelCallback(self.uOwner, SatelliteTargettingCancel, {self})",
+    "doc": "Registers a callback fired when PDA map mode is cancelled, e.g. `Player.SetPDAMapModeCancelCallback(self.uOwner, SatelliteTargettingCancel, {self})`."
    },
    "SetPlayerJoinedCallback": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.SetPlayerJoinedCallback(OnPlayerJoined)"
+    "example": "Player.SetPlayerJoinedCallback(OnPlayerJoined)",
+    "doc": "Registers a callback for when a player joins. No confirmed call sites; presumed (unconfirmed) to follow the same callback-registration shape as Event.Create."
    },
    "SetPlayerLeftCallback": {
     "n": 1,
@@ -3051,37 +3395,43 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.SetProfileCostume(iIndex - 1)"
+    "example": "Player.SetProfileCostume(iIndex - 1)",
+    "doc": "Sets the player's costume by index, e.g. `Player.SetProfileCostume(iIndex - 1)` \u2014 note real call sites apply a zero-based adjustment."
    },
    "SetSatelliteScanMode": {
     "n": 1,
     "min": 5,
     "max": 5,
-    "example": "Player.SetSatelliteScanMode(uPlayer, false, 0, 0, 0)"
+    "example": "Player.SetSatelliteScanMode(uPlayer, false, 0, 0, 0)",
+    "doc": "Enables/disables satellite scan mode for a player at given coordinates, e.g. `Player.SetSatelliteScanMode(uPlayer, false, 0, 0, 0)`. Only the disable form (bEnable=false, zeroed coords) is attested; the enable form's coordinate meaning is unconfirmed."
    },
    "SetScopeEnabled": {
     "n": 6,
     "min": 2,
     "max": 2,
-    "example": "Player.SetScopeEnabled(uPlayer, true)"
+    "example": "Player.SetScopeEnabled(uPlayer, true)",
+    "doc": "Enables/disables scope use for a player, e.g. `Player.SetScopeEnabled(Player.GetLocalPlayer(), false)`."
    },
    "SetSeatMovementLocks": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Player.SetSeatMovementLocks(uPlayerGuid, true)"
+    "example": "Player.SetSeatMovementLocks(uPlayerGuid, true)",
+    "doc": "Enables/disables seat movement locks for a player with a boolean, e.g. `Player.SetSeatMovementLocks(uPlayerGuid, true)`."
    },
    "SetSurvivalMode": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Player.SetSurvivalMode(uPlayer, true)"
+    "example": "Player.SetSurvivalMode(uPlayer, true)",
+    "doc": "Enables/disables survival mode for a player; paired with SetHealthClamp in hero.lua."
    },
    "SetVehicleDisguise": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Player.SetVehicleDisguise(bEnable)"
+    "example": "Player.SetVehicleDisguise(bEnable)",
+    "doc": "Enables/disables vehicle disguise with a single boolean, e.g. `Player.SetVehicleDisguise(bEnable)`."
    },
    "SetWaitForInGame": {
     "n": 3,
@@ -3093,7 +3443,8 @@
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Player.TeleportCamera(uSecondaryPlayer)"
+    "example": "Player.TeleportCamera(uSecondaryPlayer)",
+    "doc": "Given a player guid, snaps that player's camera to their current position, e.g. `Player.TeleportCamera(uSecondaryPlayer)` \u2014 used around co-op transitions."
    },
    "Unbind": {
     "n": 1,
@@ -3105,7 +3456,8 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Player.VehicleDisguise({Player = uRider, Remove = true})"
+    "example": "Player.VehicleDisguise({Player = uRider, Remove = true})",
+    "doc": "Starts or removes a vehicle disguise change via a table argument: `{Player = uGuid, Callback = fCallback}` to start it (with a completion callback), or `{Player = uGuid, Remove = true}` to remove it."
    }
   },
   "Report": {
@@ -3153,319 +3505,372 @@
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.ActivateFactionRegionMusic()"
+    "example": "Sound.ActivateFactionRegionMusic()",
+    "doc": "Commits the current region's faction music; takes no arguments, called immediately after SetFactionMusic/LockFactionMusic(false)."
    },
    "AddCueToMusicSourcePlaylist": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.AddCueToMusicSourcePlaylist(sPlaylist, sCue)"
+    "example": "Sound.AddCueToMusicSourcePlaylist(sPlaylist, sCue)",
+    "doc": "Adds a music cue to a named source-music playlist."
    },
    "AddFactionMusic": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Sound.AddFactionMusic(sFaction)"
+    "example": "Sound.AddFactionMusic(sFaction)",
+    "doc": "Registers a faction or freeplay-name string with the faction-music system, during music-system init."
    },
    "AddMusicSourcePlaylist": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.AddMusicSourcePlaylist(sPlaylist, fGap)"
+    "example": "Sound.AddMusicSourcePlaylist(sPlaylist, fGap)",
+    "doc": "Creates a source-music playlist given a playlist-name string and a numeric gap value."
    },
    "AddMusicState": {
     "n": 58,
     "min": 6,
     "max": 6,
-    "example": "Sound.AddMusicState(\"shell\", 0, -1, 0, 0, 4)"
+    "example": "Sound.AddMusicState(\"shell\", 0, -1, 0, 0, 4)",
+    "doc": "Registers a named music state (e.g. \"none\", \"explore\", \"action\", \"high_action\", \"hijack\", \"mission_success\", etc) with 5 numeric parameters, during music-system init. Exact meaning of each numeric slot (duration/priority/fade-in/interval/fade-out are plausible guesses) is not confirmed."
    },
    "AddMusicTransition": {
     "n": 66,
     "min": 5,
     "max": 5,
-    "example": "Sound.AddMusicTransition(\"none\", \"action\", 1, 0, 0)"
+    "example": "Sound.AddMusicTransition(\"none\", \"action\", 1, 0, 0)",
+    "doc": "Defines a legal transition edge between two already-registered music states plus 3 numeric parameters (meaning unconfirmed), building the state graph that TransitionMusic moves through."
    },
    "AddSourceMusicEntryState": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.AddSourceMusicEntryState(transition.entryState)"
+    "example": "Sound.AddSourceMusicEntryState(transition.entryState)",
+    "doc": "Adds an entry state for source-music transitions. This is the newer API (used when `Sound._GetLibVersion() >= 11`) that replaces SetSourceMusicTransition."
    },
    "BindMusicCue": {
     "n": 4,
     "min": 2,
     "max": 2,
-    "example": "Sound.BindMusicCue(cue, state)"
+    "example": "Sound.BindMusicCue(cue, state)",
+    "doc": "Binds a music cue name to a named music state."
    },
    "ClearMusicCues": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.ClearMusicCues(_tMiscMusicStates[_iCurrentMiscMusicIndex])"
+    "example": "Sound.ClearMusicCues(_tMiscMusicStates[_iCurrentMiscMusicIndex])",
+    "doc": "Clears all cues bound to a named music state; typically followed immediately by a fresh BindMusicCue call."
    },
    "ClearMusicSourcePlaylist": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.ClearMusicSourcePlaylist(sPlaylist)"
+    "example": "Sound.ClearMusicSourcePlaylist(sPlaylist)",
+    "doc": "Clears all cues from a named source-music playlist."
    },
    "ClearSourceMusicEntryStates": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.ClearSourceMusicEntryStates()"
+    "example": "Sound.ClearSourceMusicEntryStates()",
+    "doc": "Clears source-music entry states; takes no arguments. Called immediately before AddSourceMusicEntryState, in the `>= 11` branch."
    },
    "ClearSourceMusicTransitions": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.ClearSourceMusicTransitions()"
+    "example": "Sound.ClearSourceMusicTransitions()",
+    "doc": "Clears source-music transitions; takes no arguments. Called immediately before SetSourceMusicTransition, in the same `_GetLibVersion() < 11` fallback branch."
    },
    "CueAmbience": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.CueAmbience(sAmbienceStream)"
+    "example": "Sound.CueAmbience(sAmbienceStream)",
+    "doc": "Starts an ambience stream given its stream name (single string argument)."
    },
    "CueSound": {
     "n": 91,
     "min": 2,
     "max": 2,
-    "example": "Sound.CueSound(0, sCue)"
+    "example": "Sound.CueSound(0, sCue)",
+    "doc": "Plays a sound cue on an object. Called with a real object uGuid for world sounds, or 0 for UI/HUD-attached one-shots; also commonly used directly as an Event.Create timer callback."
    },
    "DefineReverbPreset": {
     "n": 1,
     "min": 17,
     "max": 17,
-    "example": null
+    "example": null,
+    "doc": "Defines a reverb preset: an integer ID, a preset-name string, and a long run of further numeric DSP parameters (room size/decay/reflections/diffusion etc. are plausible by convention, but individual meanings aren't confirmed by the single call site observed)."
    },
    "FadeCategoryDown": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Sound.FadeCategoryDown(category, fLevel, fEnterLength)"
+    "example": "Sound.FadeCategoryDown(category, fLevel, fEnterLength)",
+    "doc": "Fades a named mix category down to a given level over a given duration."
    },
    "FadeCategoryUp": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.FadeCategoryUp(category, fExitLength)"
+    "example": "Sound.FadeCategoryUp(category, fExitLength)",
+    "doc": "Fades a named mix category back up over a given duration; the restore counterpart to FadeCategoryDown."
    },
    "GetAudioDir": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.GetAudioDir()"
+    "example": "Sound.GetAudioDir()",
+    "doc": "Returns the audio directory path string; no arguments. Used to build sound-bank file paths."
    },
    "IsDynamicMusic": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.IsDynamicMusic()"
+    "example": "Sound.IsDynamicMusic()",
+    "doc": "Returns whether dynamic music is currently enabled; no arguments. Used to snapshot the prior state before a temporary override."
    },
    "IsFactionLockedMusic": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.IsFactionLockedMusic()"
+    "example": "Sound.IsFactionLockedMusic()",
+    "doc": "Returns whether faction music is currently locked; no arguments. Used to snapshot prior lock state before a temporary override."
    },
    "LoadBankWithCallback": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Sound.LoadBankWithCallback(_GetLocalizedName(sBank), sType, _FlagAssetOpComplete)"
+    "example": "Sound.LoadBankWithCallback(_GetLocalizedName(sBank), sType, _FlagAssetOpComplete)",
+    "doc": "Asynchronously loads a sound bank given a (localized) bank name and type string, invoking a completion callback function when done."
    },
    "LoadTempBank": {
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Sound.LoadTempBank(_GetLocalizedName(sBank), sType, funcCallback, tCallbackData)"
+    "example": "Sound.LoadTempBank(_GetLocalizedName(sBank), sType, funcCallback, tCallbackData)",
+    "doc": "Loads a temporary sound bank. A 4-argument variant of LoadBankWithCallback that also takes a callback-data table alongside the callback function."
    },
    "LockActionLevelMusic": {
     "n": 15,
     "min": 1,
     "max": 1,
-    "example": "Sound.LockActionLevelMusic(true)"
+    "example": "Sound.LockActionLevelMusic(true)",
+    "doc": "Locks or unlocks the currently forced action level (boolean), typically paired with SetActionLevelsMusic to hold a forced level for a duration. Can be used directly as an Event.Create callback."
    },
    "LockFactionMusic": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Sound.LockFactionMusic(true)"
+    "example": "Sound.LockFactionMusic(true)",
+    "doc": "Locks or unlocks a forced faction-music selection with a boolean."
    },
    "LockListenerPosition": {
     "n": 8,
     "min": 1,
     "max": 1,
-    "example": "Sound.LockListenerPosition(true)"
+    "example": "Sound.LockListenerPosition(true)",
+    "doc": "Locks or unlocks the audio listener's position with a boolean; used in matched pairs bracketing scripted camera/audio moments."
    },
    "OpenStreamFile": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.OpenStreamFile(sStreamFile, sFileName)"
+    "example": "Sound.OpenStreamFile(sStreamFile, sFileName)",
+    "doc": "Opens a stream file given a stream name and a file name (two string arguments)."
    },
    "OverrideUserMusic": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sound.OverrideUserMusic()"
+    "example": "Sound.OverrideUserMusic()",
+    "doc": "Overrides the user's music selection; takes no arguments. Always called behind an `if Sound.OverrideUserMusic then` existence guard, paired with RestoreUserMusic as its counterpart."
    },
    "PitchCategoryActivate": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Sound.PitchCategoryActivate(category, fLevel, fEnterLength)"
+    "example": "Sound.PitchCategoryActivate(category, fLevel, fEnterLength)",
+    "doc": "Activates a pitch shift on a named category to a given level over a given duration."
    },
    "PitchCategoryDeactivate": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.PitchCategoryDeactivate(category, fExitLength)"
+    "example": "Sound.PitchCategoryDeactivate(category, fExitLength)",
+    "doc": "Deactivates a pitch-shift category over a given duration; the restore counterpart to PitchCategoryActivate."
    },
    "RegisterReadyCallback": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.RegisterReadyCallback(_FlagSystemReady)"
+    "example": "Sound.RegisterReadyCallback(_FlagSystemReady)",
+    "doc": "Registers a callback function that is invoked once the audio system finishes initializing."
    },
    "RequestAmbienceBank": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.RequestAmbienceBank(_GetLocalizedName(sBank))"
+    "example": "Sound.RequestAmbienceBank(_GetLocalizedName(sBank))",
+    "doc": "Requests loading of an ambience sound bank, given a (localized) bank-name string."
    },
    "RestoreUserMusic": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sound.RestoreUserMusic()"
+    "example": "Sound.RestoreUserMusic()",
+    "doc": "Restores the user's music selection after OverrideUserMusic; takes no arguments, called behind the same existence-guard pattern as its counterpart."
    },
    "SetActionLevelsMusic": {
     "n": 8,
     "min": 4,
     "max": 4,
-    "example": "Sound.SetActionLevelsMusic(0, 0, 0, 0)"
+    "example": "Sound.SetActionLevelsMusic(0, 0, 0, 0)",
+    "doc": "Forces/raises the current music action level. First numeric argument varies by call site (observed 0, 3, 10, 15); the meaning of the trailing 3 numeric args (always 0 in observed calls) is unconfirmed."
    },
    "SetActionThresholdsMusic": {
     "n": 8,
     "min": 3,
     "max": 3,
-    "example": "Sound.SetActionThresholdsMusic(\"none\", 2, 0)"
+    "example": "Sound.SetActionThresholdsMusic(\"none\", 2, 0)",
+    "doc": "Sets action-level thresholds for a named music state plus 2 numeric arguments. Only the state names \"none\" and \"explore\" are seen at any call site."
    },
    "SetDynamicMusic": {
     "n": 14,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetDynamicMusic(true)"
+    "example": "Sound.SetDynamicMusic(true)",
+    "doc": "Enables or disables the dynamic music system with a single boolean."
    },
    "SetFactionMusic": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetFactionMusic(sFaction)"
+    "example": "Sound.SetFactionMusic(sFaction)",
+    "doc": "Sets/selects the current faction whose music should play, by faction-name string."
    },
    "SetHijackMusic": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.SetHijackMusic(_sHijackSuccessMusicState, _sHijackResumeMusicState)"
+    "example": "Sound.SetHijackMusic(_sHijackSuccessMusicState, _sHijackResumeMusicState)",
+    "doc": "Registers which music states back hijack-success/resume music, given two state-name strings, during init only. It does not itself start hijack music \u2014 actual hijack-time music is triggered separately via Sound.TransitionMusic(\"hijack\") in mrxsound.lua's BeginActionHijack/EndActionHijack."
    },
    "SetMasterVolume": {
     "n": 11,
     "min": 2,
     "max": 2,
-    "example": "Sound.SetMasterVolume(1, 0)"
+    "example": "Sound.SetMasterVolume(1, 0)",
+    "doc": "Sets the master volume level (observed values 0 and 1) with a fade duration in seconds as the second argument."
    },
    "SetReverb": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetReverb(1)"
+    "example": "Sound.SetReverb(1)",
+    "doc": "Sets reverb by integer ID; used as a fallback alongside SetReverbPreset."
    },
    "SetReverbPreset": {
     "n": 2,
     "min": 0,
     "max": 1,
-    "example": "Sound.SetReverbPreset(1)"
+    "example": "Sound.SetReverbPreset(1)",
+    "doc": "Sets the active reverb preset, accepting either the preset's name string or its integer ID interchangeably, gated by a version/feature check between the two call forms."
    },
    "SetRootFactionRegionMusic": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetRootFactionRegionMusic(_sRootFactionRegion)"
+    "example": "Sound.SetRootFactionRegionMusic(_sRootFactionRegion)",
+    "doc": "Sets the root faction/region used for faction-region music, by faction-name string; called once during music-system init."
    },
    "SetSourceMusic": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetSourceMusic(_sSourceMusicState)"
+    "example": "Sound.SetSourceMusic(_sSourceMusicState)",
+    "doc": "Sets the \"source\" music state name used by the source-music playlist system, during music-system init."
    },
    "SetSourceMusicTransition": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sound.SetSourceMusicTransition(transition.entryState, transition.exitState)"
+    "example": "Sound.SetSourceMusicTransition(transition.entryState, transition.exitState)",
+    "doc": "Sets entry/exit state names for source-music transitions. Used only in a fallback code path when `Sound._GetLibVersion() < 11` (the older API, superseded by AddSourceMusicEntryState)."
    },
    "SetSurvivalMode": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetSurvivalMode(true)"
+    "example": "Sound.SetSurvivalMode(true)",
+    "doc": "Enables/disables survival-mode audio state with a boolean; paired with CueSound/StopSound of the \"sfx_survival_lp\" loop in the same functions."
    },
    "SetTimerUpdateMusic": {
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Sound.SetTimerUpdateMusic(true)"
+    "example": "Sound.SetTimerUpdateMusic(true)",
+    "doc": "Toggles timer-driven music updates with a boolean; observed toggled around timer-critical gameplay such as mission countdowns."
    },
    "SetVehicleEngineBoost": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Sound.SetVehicleEngineBoost(uGuid, 0)"
+    "example": "Sound.SetVehicleEngineBoost(uGuid, 0)",
+    "doc": "Sets a vehicle's engine-boost sound state for the given vehicle uGuid and a numeric level (observed values 0 and 1). Always called behind an existence guard, same late-addition pattern as StopAndFlushAllSounds."
    },
    "StopAmbience": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sound.StopAmbience(sAmbienceStream)"
+    "example": "Sound.StopAmbience(sAmbienceStream)",
+    "doc": "Stops an ambience stream previously started with CueAmbience, using the same stream name."
    },
    "StopAndFlushAllSounds": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sound.StopAndFlushAllSounds()"
+    "example": "Sound.StopAndFlushAllSounds()",
+    "doc": "Stops and flushes all currently playing sounds; takes no arguments. Always called behind an `if Sound.StopAndFlushAllSounds then` existence guard, implying it was added in a later game build than some calling code."
    },
    "StopSound": {
     "n": 26,
     "min": 2,
     "max": 2,
-    "example": "Sound.StopSound(0, sCue)"
+    "example": "Sound.StopSound(0, sCue)",
+    "doc": "Stops a sound cue previously started with CueSound, using the same (uGuid, sCueName) pair. Also used with uGuid 0 to stop UI/HUD sounds."
    },
    "TransitionMusic": {
     "n": 43,
     "min": 0,
     "max": 2,
-    "example": "Sound.TransitionMusic(\"none\")"
+    "example": "Sound.TransitionMusic(\"none\")",
+    "doc": "The actual trigger that moves the dynamic music state machine to a named, already-registered state (e.g. \"hijack\", \"action\", \"mission_success\"). Takes an optional trailing boolean flag whose meaning is unconfirmed."
    },
    "UnloadBankWithCallback": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Sound.UnloadBankWithCallback(_GetLocalizedName(sBank), sType, _FlagAssetOpComplete)"
+    "example": "Sound.UnloadBankWithCallback(_GetLocalizedName(sBank), sType, _FlagAssetOpComplete)",
+    "doc": "Asynchronously unloads a sound bank; same (sBankName, sType, funcCallback) argument shape as LoadBankWithCallback."
    },
    "UnloadTempBank": {
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Sound.UnloadTempBank(_GetLocalizedName(sBank), sType, funcCallback, tCallbackData)"
+    "example": "Sound.UnloadTempBank(_GetLocalizedName(sBank), sType, funcCallback, tCallbackData)",
+    "doc": "Unloads a temporary sound bank; same (sBankName, sType, funcCallback, tCallbackData) shape as LoadTempBank."
    },
    "_GetLibVersion": {
     "n": 5,
     "min": 0,
     "max": 0,
-    "example": "Sound._GetLibVersion()"
+    "example": "Sound._GetLibVersion()",
+    "doc": "Returns the audio engine's build/version number (integer, no arguments). Used repeatedly in real scripts as a feature-gate, e.g. `if Sound._GetLibVersion() >= 11 then` to choose between older and newer music/reverb APIs. Leading underscore suggests an internal accessor, but it is genuinely used by shipped code."
    }
   },
   "String": {
@@ -3481,43 +3886,50 @@
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Sys.AutoLoad()"
+    "example": "Sys.AutoLoad()",
+    "doc": "Returns a boolean used as a gate to skip the shell/menu flow and auto-load directly into the game; called with no arguments."
    },
    "FinishedShell": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.FinishedShell()"
+    "example": "Sys.FinishedShell()",
+    "doc": "Returns whether the shell has finished; called defensively (`if Sys.FinishedShell and Sys.FinishedShell() then`), suggesting it may not exist on every build."
    },
    "ForceNextAutosave": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.ForceNextAutosave()"
+    "example": "Sys.ForceNextAutosave()",
+    "doc": "Forces the next autosave to occur; called with no arguments."
    },
    "GetAssetRequestMax": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetAssetRequestMax()"
+    "example": "Sys.GetAssetRequestMax()",
+    "doc": "Returns the maximum number of concurrent asset requests; used both to cache the original throttle value and as a comparison bound against pending asset operations."
    },
    "GetCharacterTemplate": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetCharacterTemplate()"
+    "example": "Sys.GetCharacterTemplate()",
+    "doc": "Returns a character-template name string; used as a fallback in a chain ending in the hardcoded default `\"mattias\"`."
    },
    "GetForceNewGame": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetForceNewGame()"
+    "example": "Sys.GetForceNewGame()",
+    "doc": "Returns whether a new game should be forced; called defensively (`if Sys.GetForceNewGame and Sys.GetForceNewGame() then`)."
    },
    "GetINIBriefing": {
     "n": 5,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetINIBriefing()"
+    "example": "Sys.GetINIBriefing()",
+    "doc": "Returns a boolean INI-briefing setting; called with no arguments, widely used in shell/briefing flow."
    },
    "GetIgnoreLayers": {
     "n": 1,
@@ -3529,247 +3941,288 @@
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetLanguage()"
+    "example": "Sys.GetLanguage()",
+    "doc": "Returns the current language as a string; can return nil/falsy on some builds \u2014 the one confirmed call site uses an `or \"English\"` fallback."
    },
    "GetLevelName": {
     "n": 10,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetLevelName()"
+    "example": "Sys.GetLevelName()",
+    "doc": "Returns the current level name as a string; called with no arguments, very widely used (including compared/lower-cased at call sites)."
    },
    "GetMasterScriptName": {
     "n": 8,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetMasterScriptName()"
+    "example": "Sys.GetMasterScriptName()",
+    "doc": "Returns the master script name string; used alongside GetLevelName to drive Net.StartServer(...) and LevelBootstrap.LoadLevel(...) calls."
    },
    "GetPlatform": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetPlatform()"
+    "example": "Sys.GetPlatform()",
+    "doc": "Returns a numeric platform ID (treated as a number at the call site, not a string); called with no arguments."
    },
    "GetShellCode": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetShellCode()"
+    "example": "Sys.GetShellCode()",
+    "doc": "Returns the shell code string; called with no arguments."
    },
    "GetSkipMission": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetSkipMission()"
+    "example": "Sys.GetSkipMission()",
+    "doc": "Returns the mission name to skip to, as a string; called with no arguments."
    },
    "GetVersion": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.GetVersion()"
+    "example": "Sys.GetVersion()",
+    "doc": "Returns two values, `sCode, sData = Sys.GetVersion()`, describing the build version."
    },
    "GuidToString": {
     "n": 25,
     "min": 1,
     "max": 1,
-    "example": "Sys.GuidToString(uGuid)"
+    "example": "Sys.GuidToString(uGuid)",
+    "doc": "Converts a GUID handle (`uGuid`) to its string form. Very widely used, often as a table key (e.g. hashing a state/node name) or for debug printing."
    },
    "HaveActiveProfile": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.HaveActiveProfile()"
+    "example": "Sys.HaveActiveProfile()",
+    "doc": "Called with no arguments, presumably to check for an active save profile; its return value is discarded at the only confirmed call site, so its actual use is unconfirmed."
    },
    "IsConfirmOnCircle": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Sys.IsConfirmOnCircle()"
+    "example": "Sys.IsConfirmOnCircle()",
+    "doc": "Returns whether the confirm button follows the PlayStation-style 'circle to cancel' convention rather than 'cross to confirm' \u2014 a region/platform-specific controller setting. Very widely used, almost always called guarded (`if Sys.IsConfirmOnCircle and ...`)."
    },
    "IsDemoMode": {
     "n": 3,
     "min": 0,
     "max": 0,
-    "example": "Sys.IsDemoMode()"
+    "example": "Sys.IsDemoMode()",
+    "doc": "Returns whether the build is running in demo mode; called defensively (`if Sys.IsDemoMode and Sys.IsDemoMode() then`)."
    },
    "IsFinalConfig": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.IsFinalConfig()"
+    "example": "Sys.IsFinalConfig()",
+    "doc": "Returns whether this is a final (non-debug) build; called defensively, used to gate a debug-only skip button so it's unavailable in final builds."
    },
    "IsGermanSKU": {
     "n": 3,
     "min": 0,
     "max": 0,
-    "example": "Sys.IsGermanSKU()"
+    "example": "Sys.IsGermanSKU()",
+    "doc": "Returns whether this is the German SKU; called unguarded (unlike most other Is* queries on this page) to gate region-specific content, presumably gore/violence toggles for the German release."
    },
    "IsLoadingOrStreaming": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.IsLoadingOrStreaming()"
+    "example": "Sys.IsLoadingOrStreaming()",
+    "doc": "Returns whether the game is currently loading or streaming assets; called defensively, used to skip certain per-frame logic while loading."
    },
    "LTIGetPrecacheBypass": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.LTIGetPrecacheBypass()"
+    "example": "Sys.LTIGetPrecacheBypass()",
+    "doc": "Returns a number (not a plain boolean) indicating precache-bypass state; compared against 0 (`if Sys.LTIGetPrecacheBypass() > 0 then`) to decide whether to bypass LTI precaching."
    },
    "MainTime": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.MainTime()"
+    "example": "Sys.MainTime()",
+    "doc": "Returns the current time with no arguments, used as a fallback session-time source. Presumed to be the engine's internal pausable/scaled clock in seconds, paired with MainTimeStamp; whether it pauses or is affected by SetTimeScale is unconfirmed."
    },
    "MainTimeStamp": {
     "n": 4,
     "min": 0,
     "max": 0,
-    "example": "Sys.MainTimeStamp()"
+    "example": "Sys.MainTimeStamp()",
+    "doc": "Captures a timestamp handle used the same way as RealTimeStamp (e.g. for session/task timers). Presumed tied to the engine's internal pausable/scaled 'main' clock rather than a real-world clock, though the exact difference from RealTimeStamp is unconfirmed."
    },
    "NoHud": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.NoHud()"
+    "example": "Sys.NoHud()",
+    "doc": "Returns whether the HUD should be hidden; called unguarded to gate HUD-manager update logic."
    },
    "PlayIntroMovies": {
     "n": 2,
     "min": 0,
     "max": 0,
-    "example": "Sys.PlayIntroMovies()"
+    "example": "Sys.PlayIntroMovies()",
+    "doc": "Returns whether intro movies should play; used to gate movie playback during bootstrap."
    },
    "RealTimeStamp": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.RealTimeStamp()"
+    "example": "Sys.RealTimeStamp()",
+    "doc": "Captures a real-world-clock timestamp handle with no arguments, e.g. `uLockTimer = Sys.RealTimeStamp()`, later read via Sys.TimeStampGetElapsed()."
    },
    "RequestAutosave": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": null
+    "example": null,
+    "doc": "Requests an autosave: `Sys.RequestAutosave(bInMission, bLastMission, fMissionTime, nPercentCompleted)`. Sometimes called defensively (checked for existence first), suggesting it may be an optional/late-bound entry point not present on every build."
    },
    "RequestGameState": {
     "n": 38,
     "min": 0,
     "max": 0,
-    "example": "Sys.RequestGameState(\"PDA\")"
+    "example": "Sys.RequestGameState(\"PDA\")",
+    "doc": "Requests a game-state transition given a free-form state-name string, e.g. \"Shell\", \"ingame\", \"cinematic\", \"Pause\", \"Loading\", \"WaitForTether\", \"PDA\". This is the core state-transition entry point, used dozens of times across shell/bootstrap code; state names aren't enumerated as constants anywhere, and it can return a success boolean."
    },
    "RequiredAsset": {
     "n": 2,
     "min": 4,
     "max": 4,
-    "example": "Sys.RequiredAsset(MasterScript, \"script\", -3, false)"
+    "example": "Sys.RequiredAsset(MasterScript, \"script\", -3, false)",
+    "doc": "Registers an asset as required for the current level: `Sys.RequiredAsset(sAssetName, sAssetType, nPriority, bFlag)`. Confirmed for both \"layer\" and \"script\" asset types with a negative priority in both observed cases; the trailing boolean's meaning is not confirmed."
    },
    "RumbleEnabled": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.RumbleEnabled()"
+    "example": "Sys.RumbleEnabled()",
+    "doc": "Returns whether controller rumble is enabled; read as part of the pause-screen options-menu system settings."
    },
    "SetAssetRequestMax": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetAssetRequestMax(nPendingOps)"
+    "example": "Sys.SetAssetRequestMax(nPendingOps)",
+    "doc": "Sets the maximum number of concurrent asset requests: `Sys.SetAssetRequestMax(nMax)`. Used by the layer manager to temporarily raise the asset-streaming throttle and later restore the original value."
    },
    "SetINIBriefing": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetINIBriefing(bBriefing)"
+    "example": "Sys.SetINIBriefing(bBriefing)",
+    "doc": "Sets the INI-briefing boolean setting: `Sys.SetINIBriefing(bValue)`. Confirmed used to toggle it via `SetINIBriefing(not GetINIBriefing())`."
    },
    "SetLevelName": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetLevelName(LevelName)"
+    "example": "Sys.SetLevelName(LevelName)",
+    "doc": "Sets the current level name: `Sys.SetLevelName(sLevelName)`."
    },
    "SetLuaSaveVersion": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetLuaSaveVersion(GetSaveDataVersion())"
+    "example": "Sys.SetLuaSaveVersion(GetSaveDataVersion())",
+    "doc": "Sets the Lua save-data version: `Sys.SetLuaSaveVersion(nVersion)`. Always called once during bootstrap with the return value of a local GetSaveDataVersion() helper."
    },
    "SetMasterScriptName": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetMasterScriptName(MasterScript)"
+    "example": "Sys.SetMasterScriptName(MasterScript)",
+    "doc": "Sets the master script name: `Sys.SetMasterScriptName(sMasterScript)`."
    },
    "SetNumberOfViewports": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetNumberOfViewports(1)"
+    "example": "Sys.SetNumberOfViewports(1)",
+    "doc": "Sets the number of active viewports: `Sys.SetNumberOfViewports(n)`; confirmed called with 1."
    },
    "SetSkipMission": {
     "n": 7,
     "min": 0,
     "max": 1,
-    "example": "Sys.SetSkipMission(\"\")"
+    "example": "Sys.SetSkipMission(\"\")",
+    "doc": "Sets the mission to skip to by name: `Sys.SetSkipMission(sMissionName)`; also confirmed called with an empty string to clear it."
    },
    "SetTimeScale": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetTimeScale(Math.min(nNewTimeScale, nMinTimeScale))"
+    "example": "Sys.SetTimeScale(Math.min(nNewTimeScale, nMinTimeScale))",
+    "doc": "Sets the game's global time scale: `Sys.SetTimeScale(nScale)`. Confirmed used for a slow-motion-style effect, with the scale clamped to a minimum value before being applied."
    },
    "SetTutorialsEnabled": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Sys.SetTutorialsEnabled(bEnable)"
+    "example": "Sys.SetTutorialsEnabled(bEnable)",
+    "doc": "Sets whether tutorials are enabled: `Sys.SetTutorialsEnabled(bEnable)`. Setter counterpart to TutorialsEnabled; called defensively (checked for existence first) from the tutorials options-menu toggle."
    },
    "StartSingleplayer": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Sys.StartSingleplayer(sLevelName, sMasterScript)"
+    "example": "Sys.StartSingleplayer(sLevelName, sMasterScript)",
+    "doc": "Starts a singleplayer session given a level name and master script name: `Sys.StartSingleplayer(sLevelName, sMasterScript)`."
    },
    "StartWithResources": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.StartWithResources()"
+    "example": "Sys.StartWithResources()",
+    "doc": "Returns whether to start with resources; called defensively (`if Sys.StartWithResources and Sys.StartWithResources() then`)."
    },
    "StringToGuid": {
     "n": 2,
     "min": 0,
     "max": 1,
-    "example": "Sys.StringToGuid(sVehicleGuid)"
+    "example": "Sys.StringToGuid(sVehicleGuid)",
+    "doc": "Converts a GUID string (e.g. a \"0x...\" hex string) to a GUID handle. Very likely the same underlying function as the bare global `StringToGuid` used pervasively elsewhere in the corpus, though the aliasing evidence is one-directional \u2014 strong for StringToGuid, unconfirmed for GuidToString."
    },
    "SubtitlesEnabled": {
     "n": 3,
     "min": 0,
     "max": 0,
-    "example": "Sys.SubtitlesEnabled()"
+    "example": "Sys.SubtitlesEnabled()",
+    "doc": "Returns whether subtitles are enabled; used both guarded and unguarded, read in the pause-screen options menu."
    },
    "TimeStampGetElapsed": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Sys.TimeStampGetElapsed(self._uTimeStamp)"
+    "example": "Sys.TimeStampGetElapsed(self._uTimeStamp)",
+    "doc": "Returns elapsed seconds since a timestamp handle (from MainTimeStamp/RealTimeStamp, re-markable via TimeStampMark) was last marked. Forms a poll-based elapsed-time primitive, an alternative to the callback-based Event.TimerRelative for code that needs to check elapsed time on demand."
    },
    "TimeStampMark": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Sys.TimeStampMark(self._uTimeStamp)"
+    "example": "Sys.TimeStampMark(self._uTimeStamp)",
+    "doc": "Resets/re-marks an existing timestamp handle in place. Call sites consistently re-mark a stamp previously produced by MainTimeStamp/RealTimeStamp rather than creating a new one."
    },
    "TutorialsEnabled": {
     "n": 6,
     "min": 0,
     "max": 0,
-    "example": "Sys.TutorialsEnabled()"
+    "example": "Sys.TutorialsEnabled()",
+    "doc": "Returns whether the tutorial-hint HUD message system is enabled. This is the gate checked in MrxTutorialManager before showing or updating a tutorial popup message, and it's read defensively in the pause-screen options-menu toggle."
    },
    "YAxisInverted": {
     "n": 1,
     "min": 0,
     "max": 0,
-    "example": "Sys.YAxisInverted()"
+    "example": "Sys.YAxisInverted()",
+    "doc": "Returns whether the Y-axis is inverted; read alongside RumbleEnabled/SubtitlesEnabled in the same pause-screen options read."
    }
   },
   "Table": {
@@ -3799,187 +4252,218 @@
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.CancelHijack(uCharacterGuid)"
+    "example": "Vehicle.CancelHijack(uCharacterGuid)",
+    "doc": "Takes a plain character guid; cancels an active hijack. Observed being called on player logout/cleanup."
    },
    "ClearControls": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.ClearControls(self._vehicle)"
+    "example": "Vehicle.ClearControls(self._vehicle)",
+    "doc": "Takes a plain vehicle guid; clears the vehicle's controls, called alongside turret-disable logic during hijack setup."
    },
    "CloseDoor": {
     "n": 3,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.CloseDoor(uGuid, \"pivot\")"
+    "example": "Vehicle.CloseDoor(uGuid, \"pivot\")",
+    "doc": "Takes a vehicle guid and a door/part name string (e.g. \"pivot\"); mirrors OpenDoor to close it."
    },
    "EnableTurret": {
     "n": 6,
     "min": 3,
     "max": 5,
-    "example": "Vehicle.EnableTurret(uGuid, \"head\", false)"
+    "example": "Vehicle.EnableTurret(uGuid, \"head\", false)",
+    "doc": "Takes a vehicle guid, a turret/part name (\"head\", \"main_turret\"), a boolean, and sometimes an axis string (\"pitch\", \"all\") plus another boolean. Confirmed to be control/orientation-only, not weapon selection: every real call site just disables or re-enables the turret's own control during a hijack cinematic and never touches what the turret fires."
    },
    "Enter": {
     "n": 14,
     "min": 2,
     "max": 5,
-    "example": "Vehicle.Enter(uBoat, uChar, \"d\", false)"
+    "example": "Vehicle.Enter(uBoat, uChar, \"d\", false)",
+    "doc": "Takes a vehicle guid, character guid, a seat-type string (\"d\", \"p\"), and one or two boolean flags (immediate, plus an optional extra flag). Puts a character into a vehicle by seat type rather than a specific seat guid."
    },
    "EnterBySeatGuid": {
     "n": 3,
     "min": 4,
     "max": 5,
-    "example": "Vehicle.EnterBySeatGuid(uLuckyLady, uChar, uSeatTran, true, false)"
+    "example": "Vehicle.EnterBySeatGuid(uLuckyLady, uChar, uSeatTran, true, false)",
+    "doc": "Takes a vehicle guid, character guid, seat guid, and one or two boolean flags (immediate, plus an extra flag); returns a success boolean. Puts a character into a specific seat identified by guid."
    },
    "Exit": {
     "n": 19,
     "min": 2,
     "max": 3,
-    "example": "Vehicle.Exit(uVeh, uGuid)"
+    "example": "Vehicle.Exit(uVeh, uGuid)",
+    "doc": "Takes a vehicle guid and a character guid, frequently with a trailing boolean flag; removes the character from the vehicle."
    },
    "GetDriver": {
     "n": 112,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.GetDriver(uVeh)"
+    "example": "Vehicle.GetDriver(uVeh)",
+    "doc": "Returns the driver's character guid for a vehicle uGuid, or nil if unmanned. Very widely used in real game scripts, often guarded with a nil check."
    },
    "GetFromRider": {
     "n": 26,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.GetFromRider(uChar)"
+    "example": "Vehicle.GetFromRider(uChar)",
+    "doc": "Takes a character uGuid; returns the vehicle guid the character is currently riding in, or nil if the character is on foot."
    },
    "GetRiders": {
     "n": 18,
     "min": 1,
     "max": 2,
-    "example": "Vehicle.GetRiders(uVeh)"
+    "example": "Vehicle.GetRiders(uVeh)",
+    "doc": "Takes a vehicle uGuid and an optional seat-type filter string (e.g. \"p\", \"g\", \"driver\"); returns a table of rider guids."
    },
    "GetSeatByType": {
     "n": 6,
     "min": 2,
     "max": 3,
-    "example": "Vehicle.GetSeatByType(uVehicle, \"d\")"
+    "example": "Vehicle.GetSeatByType(uVehicle, \"d\")",
+    "doc": "Takes a vehicle uGuid and a seat-type string (\"p\", \"d\"); at least one real call site passes a third boolean argument as well."
    },
    "GetSeatFromRider": {
     "n": 5,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.GetSeatFromRider(uGuid)"
+    "example": "Vehicle.GetSeatFromRider(uGuid)",
+    "doc": "Takes a character uGuid; returns the guid of the seat that character occupies."
    },
    "GetSeatParams": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.GetSeatParams(uRusherSeat)"
+    "example": "Vehicle.GetSeatParams(uRusherSeat)",
+    "doc": "Takes a seat guid; returns a params table that includes at least an IsGunner field per observed usage."
    },
    "GetSeatToSeat": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.GetSeatToSeat(uSeat, false)"
+    "example": "Vehicle.GetSeatToSeat(uSeat, false)",
+    "doc": "Takes a seat guid and a boolean; appears to return possible seat-transfer targets from that seat."
    },
    "HijackAbort": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.HijackAbort(self._hijacker)"
+    "example": "Vehicle.HijackAbort(self._hijacker)",
+    "doc": "Takes a plain character (hijacker) guid. Part of the hijack state machine; aborts an in-progress hijack."
    },
    "HijackAbortDone": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.HijackAbortDone(self._hijacker)"
+    "example": "Vehicle.HijackAbortDone(self._hijacker)",
+    "doc": "Takes a plain character (hijacker) guid. Part of the hijack state machine; signals that a hijack-abort has finished."
    },
    "HijackComplete": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.HijackComplete(self._hijacker)"
+    "example": "Vehicle.HijackComplete(self._hijacker)",
+    "doc": "Takes a plain character (hijacker) guid. Part of the hijack state machine; signals a successful hijack completion."
    },
    "HijackStart": {
     "n": 1,
     "min": 4,
     "max": 4,
-    "example": "Vehicle.HijackStart(self._hijacker, self._hijackee, self._vehicle, self)"
+    "example": "Vehicle.HijackStart(self._hijacker, self._hijackee, self._vehicle, self)",
+    "doc": "Takes a hijacker guid, hijackee guid, vehicle guid, and (in the one observed call site) a fourth argument that was a table/object reference (self). Begins the hijack state machine."
    },
    "IsFlying": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.IsFlying(uVehicle)"
+    "example": "Vehicle.IsFlying(uVehicle)",
+    "doc": "Takes a plain vehicle guid; returns a boolean, checked before flight-specific hijack logic runs."
    },
    "IsHijackRemote": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.IsHijackRemote(self._hijacker)"
+    "example": "Vehicle.IsHijackRemote(self._hijacker)",
+    "doc": "Takes a character guid; checks whether a hijack is remote. Its one real call site guards the call itself with `Vehicle.IsHijackRemote and ...`, implying the function's presence was historically uncertain in some contexts."
    },
    "IsSeatALadder": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.IsSeatALadder(uSeat)"
+    "example": "Vehicle.IsSeatALadder(uSeat)",
+    "doc": "Takes a plain seat guid; returns a boolean for whether that seat is a ladder-type seat."
    },
    "IsSeatBlocked": {
     "n": 1,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.IsSeatBlocked(uDriverSeat)"
+    "example": "Vehicle.IsSeatBlocked(uDriverSeat)",
+    "doc": "Takes a plain seat guid; returns a boolean for whether the seat is currently blocked/unusable."
    },
    "OpenDoor": {
     "n": 2,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.OpenDoor(uGuid, \"pivot\")"
+    "example": "Vehicle.OpenDoor(uGuid, \"pivot\")",
+    "doc": "Takes a vehicle guid and a door/part name string (e.g. \"pivot\", \"DriverHatch\"). Using it to open a tank hatch (\"DriverHatch\") has been proposed as a live test but is not yet confirmed working."
    },
    "SetCanPlayerUse": {
     "n": 2,
     "min": 3,
     "max": 3,
-    "example": "Vehicle.SetCanPlayerUse(uHeli, \"d\", true)"
+    "example": "Vehicle.SetCanPlayerUse(uHeli, \"d\", true)",
+    "doc": "Takes a vehicle guid, a seat-type string (\"d\", \"a\"), and a boolean; controls whether a player can use that seat type."
    },
    "SetHijackState": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.SetHijackState(self._hijacker, i)"
+    "example": "Vehicle.SetHijackState(self._hijacker, i)",
+    "doc": "Takes a character guid and a numeric state value; sets the hijacker's state within the hijack state machine (exact state numbering not documented from call sites)."
    },
    "SetHijackSuccess": {
     "n": 1,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.SetHijackSuccess(self._hijacker, false)"
+    "example": "Vehicle.SetHijackSuccess(self._hijacker, false)",
+    "doc": "Takes a character guid and a boolean (observed as false in the corpus); records hijack success/failure for that character."
    },
    "SetParts": {
     "n": 27,
     "min": 3,
     "max": 3,
-    "example": "Vehicle.SetParts(uGuid, \"LightFront\", true)"
+    "example": "Vehicle.SetParts(uGuid, \"LightFront\", true)",
+    "doc": "Takes a vehicle/object guid, a part name string (e.g. \"LightFront\", \"CtrlRotation\"), and a boolean; returns a boolean. Also seen used on non-vehicle gate/alarm objects, suggesting broader applicability than just player vehicles."
    },
    "SetTurretPitch": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Vehicle.SetTurretPitch(self._vehicle, \"main_turret\", 0)"
+    "example": "Vehicle.SetTurretPitch(self._vehicle, \"main_turret\", 0)",
+    "doc": "Takes a vehicle guid, turret name, and a numeric pitch value (observed as 0, resetting pitch to level right after disabling the turret during hijack). Orientation only, same caveat as EnableTurret \u2014 does not affect firing."
    },
    "StopTankHijackMotion": {
     "n": 2,
     "min": 1,
     "max": 1,
-    "example": "Vehicle.StopTankHijackMotion(self._vehicle)"
+    "example": "Vehicle.StopTankHijackMotion(self._vehicle)",
+    "doc": "Takes a plain vehicle guid; stops the tank hijack motion/animation sequence."
    },
    "TransferToSeat": {
     "n": 1,
     "min": 3,
     "max": 3,
-    "example": "Vehicle.TransferToSeat(uGuid, uDriverSeat, false)"
+    "example": "Vehicle.TransferToSeat(uGuid, uDriverSeat, false)",
+    "doc": "Takes a vehicle guid, a seat guid, and a boolean flag; transfers a rider between seats."
    },
    "Usable": {
     "n": 13,
     "min": 2,
     "max": 2,
-    "example": "Vehicle.Usable(uSeat, false)"
+    "example": "Vehicle.Usable(uSeat, false)",
+    "doc": "Takes a vehicle guid and a boolean; toggles whether the vehicle can be entered/used at all."
    }
   },
   "Weapon": {
@@ -3987,19 +4471,22 @@
     "n": 4,
     "min": 1,
     "max": 1,
-    "example": "Weapon.GetMaxReserveAmmo(uGuid)"
+    "example": "Weapon.GetMaxReserveAmmo(uGuid)",
+    "doc": "Returns the maximum reserve ammo capacity for a carried weapon guid (uWeapon). Almost always paired with SetReserveAmmo in the idiom Weapon.SetReserveAmmo(uWeapon, Weapon.GetMaxReserveAmmo(uWeapon)) to refill a weapon to full."
    },
    "GetReserveAmmo": {
     "n": 3,
     "min": 1,
     "max": 1,
-    "example": "Weapon.GetReserveAmmo(weapon)"
+    "example": "Weapon.GetReserveAmmo(weapon)",
+    "doc": "Returns the current reserve ammo count for a carried/equipped weapon guid (uWeapon). Always called with a player's hand-held weapon, never a vehicle weapon."
    },
    "SetReserveAmmo": {
     "n": 5,
     "min": 2,
     "max": 2,
-    "example": "Weapon.SetReserveAmmo(weapon, max)"
+    "example": "Weapon.SetReserveAmmo(weapon, max)",
+    "doc": "Sets the reserve ammo of a carried weapon guid (uWeapon) to nAmount. Commonly used to refill a weapon to max via Weapon.SetReserveAmmo(uWeapon, Weapon.GetMaxReserveAmmo(uWeapon)), but is also seen setting a flat value like 1; it can also be registered directly as an Event.Create callback (e.g. for ObjectHibernation), so it may be invoked by the engine's event dispatcher rather than called directly."
    }
   },
   "_GuiInternal": {
