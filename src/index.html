@@ -43,17 +43,21 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <button class="stab" data-p="examples">Examples</button>
       <button class="stab" data-p="api">API</button>
       <button class="stab" data-p="templates">Templates</button>
+      <button class="stab" data-p="inspect">Inspect</button>
     </div>
     <div class="spanel" id="panelScripts">
       <div class="sidehead scriptshead">
-        <button class="btn small" id="scNew" title="Start a new empty script">+ New</button>
-        <button class="btn small" id="scImport" title="Import .lua files from disk">Import</button>
-        <button class="btn small" id="scExport" title="Download the open script as a .lua file">Export</button>
+        <select class="btn small scactions" id="scActions" title="Script actions">
+          <option value="" selected>Actions ▾</option>
+          <option value="new">+ New script</option>
+          <option value="import">Import .lua files…</option>
+          <option value="export">Export current script</option>
+          <option value="backup">Backup library (.json)</option>
+          <option value="restore">Restore library…</option>
+          <option value="deploy">⬇ Deploy as OnKey</option>
+        </select>
         <input type="file" id="scFile" accept=".lua,.txt" multiple hidden>
-        <button class="btn small" id="scBackup" title="Download your whole script library as one JSON file">Backup</button>
-        <button class="btn small" id="scRestore" title="Restore scripts from a library JSON file — adds to your library, never overwrites">Restore</button>
         <input type="file" id="scRestoreFile" accept=".json" hidden>
-        <button class="btn small go" id="scDeploy" title="Wrap this script in real OnKey mod boilerplate (guard/state/action) and download it, ready to bind in lua_loader.ini">⬇ Deploy as OnKey</button>
       </div>
       <div class="sclist" id="scList"></div>
     </div>
@@ -73,6 +77,17 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       </div>
       <div class="tplcredit" id="tplCredit"></div>
       <div class="apitree" id="tplTree"></div>
+    </div>
+    <div class="spanel hidden" id="panelInspect">
+      <div class="inspecthead hidden" id="inspectHead">
+        <span class="inspectexpr" id="inspectExpr"></span>
+        <button class="btn small" id="inspectClose" title="Stop inspecting">✕</button>
+      </div>
+      <div class="inspectbody">
+        <div class="inspectempty" id="inspectEmpty">Click 🔍 on a Results value to inspect it here as a
+          live object — name, position, health, faction and more, refreshing while connected.</div>
+        <div class="inspectfields hidden" id="inspectFields"></div>
+      </div>
     </div>
   </aside>
 

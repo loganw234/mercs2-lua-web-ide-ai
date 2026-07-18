@@ -84,8 +84,8 @@
     row.appendChild(ex);
   }
   /* a "🔍 inspect" button on any simple (non-table, non-empty) ok result -- re-evaluates that value as a
-     guid via the object inspector (45_watch.js's object-mode watch). Not shown for table literals (a
-     guid is never displayed as "{...}") or an empty/error result -- nothing sensible to inspect there. */
+     guid in the Inspect sidebar tab (46_inspector.js). Not shown for table literals (a guid is never
+     displayed as "{...}") or an empty/error result -- nothing sensible to inspect there. */
   function inspectable(outcome) {
     return outcome && outcome.cls === "ok" && outcome.text && outcome.text !== "(no return value)" &&
       outcome.text.charAt(0) !== "{";
@@ -94,7 +94,7 @@
     var old = row.querySelector(".inspect"); if (old) old.remove();
     if (!inspectable(outcome)) return;
     var ins = document.createElement("button"); ins.className = "inspect"; ins.textContent = "🔍"; ins.title = "Inspect this as a live object";
-    ins.onclick = function () { IDE.watch.addObject(outcome.text); };
+    ins.onclick = function () { IDE.inspector.inspect(outcome.text); };
     row.insertBefore(ins, r);
   }
   function makeRow(codeText, outcome) {

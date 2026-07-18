@@ -66,6 +66,7 @@
       $("panelExamples").classList.toggle("hidden", which !== "examples");
       $("panelApi").classList.toggle("hidden", which !== "api");
       $("panelTemplates").classList.toggle("hidden", which !== "templates");
+      $("panelInspect").classList.toggle("hidden", which !== "inspect");
     };
   });
 

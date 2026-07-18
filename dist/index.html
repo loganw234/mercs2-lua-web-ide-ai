@@ -63,8 +63,8 @@ select.btn{padding:6px 8px}
 .sidehead{padding:9px;border-bottom:1px solid var(--edge)}
 
 /* sidebar tabs + panels */
-.sidetabs{display:flex;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--edge)}
-.stab{font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;border-bottom:2px solid transparent;padding:7px 10px;cursor:pointer}
+.sidetabs{display:flex;flex-wrap:wrap;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--edge)}
+.stab{font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;border-bottom:2px solid transparent;padding:7px 9px;cursor:pointer}
 .stab.on{color:var(--ink);border-bottom-color:var(--accent)}
 .spanel{flex:1;display:flex;flex-direction:column;min-height:0}
 .spanel.hidden{display:none}
@@ -72,7 +72,8 @@ select.btn{padding:6px 8px}
 .scriptname{color:var(--dim);font:12px/1 var(--efont);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* the Scripts panel */
-.scriptshead{display:flex;gap:6px;flex-wrap:wrap}
+.scriptshead{display:flex;gap:6px}
+.scactions{flex:1;width:100%}
 .sclist{flex:1;overflow-y:auto;padding:4px 0}
 .scrow{display:flex;align-items:center;padding:6px 8px 6px 11px;cursor:pointer;border-left:2px solid transparent}
 .scrow:hover{background:var(--hov)}
@@ -120,6 +121,20 @@ select.btn{padding:6px 8px}
 .call{padding:3px 11px 3px 20px;color:var(--ink);font:12px/1.4 var(--efont);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .call:hover{background:var(--hov);color:var(--accent)}
 .nsdoc{padding:2px 11px 7px;color:var(--dim);font-size:11px;line-height:1.4}
+
+/* the Inspect panel -- takes over the sidebar for one live-polled object (46_inspector.js) */
+.inspecthead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;border-bottom:1px solid var(--edge)}
+.inspecthead.hidden{display:none}
+.inspectexpr{flex:1;min-width:0;font:12px/1.4 var(--efont);color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inspectbody{flex:1;overflow-y:auto}
+.inspectempty{color:var(--dim);font:11.5px/1.6 system-ui,sans-serif;padding:14px}
+.inspectfields.hidden{display:none}
+.inspectfield{padding:7px 11px;border-bottom:1px solid var(--edge);display:flex;flex-direction:column;gap:1px}
+.ifk{color:var(--dim);font:10px/1.3 var(--efont);text-transform:uppercase;letter-spacing:.04em}
+.ifv{color:var(--ink);font:12.5px/1.5 var(--efont);word-break:break-word;white-space:pre-wrap}
+.inspectstatus{padding:14px;font:12px/1.5 var(--efont)}
+.inspectstatus.dim{color:var(--dim)}
+.inspectstatus.err{color:var(--err)}
 
 .work{display:flex;flex-direction:column;min-width:0;min-height:0}
 
@@ -230,15 +245,6 @@ select.btn{padding:6px 8px}
 .watchrm{flex:none;font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;cursor:pointer;padding:2px 5px}
 .watchrm:hover{color:var(--err)}
 
-/* object-mode watch rows (the object inspector -- 🔍 from a Results row) */
-.watchrow.watchobj{border-bottom:0}
-.watchobjsum{border-bottom:1px dotted var(--dim)}
-.watchfields{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:0 11px 8px 11px;border-bottom:1px solid var(--edge)}
-.watchfields.hidden{display:none}
-.watchfield{display:flex;gap:6px;font:11px/1.5 var(--efont);overflow:hidden}
-.wfk{color:var(--dim);flex:none;width:60px}
-.wfv{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
 /* row re-run + the feed area wrapper with its "jump to latest" chip */
 .feedwrap{flex:1;position:relative;display:flex;flex-direction:column;min-height:0}
 .row{position:relative;padding-right:48px}
@@ -311,17 +317,21 @@ a.btn{text-decoration:none;display:inline-block}
       <button class="stab" data-p="examples">Examples</button>
       <button class="stab" data-p="api">API</button>
       <button class="stab" data-p="templates">Templates</button>
+      <button class="stab" data-p="inspect">Inspect</button>
     </div>
     <div class="spanel" id="panelScripts">
       <div class="sidehead scriptshead">
-        <button class="btn small" id="scNew" title="Start a new empty script">+ New</button>
-        <button class="btn small" id="scImport" title="Import .lua files from disk">Import</button>
-        <button class="btn small" id="scExport" title="Download the open script as a .lua file">Export</button>
+        <select class="btn small scactions" id="scActions" title="Script actions">
+          <option value="" selected>Actions ▾</option>
+          <option value="new">+ New script</option>
+          <option value="import">Import .lua files…</option>
+          <option value="export">Export current script</option>
+          <option value="backup">Backup library (.json)</option>
+          <option value="restore">Restore library…</option>
+          <option value="deploy">⬇ Deploy as OnKey</option>
+        </select>
         <input type="file" id="scFile" accept=".lua,.txt" multiple hidden>
-        <button class="btn small" id="scBackup" title="Download your whole script library as one JSON file">Backup</button>
-        <button class="btn small" id="scRestore" title="Restore scripts from a library JSON file — adds to your library, never overwrites">Restore</button>
         <input type="file" id="scRestoreFile" accept=".json" hidden>
-        <button class="btn small go" id="scDeploy" title="Wrap this script in real OnKey mod boilerplate (guard/state/action) and download it, ready to bind in lua_loader.ini">⬇ Deploy as OnKey</button>
       </div>
       <div class="sclist" id="scList"></div>
     </div>
@@ -341,6 +351,17 @@ a.btn{text-decoration:none;display:inline-block}
       </div>
       <div class="tplcredit" id="tplCredit"></div>
       <div class="apitree" id="tplTree"></div>
+    </div>
+    <div class="spanel hidden" id="panelInspect">
+      <div class="inspecthead hidden" id="inspectHead">
+        <span class="inspectexpr" id="inspectExpr"></span>
+        <button class="btn small" id="inspectClose" title="Stop inspecting">✕</button>
+      </div>
+      <div class="inspectbody">
+        <div class="inspectempty" id="inspectEmpty">Click 🔍 on a Results value to inspect it here as a
+          live object — name, position, health, faction and more, refreshing while connected.</div>
+        <div class="inspectfields hidden" id="inspectFields"></div>
+      </div>
     </div>
   </aside>
 
@@ -11355,7 +11376,7 @@ a.btn{text-decoration:none;display:inline-block}
   }
  ]
 };</script>
-<script>window.IDE_BUILD={"sha": "d98ee78", "date": "2026-07-18T05:57:56-07:00"};</script>
+<script>window.IDE_BUILD={"sha": "14af7eb", "date": "2026-07-18T06:21:20-07:00"};</script>
 <script>/* vendor.js -- GENERATED by tools/vendor (npm run build). CodeMirror 6 + luaparse, exposed as window.CM. Do not edit. */
 var CM=(()=>{var _p=Object.create;var os=Object.defineProperty;var Yp=Object.getOwnPropertyDescriptor;var Jp=Object.getOwnPropertyNames;var Xp=Object.getPrototypeOf,Qp=Object.prototype.hasOwnProperty;var ph=(n,e)=>()=>(e||n((e={exports:{}}).exports,e),e.exports),Zp=(n,e)=>{for(var t in e)os(n,t,{get:e[t],enumerable:!0})},mh=(n,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let s of Jp(e))!Qp.call(n,s)&&s!==t&&os(n,s,{get:()=>e[s],enumerable:!(i=Yp(e,s))||i.enumerable});return n};var gh=(n,e,t)=>(t=n!=null?_p(Xp(n)):{},mh(e||!n||!n.__esModule?os(t,"default",{value:n,enumerable:!0}):t,n)),em=n=>mh(os({},"__esModule",{value:!0}),n);var up=ph((nn,is)=>{(function(n,e,t){"use strict";var i={function:!0,object:!0},s=i[typeof nn]&&nn&&!nn.nodeType&&nn,r=i[typeof is]&&is&&!is.nodeType&&is,o=s&&r&&typeof global=="object"&&global,l=r&&r.exports===s&&s;o&&(o.global===o||o.window===o||o.self===o)&&(n=o),typeof define=="function"&&typeof define.amd=="object"&&define.amd?(define(["exports"],t),s&&l&&t(r.exports)):t(s&&r?l?r.exports:s:n[e]={})})(nn,"luaparse",function(n){"use strict";n.version="0.3.1";var e,t,i,s,r,o=n.defaultOptions={wait:!1,comments:!0,scope:!1,locations:!1,ranges:!1,onCreateNode:null,onCreateScope:null,onDestroyScope:null,onLocalDeclaration:null,luaVersion:"5.1",encodingMode:"none"};function l(u,g){return g=g||0,u<128?String.fromCharCode(u):u<2048?String.fromCharCode(g|192|u>>6,g|128|u&63):u<65536?String.fromCharCode(g|224|u>>12,g|128|u>>6&63,g|128|u&63):u<1114112?String.fromCharCode(g|240|u>>18,g|128|u>>12&63,g|128|u>>6&63,g|128|u&63):null}function a(u,g){for(var w=u.toString(16);w.length<g;)w="0"+w;return w}function h(u){return function(g){var w=u.exec(g);if(!w)return g;F(null,S.invalidCodeUnit,a(w[0].charCodeAt(0),4).toUpperCase())}}var c={"pseudo-latin1":{fixup:h(/[^\x00-\xff]/),encodeByte:function(u){return u===null?"":String.fromCharCode(u)},encodeUTF8:function(u){return l(u)}},"x-user-defined":{fixup:h(/[^\x00-\x7f\uf780-\uf7ff]/),encodeByte:function(u){return u===null?"":u>=128?String.fromCharCode(u|63232):String.fromCharCode(u)},encodeUTF8:function(u){return l(u,63232)}},none:{discardStrings:!0,fixup:function(u){return u},encodeByte:function(u){return""},encodeUTF8:function(u){return""}}},f=1,d=2,p=4,m=8,y=16,b=32,k=64,C=128,M=256;n.tokenTypes={EOF:f,StringLiteral:d,Keyword:p,Identifier:m,NumericLiteral:y,Punctuator:b,BooleanLiteral:k,NilLiteral:C,VarargLiteral:M};var S=n.errors={unexpected:"unexpected %1 '%2' near '%3'",unexpectedEOF:"unexpected symbol near '<eof>'",expected:"'%1' expected near '%2'",expectedToken:"%1 expected near '%2'",unfinishedString:"unfinished string near '%1'",malformedNumber:"malformed number near '%1'",decimalEscapeTooLarge:"decimal escape too large near '%1'",invalidEscape:"invalid escape sequence near '%1'",hexadecimalDigitExpected:"hexadecimal digit expected near '%1'",braceExpected:"missing '%1' near '%2'",tooLargeCodepoint:"UTF-8 value too large near '%1'",unfinishedLongString:"unfinished long string (starting at line %1) near '%2'",unfinishedLongComment:"unfinished long comment (starting at line %1) near '%2'",ambiguousSyntax:"ambiguous syntax (function call x new statement) near '%1'",noLoopToBreak:"no loop to break near '%1'",labelAlreadyDefined:"label '%1' already defined on line %2",labelNotVisible:"no visible label '%1' for <goto>",gotoJumpInLocalScope:"<goto %1> jumps into the scope of local '%2'",cannotUseVararg:"cannot use '...' outside a vararg function near '%1'",invalidCodeUnit:"code unit U+%1 is not allowed in the current encoding mode"},x=n.ast={labelStatement:function(u){return{type:"LabelStatement",label:u}},breakStatement:function(){return{type:"BreakStatement"}},gotoStatement:function(u){return{type:"GotoStatement",label:u}},returnStatement:function(u){return{type:"ReturnStatement",arguments:u}},ifStatement:function(u){return{type:"IfStatement",clauses:u}},ifClause:function(u,g){return{type:"IfClause",condition:u,body:g}},elseifClause:function(u,g){return{type:"ElseifClause",condition:u,body:g}},elseClause:function(u){return{type:"ElseClause",body:u}},whileStatement:function(u,g){return{type:"WhileStatement",condition:u,body:g}},doStatement:function(u){return{type:"DoStatement",body:u}},repeatStatement:function(u,g){return{type:"RepeatStatement",condition:u,body:g}},localStatement:function(u,g){return{type:"LocalStatement",variables:u,init:g}},assignmentStatement:function(u,g){return{type:"AssignmentStatement",variables:u,init:g}},callStatement:function(u){return{type:"CallStatement",expression:u}},functionStatement:function(u,g,w,D){return{type:"FunctionDeclaration",identifier:u,isLocal:w,parameters:g,body:D}},forNumericStatement:function(u,g,w,D,B){return{type:"ForNumericStatement",variable:u,start:g,end:w,step:D,body:B}},forGenericStatement:function(u,g,w){return{type:"ForGenericStatement",variables:u,iterators:g,body:w}},chunk:function(u){return{type:"Chunk",body:u}},identifier:function(u){return{type:"Identifier",name:u}},literal:function(u,g,w){return u=u===d?"StringLiteral":u===y?"NumericLiteral":u===k?"BooleanLiteral":u===C?"NilLiteral":"VarargLiteral",{type:u,value:g,raw:w}},tableKey:function(u,g){return{type:"TableKey",key:u,value:g}},tableKeyString:function(u,g){return{type:"TableKeyString",key:u,value:g}},tableValue:function(u){return{type:"TableValue",value:u}},tableConstructorExpression:function(u){return{type:"TableConstructorExpression",fields:u}},binaryExpression:function(u,g,w){var D=u==="and"||u==="or"?"LogicalExpression":"BinaryExpression";return{type:D,operator:u,left:g,right:w}},unaryExpression:function(u,g){return{type:"UnaryExpression",operator:u,argument:g}},memberExpression:function(u,g,w){return{type:"MemberExpression",indexer:g,identifier:w,base:u}},indexExpression:function(u,g){return{type:"IndexExpression",base:u,index:g}},callExpression:function(u,g){return{type:"CallExpression",base:u,arguments:g}},tableCallExpression:function(u,g){return{type:"TableCallExpression",base:u,arguments:g}},stringCallExpression:function(u,g){return{type:"StringCallExpression",base:u,argument:g}},comment:function(u,g){return{type:"Comment",value:u,raw:g}}};function A(u){if(Ae){var g=Ge.pop();g.complete(),g.bless(u)}return t.onCreateNode&&t.onCreateNode(u),u}var T=Array.prototype.slice,z=Object.prototype.toString,j=function(u,g){for(var w=0,D=u.length;w<D;++w)if(u[w]===g)return w;return-1};Array.prototype.indexOf&&(j=function(u,g){return u.indexOf(g)});function Z(u,g,w){for(var D=0,B=u.length;D<B;++D)if(u[D][g]===w)return D;return-1}function q(u){var g=T.call(arguments,1);return u=u.replace(/%(\d)/g,function(w,D){return""+g[D-1]||""}),u}var V=function(u){for(var g=T.call(arguments,1),w,D,B=0,U=g.length;B<U;++B){w=g[B];for(D in w)Object.prototype.hasOwnProperty.call(w,D)&&(u[D]=w[D])}return u};Object.assign&&(V=Object.assign),n.SyntaxError=SyntaxError;function _(u){return Object.create?Object.create(u,{line:{writable:!0,value:u.line},index:{writable:!0,value:u.index},column:{writable:!0,value:u.column}}):u}function F(u){var g=q.apply(null,T.call(arguments,1)),w,D;throw u===null||typeof u.line>"u"?(D=v-ge+1,w=_(new SyntaxError(q("[%1:%2] %3",ce,D,g))),w.index=v,w.line=ce,w.column=D):(D=u.range[0]-u.lineStart,w=_(new SyntaxError(q("[%1:%2] %3",u.line,D,g))),w.line=u.line,w.index=u.range[0],w.column=D),w}function Y(u){var g=e.slice(u.range[0],u.range[1]);return g||u.value}function pe(u,g){F(g,S.expectedToken,u,Y(g))}function we(u){var g=Y(Oe);if(typeof u.type<"u"){var w;switch(u.type){case d:w="string";break;case p:w="keyword";break;case m:w="identifier";break;case y:w="number";break;case b:w="symbol";break;case k:w="boolean";break;case C:return F(u,S.unexpected,"symbol","nil",g);case f:return F(u,S.unexpectedEOF)}return F(u,S.unexpected,w,Y(u),g)}return F(u,S.unexpected,"symbol",u,g)}var v,L,le,Oe,Re,J,ce,ge;n.lex=It;function It(){for(Qr();e.charCodeAt(v)===45&&e.charCodeAt(v+1)===45;)Mp(),Qr();if(v>=i)return{type:f,value:"<eof>",line:ce,lineStart:ge,range:[v,v]};var u=e.charCodeAt(v),g=e.charCodeAt(v+1);if(J=v,Dp(u))return gp();switch(u){case 39:case 34:return bp();case 48:case 49:case 50:case 51:case 52:case 53:case 54:case 55:case 56:case 57:return nh();case 46:return Nt(g)?nh():g===46?e.charCodeAt(v+2)===46?yp():Ce(".."):Ce(".");case 61:return Ce(g===61?"==":"=");case 62:return s.bitwiseOperators&&g===62?Ce(">>"):Ce(g===61?">=":">");case 60:return s.bitwiseOperators&&g===60?Ce("<<"):Ce(g===61?"<=":"<");case 126:if(g===61)return Ce("~=");if(!s.bitwiseOperators)break;return Ce("~");case 58:return s.labels&&g===58?Ce("::"):Ce(":");case 91:return g===91||g===61?xp():Ce("[");case 47:return s.integerDivision&&g===47?Ce("//"):Ce("/");case 38:case 124:if(!s.bitwiseOperators)break;case 42:case 94:case 37:case 44:case 123:case 125:case 93:case 40:case 41:case 59:case 35:case 45:case 43:return Ce(e.charAt(v))}return we(e.charAt(v))}function Zt(){var u=e.charCodeAt(v),g=e.charCodeAt(v+1);return sn(u)?(u===10&&g===13&&++v,u===13&&g===10&&++v,++ce,ge=++v,!0):!1}function Qr(){for(;v<i;){var u=e.charCodeAt(v);if(Tp(u))++v;else if(!Zt())break}}function gp(){for(var u,g;Op(e.charCodeAt(++v)););return u=r.fixup(e.slice(J,v)),Lp(u)?g=p:u==="true"||u==="false"?(g=k,u=u==="true"):u==="nil"?(g=C,u=null):g=m,{type:g,value:u,line:ce,lineStart:ge,range:[J,v]}}function Ce(u){return v+=u.length,{type:b,value:u,line:ce,lineStart:ge,range:[J,v]}}function yp(){return v+=3,{type:M,value:"...",line:ce,lineStart:ge,range:[J,v]}}function bp(){for(var u=e.charCodeAt(v++),g=ce,w=ge,D=v,B=r.discardStrings?null:"",U;U=e.charCodeAt(v++),u!==U;)if((v>i||sn(U))&&(B+=e.slice(D,v-1),F(null,S.unfinishedString,e.slice(J,v-1))),U===92){if(!r.discardStrings){var ie=e.slice(D,v-1);B+=r.fixup(ie)}var ye=Ap();r.discardStrings||(B+=ye),D=v}return r.discardStrings||(B+=r.encodeByte(null),B+=r.fixup(e.slice(D,v-1))),{type:d,value:B,line:g,lineStart:w,lastLine:ce,lastLineStart:ge,range:[J,v]}}function xp(){var u=ce,g=ge,w=sh(!1);return w===!1&&F(L,S.expected,"[",Y(L)),{type:d,value:r.discardStrings?null:r.fixup(w),line:u,lineStart:g,lastLine:ce,lastLineStart:ge,range:[J,v]}}function nh(){var u=e.charAt(v),g=e.charAt(v+1),w=u==="0"&&"xX".indexOf(g||null)>=0?Sp():kp(),D=vp(),B=wp();return B&&(D||w.hasFractionPart)&&F(null,S.malformedNumber,e.slice(J,v)),{type:y,value:w.value,line:ce,lineStart:ge,range:[J,v]}}function vp(){if(s.imaginaryNumbers)return"iI".indexOf(e.charAt(v)||null)>=0?(++v,!0):!1}function wp(){if(s.integerSuffixes){if("uU".indexOf(e.charAt(v)||null)>=0)if(++v,"lL".indexOf(e.charAt(v)||null)>=0){if(++v,"lL".indexOf(e.charAt(v)||null)>=0)return++v,"ULL";F(null,S.malformedNumber,e.slice(J,v))}else F(null,S.malformedNumber,e.slice(J,v));else if("lL".indexOf(e.charAt(v)||null)>=0){if(++v,"lL".indexOf(e.charAt(v)||null)>=0)return++v,"LL";F(null,S.malformedNumber,e.slice(J,v))}}}function Sp(){var u=0,g=1,w=1,D,B,U,ie;for(ie=v+=2,ei(e.charCodeAt(v))||F(null,S.malformedNumber,e.slice(J,v));ei(e.charCodeAt(v));)++v;D=parseInt(e.slice(ie,v),16);var ye=!1;if(e.charAt(v)==="."){for(ye=!0,B=++v;ei(e.charCodeAt(v));)++v;u=e.slice(B,v),u=B===v?0:parseInt(u,16)/Math.pow(16,v-B)}var ln=!1;if("pP".indexOf(e.charAt(v)||null)>=0){for(ln=!0,++v,"+-".indexOf(e.charAt(v)||null)>=0&&(w=e.charAt(v++)==="+"?1:-1),U=v,Nt(e.charCodeAt(v))||F(null,S.malformedNumber,e.slice(J,v));Nt(e.charCodeAt(v));)++v;g=e.slice(U,v),g=Math.pow(2,g*w)}return{value:(D+u)*g,hasFractionPart:ye||ln}}function kp(){for(;Nt(e.charCodeAt(v));)++v;var u=!1;if(e.charAt(v)===".")for(u=!0,++v;Nt(e.charCodeAt(v));)++v;var g=!1;if("eE".indexOf(e.charAt(v)||null)>=0)for(g=!0,++v,"+-".indexOf(e.charAt(v)||null)>=0&&++v,Nt(e.charCodeAt(v))||F(null,S.malformedNumber,e.slice(J,v));Nt(e.charCodeAt(v));)++v;return{value:parseFloat(e.slice(J,v)),hasFractionPart:u||g}}function Cp(){var u=v++;for(e.charAt(v++)!=="{"&&F(null,S.braceExpected,"{","\\"+e.slice(u,v)),ei(e.charCodeAt(v))||F(null,S.hexadecimalDigitExpected,"\\"+e.slice(u,v));e.charCodeAt(v)===48;)++v;for(var g=v;ei(e.charCodeAt(v));)++v,v-g>6&&F(null,S.tooLargeCodepoint,"\\"+e.slice(u,v));var w=e.charAt(v++);w!=="}"&&(w==='"'||w==="'"?F(null,S.braceExpected,"}","\\"+e.slice(u,v--)):F(null,S.hexadecimalDigitExpected,"\\"+e.slice(u,v)));var D=parseInt(e.slice(g,v-1)||"0",16),B="\\"+e.slice(u,v);return D>1114111&&F(null,S.tooLargeCodepoint,B),r.encodeUTF8(D,B)}function Ap(){var u=v;switch(e.charAt(v)){case"a":return++v,"\x07";case"n":return++v,`
 `;case"r":return++v,"\r";case"t":return++v,"	";case"v":return++v,"\v";case"b":return++v,"\b";case"f":return++v,"\f";case"\r":case`
@@ -12361,8 +12382,8 @@ IDE.bus = (function () {
     row.appendChild(ex);
   }
   /* a "🔍 inspect" button on any simple (non-table, non-empty) ok result -- re-evaluates that value as a
-     guid via the object inspector (45_watch.js's object-mode watch). Not shown for table literals (a
-     guid is never displayed as "{...}") or an empty/error result -- nothing sensible to inspect there. */
+     guid in the Inspect sidebar tab (46_inspector.js). Not shown for table literals (a guid is never
+     displayed as "{...}") or an empty/error result -- nothing sensible to inspect there. */
   function inspectable(outcome) {
     return outcome && outcome.cls === "ok" && outcome.text && outcome.text !== "(no return value)" &&
       outcome.text.charAt(0) !== "{";
@@ -12371,7 +12392,7 @@ IDE.bus = (function () {
     var old = row.querySelector(".inspect"); if (old) old.remove();
     if (!inspectable(outcome)) return;
     var ins = document.createElement("button"); ins.className = "inspect"; ins.textContent = "🔍"; ins.title = "Inspect this as a live object";
-    ins.onclick = function () { IDE.watch.addObject(outcome.text); };
+    ins.onclick = function () { IDE.inspector.inspect(outcome.text); };
     row.insertBefore(ins, r);
   }
   function makeRow(codeText, outcome) {
@@ -12570,10 +12591,8 @@ IDE.bus = (function () {
    erroring, and picks back up on its own once reconnected. Pinned expressions (not their last values)
    persist across reloads.
 
-   Object-mode rows (kind:"object", added by clicking 🔍 on a Results row -- 40_console.js) are the same
-   poll loop over a different, compound query: one round-trip pcall-reads name/pos/health/faction/alive +
-   Ess.Probe.describeSafe for whatever guid the expression evaluates to, rendered as a small collapsible
-   field list instead of one text value. */
+   The 🔍 object inspector (click on a Results row -- 40_console.js) lives in its own sidebar tab, not
+   here -- see 46_inspector.js. */
 (function () {
   var IDE = window.IDE, $ = IDE.$, KEY = "m2ide.watch.v1", INTERVAL = 2000;
   var list = $("watchList");
@@ -12582,7 +12601,7 @@ IDE.bus = (function () {
   function uid() { return "w" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
   function persist() {
     try {
-      localStorage.setItem(KEY, JSON.stringify(rows.map(function (r) { return { expr: r.expr, kind: r.kind }; })));
+      localStorage.setItem(KEY, JSON.stringify(rows.map(function (r) { return { expr: r.expr }; })));
     } catch (e) {}
   }
   function setStatus(row, text, cls) {
@@ -12590,10 +12609,83 @@ IDE.bus = (function () {
     row.valEl.textContent = text;
   }
 
-  /* ---- object-mode: one compound query, tab-separated so a single round-trip carries every field ---- */
-  var OBJECT_FIELDS = ["guid", "name", "pos", "health", "maxHealth", "faction", "alive", "describe"];
-  function objectQuery(expr) {
-    return "local uGuid = (" + expr + "\n)\n" +
+  function poll(row) {
+    if (!IDE.bridge.connected()) { setStatus(row, "· not connected", "dim"); return; }
+    IDE.bridge.run("return (" + row.expr + "\n)").then(function (r) {
+      if (rows.indexOf(row) < 0) return;   // removed while the request was in flight
+      if (r.error) { setStatus(row, r.error, "err"); return; }
+      if (r.timedOut) { setStatus(row, "timed out", "err"); return; }
+      if (r.ok === false) { setStatus(row, "error: " + r.value, "err"); return; }
+      setStatus(row, (r.value === "" || r.value == null) ? "nil" : r.value, "ok");
+    });
+  }
+  function removeRow(row) {
+    clearInterval(row.timer);
+    row.el.remove();
+    rows = rows.filter(function (r) { return r !== row; });
+    persist();
+  }
+  function addRow(expr) {
+    var row = { id: uid(), expr: expr };
+    var el = document.createElement("div"); el.className = "watchrow";
+    var ex = document.createElement("span"); ex.className = "watchexpr"; ex.textContent = expr; ex.title = expr;
+    var val = document.createElement("span"); val.className = "watchval dim"; val.textContent = "…";
+    var rm = document.createElement("button"); rm.className = "watchrm"; rm.title = "Stop watching"; rm.textContent = "×";
+    rm.onclick = function () { removeRow(row); };
+    el.appendChild(ex); el.appendChild(val); el.appendChild(rm);
+    row.valEl = val; row.el = el;
+    list.appendChild(el);
+    rows.push(row);
+    poll(row);
+    row.timer = setInterval(function () { poll(row); }, INTERVAL);
+    return row;
+  }
+
+  $("watchAdd").onclick = function () {
+    var expr = $("watchExpr").value.trim();
+    if (!expr) return;
+    addRow(expr);
+    persist();
+    $("watchExpr").value = "";
+    $("watchExpr").focus();
+  };
+  $("watchExpr").addEventListener("keydown", function (e) { if (e.key === "Enter") $("watchAdd").click(); });
+
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) {}
+  saved.forEach(function (s) { if (s && s.expr) addRow(s.expr); });
+
+  /* a reconnect should re-poll everything right away rather than waiting out the interval */
+  IDE.bus.on("status", function (s) { if (s === "open") rows.forEach(poll); });
+
+  IDE.watch = { add: function (expr) { addRow(expr); persist(); } };
+})();
+
+/* ==== 46_inspector.js ==== */
+/* 46_inspector.js -- the Inspect sidebar tab: click 🔍 on a Results row (40_console.js) and it takes over
+   the sidebar with a live view of that guid -- name/position/health/faction/alive + Ess.Probe.describeSafe,
+   one compound round-trip so every field lands in a single poll, re-polling every couple seconds while
+   connected (same pattern as the Watch tab). Single-slot: inspecting a new value replaces whatever was
+   there before, since this is "look at the thing I just got", not a pinned list. Not persisted across
+   reload -- a stale guid from a past session is never a live object anyway. */
+(function () {
+  var IDE = window.IDE, $ = IDE.$, INTERVAL = 2000;
+  var head = $("inspectHead"), exprEl = $("inspectExpr"), empty = $("inspectEmpty"), fields = $("inspectFields");
+  var expr = null, timer = null;
+
+  var FIELDS = [
+    { key: "guid", label: "Guid" },
+    { key: "name", label: "Name" },
+    { key: "pos", label: "Position" },
+    { key: "health", label: "Health" },
+    { key: "maxHealth", label: "Max HP" },
+    { key: "faction", label: "Faction" },
+    { key: "alive", label: "Alive" },
+    { key: "describe", label: "Description" }
+  ];
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function query(e) {
+    return "local uGuid = (" + e + "\n)\n" +
       "if uGuid == nil then return \"\" end\n" +
       "local function safe1(fn, ...) local ok, a = pcall(fn, ...); if ok then return a end return nil end\n" +
       "local name = safe1(Ess.Object.displayName, uGuid)\n" +
@@ -12608,96 +12700,54 @@ IDE.bus = (function () {
       "  hp and tostring(hp) or \"?\", maxhp and tostring(maxhp) or \"?\", fac and tostring(fac) or \"?\",\n" +
       "  (alive == true) and \"yes\" or (alive == false and \"no\" or \"?\"), descOk and tostring(desc) or \"?\" }, \"\\t\")";
   }
-  function renderObjectVal(row, parts) {
-    row.valEl.innerHTML = "";
-    row.valEl.className = "watchval ok";
-    var summary = document.createElement("span"); summary.className = "watchobjsum";
-    summary.textContent = (parts[1] !== "?" ? parts[1] : parts[0]);
-    row.valEl.appendChild(summary);
-    var grid = row.fieldsEl;
-    grid.innerHTML = "";
-    OBJECT_FIELDS.forEach(function (label, i) {
-      var d = document.createElement("div"); d.className = "watchfield";
-      d.innerHTML = "<span class=\"wfk\">" + label + "</span><span class=\"wfv\">" + esc(parts[i] || "?") + "</span>";
-      grid.appendChild(d);
+  function renderFields(parts) {
+    fields.innerHTML = "";
+    FIELDS.forEach(function (f, i) {
+      var d = document.createElement("div"); d.className = "inspectfield";
+      d.innerHTML = "<span class=\"ifk\">" + f.label + "</span><span class=\"ifv\">" + esc(parts[i] || "?") + "</span>";
+      fields.appendChild(d);
     });
   }
-  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-
-  function poll(row) {
-    if (!IDE.bridge.connected()) { setStatus(row, "· not connected", "dim"); return; }
-    var query = row.kind === "object" ? objectQuery(row.expr) : "return (" + row.expr + "\n)";
-    IDE.bridge.run(query).then(function (r) {
-      if (rows.indexOf(row) < 0) return;   // removed while the request was in flight
-      if (r.error) { setStatus(row, r.error, "err"); return; }
-      if (r.timedOut) { setStatus(row, "timed out", "err"); return; }
-      if (r.ok === false) { setStatus(row, "error: " + r.value, "err"); return; }
-      if (row.kind === "object") {
-        if (r.value === "" || r.value == null) { setStatus(row, "nil (not a live object)", "dim"); if (row.fieldsEl) row.fieldsEl.innerHTML = ""; return; }
-        renderObjectVal(row, String(r.value).split("\t"));
-      } else {
-        setStatus(row, (r.value === "" || r.value == null) ? "nil" : r.value, "ok");
-      }
-    });
+  function renderStatus(text, cls) {
+    fields.innerHTML = "";
+    var d = document.createElement("div"); d.className = "inspectstatus " + cls; d.textContent = text;
+    fields.appendChild(d);
   }
-  function removeRow(row) {
-    clearInterval(row.timer);
-    row.el.remove();
-    rows = rows.filter(function (r) { return r !== row; });
-    persist();
-  }
-  function addRow(expr, kind) {
-    var row = { id: uid(), expr: expr, kind: kind || "expr" };
-    var el = document.createElement("div"); el.className = "watchrow" + (row.kind === "object" ? " watchobj" : "");
-    var ex = document.createElement("span"); ex.className = "watchexpr"; ex.textContent = expr; ex.title = expr;
-    var val = document.createElement("span"); val.className = "watchval dim"; val.textContent = "…";
-    var rm = document.createElement("button"); rm.className = "watchrm"; rm.title = "Stop watching"; rm.textContent = "×";
-    rm.onclick = function () { removeRow(row); };
-    el.appendChild(ex); el.appendChild(val); el.appendChild(rm);
-    row.valEl = val; row.el = el;
-    if (row.kind === "object") {
-      var open = true;
-      val.style.cursor = "pointer";
-      var fields = document.createElement("div"); fields.className = "watchfields";
-      row.fieldsEl = fields;
-      val.onclick = function () { open = !open; fields.classList.toggle("hidden", !open); };
-      list.appendChild(el);
-      list.appendChild(fields);
-    } else {
-      list.appendChild(el);
-    }
-    rows.push(row);
-    poll(row);
-    row.timer = setInterval(function () { poll(row); }, INTERVAL);
-    return row;
-  }
-
-  $("watchAdd").onclick = function () {
-    var expr = $("watchExpr").value.trim();
+  function poll() {
     if (!expr) return;
-    addRow(expr, "expr");
-    persist();
-    $("watchExpr").value = "";
-    $("watchExpr").focus();
-  };
-  $("watchExpr").addEventListener("keydown", function (e) { if (e.key === "Enter") $("watchAdd").click(); });
+    if (!IDE.bridge.connected()) { renderStatus("· not connected", "dim"); return; }
+    IDE.bridge.run(query(expr)).then(function (r) {
+      if (!expr) return;   // stopped while the request was in flight
+      if (r.error) { renderStatus(r.error, "err"); return; }
+      if (r.timedOut) { renderStatus("timed out", "err"); return; }
+      if (r.ok === false) { renderStatus("error: " + r.value, "err"); return; }
+      if (r.value === "" || r.value == null) { renderStatus("nil (not a live object)", "dim"); return; }
+      renderFields(String(r.value).split("\t"));
+    });
+  }
+  function stop() {
+    clearInterval(timer); timer = null; expr = null;
+    head.classList.add("hidden");
+    empty.classList.remove("hidden");
+    fields.classList.add("hidden");
+  }
+  function inspect(e) {
+    clearInterval(timer);
+    expr = e;
+    exprEl.textContent = e; exprEl.title = e;
+    head.classList.remove("hidden");
+    empty.classList.add("hidden");
+    fields.classList.remove("hidden");
+    fields.innerHTML = "";
+    poll();
+    timer = setInterval(poll, INTERVAL);
+    var tab = document.querySelector('.stab[data-p="inspect"]');
+    if (tab) tab.click();
+  }
+  $("inspectClose").onclick = stop;
+  IDE.bus.on("status", function (s) { if (s === "open" && expr) poll(); });
 
-  var saved = [];
-  try { saved = JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) {}
-  saved.forEach(function (s) { if (s && s.expr) addRow(s.expr, s.kind); });
-
-  /* a reconnect should re-poll everything right away rather than waiting out the interval */
-  IDE.bus.on("status", function (s) { if (s === "open") rows.forEach(poll); });
-
-  IDE.watch = {
-    add: function (expr) { addRow(expr, "expr"); persist(); },
-    /* the object inspector entry point -- 40_console.js's 🔍 button on a Results row calls this with the
-       row's raw result text as the expression to re-evaluate. */
-    addObject: function (expr) {
-      addRow(expr, "object"); persist();
-      document.querySelector('.tab[data-t="watch"]').click();
-    }
-  };
+  IDE.inspector = { inspect: inspect };
 })();
 
 /* ==== 50_api.js ==== */
@@ -12921,12 +12971,13 @@ IDE.bus = (function () {
     };
   }
 
-  /* ---- toolbar: new / import / export ---- */
-  $("scNew").onclick = function () {
+  /* ---- toolbar: one "Actions" dropdown instead of a row of buttons -- new / import / export / backup /
+     restore / deploy, each just a plain function here, wired to the <select>'s onchange below. ---- */
+  function newScript() {
     IDE.store.create("Untitled", "-- " + new Date().toLocaleDateString() + "\n\n");
     IDE.editor.focus();
-  };
-  $("scImport").onclick = function () { $("scFile").click(); };
+  }
+  function importScripts() { $("scFile").click(); }
   $("scFile").onchange = function () {
     var files = Array.prototype.slice.call(this.files || []);
     this.value = "";
@@ -12936,7 +12987,7 @@ IDE.bus = (function () {
       rd.readAsText(f);
     });
   };
-  $("scExport").onclick = function () {
+  function exportScript() {
     var s = IDE.store.active();
     var blob = new Blob([IDE.editor.get()], { type: "text/x-lua" });
     var a = document.createElement("a");
@@ -12944,7 +12995,7 @@ IDE.bus = (function () {
     a.download = s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") + ".lua" || "script.lua";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  };
+  }
 
   /* ---- deploy as OnKey: bridges "ran it once in the IDE" to "it's a real mod now". Wraps the open
      script in the exact guard/state/action shape every Ess OnKey mod uses (samples/OnKey/StarterMod.lua),
@@ -12967,7 +13018,7 @@ IDE.bus = (function () {
       code
     );
   }
-  $("scDeploy").onclick = function () {
+  function deployOnKey() {
     var s = IDE.store.active();
     var modName = s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") || "MyMod";
     var wrapped = onKeyWrap(modName, IDE.editor.get());
@@ -12977,19 +13028,19 @@ IDE.bus = (function () {
     a.download = modName + ".lua";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-    IDE.ui.flash($("scDeploy"), "Downloaded — bind it in lua_loader.ini");
-  };
+    flashActions("Downloaded — bind it in lua_loader.ini");
+  }
 
   /* ---- whole-library backup / restore -- the seatbelt against "clear browsing data" ---- */
-  $("scBackup").onclick = function () {
+  function backupLibrary() {
     var blob = new Blob([IDE.store.exportAll()], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "mercs2-ide-library-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  };
-  $("scRestore").onclick = function () { $("scRestoreFile").click(); };
+  }
+  function restoreLibrary() { $("scRestoreFile").click(); }
   $("scRestoreFile").onchange = function () {
     var file = (this.files || [])[0];
     this.value = "";
@@ -12997,10 +13048,31 @@ IDE.bus = (function () {
     var rd = new FileReader();
     rd.onload = function () {
       var r = IDE.store.importAll(String(rd.result));
-      if (r.ok) IDE.ui.flash($("scRestore"), r.added ? ("+" + r.added) : "0 found");
+      if (r.ok) flashActions(r.added ? ("+" + r.added + " restored") : "0 found");
       else alert("Couldn't restore that file: " + r.error);
     };
     rd.readAsText(file);
+  };
+
+  /* ---- the dropdown itself: one <select> instead of six buttons. A message (deploy/restore) "flashes"
+     by swapping the placeholder option's own text, since a <select>'s visible label is whatever option is
+     selected, not any textContent of its own. ---- */
+  var scActions = $("scActions"), placeholderOpt = scActions.querySelector('option[value=""]');
+  function flashActions(msg) {
+    var orig = placeholderOpt.textContent;
+    placeholderOpt.textContent = msg;
+    scActions.value = "";
+    setTimeout(function () { placeholderOpt.textContent = orig; }, 1400);
+  }
+  scActions.onchange = function () {
+    var v = this.value;
+    this.value = "";
+    if (v === "new") newScript();
+    else if (v === "import") importScripts();
+    else if (v === "export") exportScript();
+    else if (v === "backup") backupLibrary();
+    else if (v === "restore") restoreLibrary();
+    else if (v === "deploy") deployOnKey();
   };
 
   /* ---- keep everything in sync ---- */
@@ -13084,6 +13156,7 @@ IDE.bus = (function () {
       $("panelExamples").classList.toggle("hidden", which !== "examples");
       $("panelApi").classList.toggle("hidden", which !== "api");
       $("panelTemplates").classList.toggle("hidden", which !== "templates");
+      $("panelInspect").classList.toggle("hidden", which !== "inspect");
     };
   });
 

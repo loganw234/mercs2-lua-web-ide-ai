@@ -59,12 +59,13 @@
     };
   }
 
-  /* ---- toolbar: new / import / export ---- */
-  $("scNew").onclick = function () {
+  /* ---- toolbar: one "Actions" dropdown instead of a row of buttons -- new / import / export / backup /
+     restore / deploy, each just a plain function here, wired to the <select>'s onchange below. ---- */
+  function newScript() {
     IDE.store.create("Untitled", "-- " + new Date().toLocaleDateString() + "\n\n");
     IDE.editor.focus();
-  };
-  $("scImport").onclick = function () { $("scFile").click(); };
+  }
+  function importScripts() { $("scFile").click(); }
   $("scFile").onchange = function () {
     var files = Array.prototype.slice.call(this.files || []);
     this.value = "";
@@ -74,7 +75,7 @@
       rd.readAsText(f);
     });
   };
-  $("scExport").onclick = function () {
+  function exportScript() {
     var s = IDE.store.active();
     var blob = new Blob([IDE.editor.get()], { type: "text/x-lua" });
     var a = document.createElement("a");
@@ -82,7 +83,7 @@
     a.download = s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") + ".lua" || "script.lua";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  };
+  }
 
   /* ---- deploy as OnKey: bridges "ran it once in the IDE" to "it's a real mod now". Wraps the open
      script in the exact guard/state/action shape every Ess OnKey mod uses (samples/OnKey/StarterMod.lua),
@@ -105,7 +106,7 @@
       code
     );
   }
-  $("scDeploy").onclick = function () {
+  function deployOnKey() {
     var s = IDE.store.active();
     var modName = s.name.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") || "MyMod";
     var wrapped = onKeyWrap(modName, IDE.editor.get());
@@ -115,19 +116,19 @@
     a.download = modName + ".lua";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-    IDE.ui.flash($("scDeploy"), "Downloaded — bind it in lua_loader.ini");
-  };
+    flashActions("Downloaded — bind it in lua_loader.ini");
+  }
 
   /* ---- whole-library backup / restore -- the seatbelt against "clear browsing data" ---- */
-  $("scBackup").onclick = function () {
+  function backupLibrary() {
     var blob = new Blob([IDE.store.exportAll()], { type: "application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "mercs2-ide-library-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  };
-  $("scRestore").onclick = function () { $("scRestoreFile").click(); };
+  }
+  function restoreLibrary() { $("scRestoreFile").click(); }
   $("scRestoreFile").onchange = function () {
     var file = (this.files || [])[0];
     this.value = "";
@@ -135,10 +136,31 @@
     var rd = new FileReader();
     rd.onload = function () {
       var r = IDE.store.importAll(String(rd.result));
-      if (r.ok) IDE.ui.flash($("scRestore"), r.added ? ("+" + r.added) : "0 found");
+      if (r.ok) flashActions(r.added ? ("+" + r.added + " restored") : "0 found");
       else alert("Couldn't restore that file: " + r.error);
     };
     rd.readAsText(file);
+  };
+
+  /* ---- the dropdown itself: one <select> instead of six buttons. A message (deploy/restore) "flashes"
+     by swapping the placeholder option's own text, since a <select>'s visible label is whatever option is
+     selected, not any textContent of its own. ---- */
+  var scActions = $("scActions"), placeholderOpt = scActions.querySelector('option[value=""]');
+  function flashActions(msg) {
+    var orig = placeholderOpt.textContent;
+    placeholderOpt.textContent = msg;
+    scActions.value = "";
+    setTimeout(function () { placeholderOpt.textContent = orig; }, 1400);
+  }
+  scActions.onchange = function () {
+    var v = this.value;
+    this.value = "";
+    if (v === "new") newScript();
+    else if (v === "import") importScripts();
+    else if (v === "export") exportScript();
+    else if (v === "backup") backupLibrary();
+    else if (v === "restore") restoreLibrary();
+    else if (v === "deploy") deployOnKey();
   };
 
   /* ---- keep everything in sync ---- */
