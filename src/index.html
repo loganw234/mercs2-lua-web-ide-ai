@@ -19,6 +19,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
   <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) — also autosaves as you type">Save</button>
   <button class="btn" id="share" title="Copy a shareable link (script encoded in the URL)">Share</button>
   <button class="btn" id="grabTarget" title="Grab what you're aiming at in-game (Ess.Player.targetUnderReticle) — inserts its guid at the caret">🎯 Grab target</button>
+  <button class="btn" id="tutStart" title="A guided first script: connect, spawn a taxi, find a fare, and turn it into a real mod">🎓 Tutorial</button>
   <span class="spacer"></span>
   <input id="url" class="url" value="ws://127.0.0.1:27050" spellcheck="false" title="The lua-bridge WebSocket address">
   <button class="btn" id="connect">Connect</button>
@@ -142,6 +143,23 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 </main>
 
 <button id="themeBtn" title="Theme: auto (following your system)">◐</button>
+
+<div class="tutorial hidden" id="tutorial">
+  <div class="tuthead">
+    <span class="tutstepno" id="tutStep"></span>
+    <button class="updx" id="tutClose" title="Skip tutorial">×</button>
+  </div>
+  <div class="tutdots" id="tutDots"></div>
+  <h3 id="tutTitle"></h3>
+  <p id="tutBody"></p>
+  <div class="tuttoast hidden" id="tutToast"></div>
+  <div class="tuthint hidden" id="tutHint"></div>
+  <div class="tutdone hidden" id="tutDone">
+    <p><b>That's a real taxi-fare minigame</b>, built and deployed by you. Press the key you bound it to
+    in-game any time you want a new fare.</p>
+    <button class="btn small go" id="tutDoneClose">Nice</button>
+  </div>
+</div>
 
 <div class="onboard" id="onboard" hidden>
   <div class="card">

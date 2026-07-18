@@ -39,10 +39,12 @@ show.
 
 Rest of Tier 2 (all but the tutorial), same session:
 
-- **Object inspector** — a 🔍 button on any simple (non-table) `ok` Results value adds an "object watch"
-  row to the Watch tab: one round-trip pcall-reads name/pos/health/maxHealth/faction/alive +
-  `Ess.Probe.describeSafe`, rendered as a small collapsible field list, refreshing on the same 2s poll
-  every other watch row uses.
+- **Object inspector** — its own sidebar tab (`46_inspector.js`), not a Watch-tab row: a 🎯 Grab target
+  button, a type-a-guid box, or 🔍 on a Results value all feed it a guid, and it takes over the sidebar
+  with a live view (name/position/health/maxHealth/faction/alive/`Ess.Probe.describeSafe`, one compound
+  round-trip, 2s poll). Also where a real bug got caught and fixed: a guid is Lua userdata, not a number —
+  `tostring()` on one gives an opaque, non-reusable string, and `Ess.Name`/`Sys.StringToGuid` (the real,
+  portable "0x..." round trip) turned out to be necessary, confirmed live against a running game.
 - **Deploy as OnKey** — a Scripts-panel button wraps the open script in the real guard/state/action shape
   every Ess OnKey mod uses (`samples/OnKey/StarterMod.lua`'s own pattern), named after the script, and
   downloads it ready to drop in `scripts/OnKey/` with a `lua_loader.ini` binding comment baked in.
@@ -55,14 +57,20 @@ Rest of Tier 2 (all but the tutorial), same session:
   against; on every connect the IDE asks the game its real version and shows one dismissible line on a
   mismatch. Dismissing remembers that exact (reference, game) pair, not "forever".
 
-## Tier 2 — worth planning (medium effort, big payoff)
+- **Interactive first-script tutorial** — a floating, non-blocking guided panel (`78_tutorial.js`): connect
+  → say hello (`return Ess.VERSION`) → summon a taxi → find a nearby civilian fare → hold them → mark the
+  pickup and drop a "go here" ring → deploy as OnKey. One script, additively built in place across all six
+  steps (each step's code is the FULL accumulated script so far, so it's always immediately re-runnable),
+  living in its own dedicated "Tutorial: Taxi Fare" library entry so it never clobbers whatever was already
+  open. Every step advances off a real signal from the game (a new `"ran"` bus event carrying the actual
+  bridge result, plus existing `"status"`/new `"deployed"` events) — never a bare "Next" click. All six
+  code steps were live-verified against a running game while building this: `Ess.Probe.nearby(..., "humans")`
+  + `Ess.Probe.getFaction(g) == "Civ"` finds a civilian (the "Civ" faction abbreviation itself was confirmed
+  live, not guessed), `Ess.AIOrders.command({g}, "hold")` needs no extra opts, and `Ess.Mark.object` +
+  `Ess.Easy.Mark.zone` place the pickup/drop-off markers. By the end the player has an actual working
+  taxi-fare minigame, not a demo — and it's real because they built it.
 
-- **Interactive first-script tutorial** (L) — a guided overlay: connect → run `return Ess.VERSION` → toast
-  → spawn a car → bind a hotkey loop. Each step advances only when the *real result* comes back from the
-  game (the bridge tells us), so completing it means the user has actually done the loop, not read about
-  it. The examples gallery provides the material; the missing piece is the step-runner + progress UI.
-
-## Tier 3 — ambitious / speculative
+## Tier 2 — ambitious / speculative
 
 - **Live parameter playground** (L) — port the in-game `Playground.lua` idea into the IDE: pick an
   `Ess.Easy.*` call, get sliders/dropdowns for its parameters, hit run repeatedly. The API data plus

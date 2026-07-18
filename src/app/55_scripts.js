@@ -117,6 +117,7 @@
     document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
     flashActions("Downloaded — bind it in lua_loader.ini");
+    IDE.bus.emit("deployed", { name: modName });
   }
 
   /* ---- whole-library backup / restore -- the seatbelt against "clear browsing data" ---- */

@@ -261,6 +261,29 @@ select.btn{padding:6px 8px}
   box-shadow:0 4px 14px rgba(0,0,0,.25)}
 #themeBtn:hover{color:var(--ink);border-color:var(--accent)}
 
+/* ---- the guided tutorial: a floating, non-blocking card (not a modal -- the player needs the whole app
+   live underneath: Connect, Run, Results) -- 78_tutorial.js ---- */
+.tutorial{position:fixed;right:16px;bottom:56px;z-index:41;width:300px;background:var(--bar);
+  border:1px solid var(--edge2);border-radius:12px;padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.tutorial.hidden{display:none}
+.tuthead{display:flex;align-items:center;justify-content:space-between}
+.tutstepno{color:var(--dim);font:11px/1 var(--efont);text-transform:uppercase;letter-spacing:.04em}
+.tutdots{display:flex;gap:4px;margin:8px 0}
+.tutdot{width:7px;height:7px;border-radius:50%;background:var(--edge2)}
+.tutdot.on{background:var(--accent)}
+.tutdot.done{background:var(--go)}
+.tutorial h3{margin:2px 0 6px;font-size:14px}
+.tutorial p{margin:0;color:var(--ink);font-size:12.5px;line-height:1.55}
+.tutorial p b{color:var(--accent)}
+.tuttoast{margin-top:10px;padding:7px 9px;background:rgba(78,201,160,.14);border:1px solid rgba(78,201,160,.35);
+  border-radius:7px;color:var(--go);font-size:12px;line-height:1.4}
+.tuttoast.hidden{display:none}
+.tuthint{margin-top:8px;color:var(--dim);font-size:11.5px;font-style:italic;line-height:1.4}
+.tuthint.hidden{display:none}
+.tutdone{margin-top:10px}
+.tutdone.hidden{display:none}
+.tutdone p{margin-bottom:10px}
+
 /* ---- onboarding overlay ---- */
 .onboard{position:fixed;inset:0;background:rgba(6,10,17,.72);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
 .onboard[hidden]{display:none}   /* the class sets display:flex, which would otherwise override the hidden attribute */
