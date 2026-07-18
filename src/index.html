@@ -18,6 +18,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
   <span class="scriptname" id="scriptName" title="The open script — manage scripts in the sidebar"></span>
   <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) — also autosaves as you type">Save</button>
   <button class="btn" id="share" title="Copy a shareable link (script encoded in the URL)">Share</button>
+  <button class="btn" id="grabTarget" title="Grab what you're aiming at in-game (Ess.Player.targetUnderReticle) — inserts its guid at the caret">🎯 Grab target</button>
   <span class="spacer"></span>
   <input id="url" class="url" value="ws://127.0.0.1:27050" spellcheck="false" title="The lua-bridge WebSocket address">
   <button class="btn" id="connect">Connect</button>
@@ -36,6 +37,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <button class="stab on" data-p="scripts">Scripts</button>
       <button class="stab" data-p="examples">Examples</button>
       <button class="stab" data-p="api">API</button>
+      <button class="stab" data-p="templates">Templates</button>
     </div>
     <div class="spanel" id="panelScripts">
       <div class="sidehead scriptshead">
@@ -43,6 +45,9 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
         <button class="btn small" id="scImport" title="Import .lua files from disk">Import</button>
         <button class="btn small" id="scExport" title="Download the open script as a .lua file">Export</button>
         <input type="file" id="scFile" accept=".lua,.txt" multiple hidden>
+        <button class="btn small" id="scBackup" title="Download your whole script library as one JSON file">Backup</button>
+        <button class="btn small" id="scRestore" title="Restore scripts from a library JSON file — adds to your library, never overwrites">Restore</button>
+        <input type="file" id="scRestoreFile" accept=".json" hidden>
       </div>
       <div class="sclist" id="scList"></div>
     </div>
@@ -56,6 +61,12 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <div class="apitree" id="apiTree"></div>
       <div class="apidoc hidden" id="apiDoc"></div>
     </div>
+    <div class="spanel hidden" id="panelTemplates">
+      <div class="sidehead">
+        <input id="tplSearch" placeholder="search spawnable templates…" spellcheck="false">
+      </div>
+      <div class="apitree" id="tplTree"></div>
+    </div>
   </aside>
 
   <div class="hsplit" id="hsplit" title="Drag to resize the sidebar"></div>
@@ -67,13 +78,30 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <div class="tabs">
         <button class="tab on" data-t="results" id="tabResults">Results</button>
         <button class="tab" data-t="log" id="tabLog">Log &amp; telemetry</button>
+        <button class="tab" data-t="watch" id="tabWatch">Watch</button>
         <span class="spacer"></span>
         <input id="logFilter" class="hidden" placeholder="filter the log…" spellcheck="false">
+        <button class="clr hidden" id="hlRules" title="Manage log highlight rules">🎨 rules</button>
         <span class="clr" id="clr">clear</span>
+      </div>
+      <div class="hlpanel hidden" id="hlPanel">
+        <div class="hlrulerow hladdrow">
+          <input type="color" id="hlColor" value="#ffcc00" title="Rule color">
+          <input id="hlPattern" placeholder="text or /regex/i" spellcheck="false" title="Text (or /regex/flags) — a matching line gets this color">
+          <button class="btn small" id="hlAdd">Add</button>
+        </div>
+        <div id="hlList"></div>
       </div>
       <div class="feedwrap">
         <div class="feed" id="results"></div>
         <div class="feed hidden mono" id="log"></div>
+        <div class="watchpanel hidden" id="watchPanel">
+          <div class="watchadd">
+            <input id="watchExpr" placeholder="expression, e.g. Ess.Player.pose(0)" spellcheck="false">
+            <button class="btn small" id="watchAdd">+ Watch</button>
+          </div>
+          <div class="watchlist" id="watchList"></div>
+        </div>
         <button class="latest hidden" id="latest">↓ latest</button>
       </div>
       <div class="repl">
@@ -121,6 +149,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 <script>/*__API__*/</script>
 <script>/*__NATIVES__*/</script>
 <script>/*__EXAMPLES__*/</script>
+<script>/*__TEMPLATES__*/</script>
 <script>/*__BUILD__*/</script>
 <script>/*__APP__*/</script>
 </body>

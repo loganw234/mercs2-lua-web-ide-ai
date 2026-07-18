@@ -84,6 +84,29 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
   };
 
+  /* ---- whole-library backup / restore -- the seatbelt against "clear browsing data" ---- */
+  $("scBackup").onclick = function () {
+    var blob = new Blob([IDE.store.exportAll()], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "mercs2-ide-library-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  };
+  $("scRestore").onclick = function () { $("scRestoreFile").click(); };
+  $("scRestoreFile").onchange = function () {
+    var file = (this.files || [])[0];
+    this.value = "";
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var r = IDE.store.importAll(String(rd.result));
+      if (r.ok) IDE.ui.flash($("scRestore"), r.added ? ("+" + r.added) : "0 found");
+      else alert("Couldn't restore that file: " + r.error);
+    };
+    rd.readAsText(file);
+  };
+
   /* ---- keep everything in sync ---- */
   IDE.bus.on("scripts", render);
   IDE.bus.on("script", function (s) {

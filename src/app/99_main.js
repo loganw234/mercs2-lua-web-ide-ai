@@ -7,12 +7,23 @@
   var savedWs = null; try { savedWs = localStorage.getItem(IDE.cfg.wsKey); } catch (e) {}
   if (savedWs) $("url").value = savedWs;
 
-  var h = /[#&]s=([^&]+)/.exec(location.hash || "");
-  if (h) {
-    var shared = null;
-    try { shared = decodeURIComponent(h[1]); } catch (e) {}
+  /* #z= is the LZ-string-compressed {n: name, c: code} form; #s= is the older plain-encoded, name-less
+     form -- still parsed forever so a link minted before compression shipped keeps working. */
+  var hz = /[#&]z=([^&]+)/.exec(location.hash || "");
+  var hs = !hz && /[#&]s=([^&]+)/.exec(location.hash || "");
+  if (hz || hs) {
+    var sharedName = "Shared script", shared = null;
+    try {
+      if (hz) {
+        var raw = (window.CM && CM.LZString) ? CM.LZString.decompressFromEncodedURIComponent(hz[1]) : null;
+        var obj = raw != null ? JSON.parse(raw) : null;
+        if (obj && typeof obj.c === "string") { shared = obj.c; if (obj.n) sharedName = obj.n; }
+      } else {
+        shared = decodeURIComponent(hs[1]);
+      }
+    } catch (e) {}
     if (shared != null) {
-      IDE.store.create("Shared script", shared);   // emits "script" -> 55 loads it into the editor
+      IDE.store.create(sharedName, shared);   // emits "script" -> 55 loads it into the editor
       try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
     }
   }

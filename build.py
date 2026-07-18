@@ -39,6 +39,7 @@ def main():
     api = (SRC / "data" / "ess-api.json").read_text(encoding="utf-8")
     natives = (SRC / "data" / "natives.json").read_text(encoding="utf-8")
     examples = (SRC / "data" / "examples.json").read_text(encoding="utf-8")
+    templates = (SRC / "data" / "templates.json").read_text(encoding="utf-8")
 
     parts = [(SRC / "lib" / "vendor.js").read_text(encoding="utf-8"),
              (SRC / "lib" / "ess-bridge.js").read_text(encoding="utf-8")]
@@ -51,6 +52,7 @@ def main():
             .replace("/*__API__*/", "window.ESS_API=" + guard(api) + ";")
             .replace("/*__NATIVES__*/", "window.MERCS_NATIVES=" + guard(natives) + ";")
             .replace("/*__EXAMPLES__*/", "window.ESS_EXAMPLES=" + guard(examples) + ";")
+            .replace("/*__TEMPLATES__*/", "window.MERCS_TEMPLATES=" + guard(templates) + ";")
             .replace("/*__BUILD__*/", "window.IDE_BUILD=" + json.dumps(build_info()) + ";")
             .replace("/*__APP__*/", guard(app)))
 

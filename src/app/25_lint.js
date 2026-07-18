@@ -14,6 +14,10 @@
   var IDE = window.IDE, CM = window.CM, lp = CM.luaparse;
 
   var LOADER = { Printf: 1, WsSend: 1, IsKeyDown: 1, PopKeyEvents: 1, ClearKeyEvents: 1, GetKeyboardState: 1, SaveVar: 1, LoadVar: 1 };
+  /* calls whose first (literal) argument is a spawn template -- checked against MERCS_TEMPLATES below.
+     A small, explicit set on purpose: this is a soft nudge for the common cases, not an attempt to trace
+     every possible way a template string reaches the engine. */
+  var TPL_CALLS = { "Pg.Spawn": 1, "Ess.Object.spawn": 1, "Ess.Object.spawnAhead": 1, "Ess.Easy.Vehicle.summon": 1 };
 
   var K = null;
   function knowledge() {
@@ -22,7 +26,11 @@
     var nat = (window.MERCS_NATIVES && window.MERCS_NATIVES.natives) || {};
     var essPaths = {}; ess.completions.forEach(function (c) { essPaths[c] = 1; });
     var essNs = {}; ess.namespaces.forEach(function (n) { essNs[n.name] = 1; });
-    return (K = { essPaths: essPaths, essNs: essNs, essList: ess.completions, nat: nat });
+    var tplSet = {};
+    ((window.MERCS_TEMPLATES && window.MERCS_TEMPLATES.categories) || []).forEach(function (cat) {
+      cat.items.forEach(function (it) { tplSet[it.name] = 1; });
+    });
+    return (K = { essPaths: essPaths, essNs: essNs, essList: ess.completions, nat: nat, tplSet: tplSet });
   }
 
   /* ---- tiny Levenshtein + did-you-mean ---- */
@@ -120,6 +128,19 @@
           }
 
           var p = base ? dotted(base) : null;
+
+          /* unknown template-name string literal on a known spawn-like call. luaparse's default
+             encodingMode leaves .value null on string literals (byte-level, not auto-decoded) -- .raw
+             still has the quotes, so strip a single matching pair rather than trusting .value. */
+          if (p && TPL_CALLS[p.path] && n.type === "CallExpression" && n.arguments && n.arguments[0] &&
+              n.arguments[0].type === "StringLiteral") {
+            var raw = n.arguments[0].raw || "";
+            var tplName = /^["']([\s\S]*)["']$/.test(raw) ? raw.slice(1, -1) : null;
+            if (tplName && tplName.trim() && !api.tplSet[tplName]) {
+              warnings.push({ from: n.arguments[0].range[0], to: n.arguments[0].range[1], severity: "info",
+                message: '"' + tplName + '" isn\'t in the known template list — double-check the spelling, or browse the Templates tab in the sidebar.' });
+            }
+          }
 
           /* print() -> the game log */
           if (base && base.type === "Identifier" && base.name === "print") {

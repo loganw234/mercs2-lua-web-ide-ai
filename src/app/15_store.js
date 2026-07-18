@@ -92,6 +92,29 @@
       }
       persist();
       IDE.bus.emit("scripts");
+    },
+    /* backup/restore: the whole library as one JSON file. Restore is always additive (merge, never
+       clobber) -- imported scripts land as brand-new entries with fresh ids, name-deduped the same way
+       a fresh "+ New" would be, so a restore can never silently overwrite in-progress work. */
+    exportAll: function () {
+      return JSON.stringify({
+        exportedAt: Date.now(),
+        scripts: db.scripts.map(function (s) { return { name: s.name, code: s.code }; })
+      }, null, 2);
+    },
+    importAll: function (jsonText) {
+      var parsed;
+      try { parsed = JSON.parse(jsonText); } catch (e) { return { ok: false, error: "not valid JSON" }; }
+      var list = Array.isArray(parsed) ? parsed : parsed.scripts;
+      if (!Array.isArray(list)) return { ok: false, error: "no scripts array found in that file" };
+      var added = 0;
+      list.forEach(function (item) {
+        if (!item || typeof item.code !== "string") return;
+        db.scripts.push({ id: uid(), name: uniqueName(item.name || "Untitled"), code: item.code, mtime: Date.now() });
+        added++;
+      });
+      if (added) { persist(); IDE.bus.emit("scripts"); }
+      return { ok: true, added: added };
     }
   };
 })();

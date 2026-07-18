@@ -1,0 +1,2694 @@
+{
+ "_source": "AllInOneSpawnMenu.lua + CommonSpawnMenu.lua (Logan's hand-curated OnKey spawn menus) + wiki spawn-reference/pg-spawn-calls.md + weapons.md (Skins/FX/extra-weapon supplement), 667 confirmed names as of 2026-07-18",
+ "categories": [
+  {
+   "name": "Vehicles",
+   "items": [
+    {
+     "name": "AH1Z",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MH53J",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MH53J (Pursuit)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Offroad Motorcycle (AL)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Softtop)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (50Cal)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (GL)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Avenger)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (TOW)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Cargo)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Semi)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Fuel)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Expandible Van)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (Minigun)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AD)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MGS)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MEWSS)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AT)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (25mm)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "M2A3",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "M1A2",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MarkV",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LCUR",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LCUR (light)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LCUR (medium)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LCUR (heavy)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Allied Destroyer",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Ka29b",
+     "sub": "China"
+    },
+    {
+     "name": "Ka29b (Bomber)",
+     "sub": "China"
+    },
+    {
+     "name": "Ka29b (Pursuit)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ10",
+     "sub": "China"
+    },
+    {
+     "name": "Mi26 (CH)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (GL)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (MG)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Semi)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Cargo)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Fuel)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (MLRS)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ551",
+     "sub": "China"
+    },
+    {
+     "name": "ZBD2000",
+     "sub": "China"
+    },
+    {
+     "name": "PLZ45",
+     "sub": "China"
+    },
+    {
+     "name": "PGZ95",
+     "sub": "China"
+    },
+    {
+     "name": "PGZ95 Command",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ63a",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ98",
+     "sub": "China"
+    },
+    {
+     "name": "HuangFeng",
+     "sub": "China"
+    },
+    {
+     "name": "HuangFeng (jammer)",
+     "sub": "China"
+    },
+    {
+     "name": "Chinese Destroyer",
+     "sub": "China"
+    },
+    {
+     "name": "Ambulance",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Armored Bank Truck",
+     "sub": "Civilian"
+    },
+    {
+     "name": "esv (lowrider)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (crappy)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Vanquish",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Vanquish (Racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "escort",
+     "sub": "Civilian"
+    },
+    {
+     "name": "R90",
+     "sub": "Civilian"
+    },
+    {
+     "name": "R90 Limo",
+     "sub": "Civilian"
+    },
+    {
+     "name": "R90 Taxi",
+     "sub": "Civilian"
+    },
+    {
+     "name": "CRX",
+     "sub": "Civilian"
+    },
+    {
+     "name": "ClownCar",
+     "sub": "Civilian"
+    },
+    {
+     "name": "CRX (racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "impact",
+     "sub": "Civilian"
+    },
+    {
+     "name": "impact (sut)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix (crappy)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix (racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Chopper",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Mattias Chopper",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "scooter",
+     "sub": "Civilian"
+    },
+    {
+     "name": "devastator",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Sidecar Motorcycle",
+     "sub": "Civilian"
+    },
+    {
+     "name": "el grande",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder",
+     "sub": "Civilian"
+    },
+    {
+     "name": "taxi (tercel)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "van (taxi)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Austin (CIV)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Mark (CIV)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Garbage Truck",
+     "sub": "Civilian"
+    },
+    {
+     "name": "transport truck",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "van (commercial)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "van (crappy)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "van (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W8 (normal)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (Sprint)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (Z12)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (Z12) Racer",
+     "sub": "Civilian"
+    },
+    {
+     "name": "L300",
+     "sub": "Civilian"
+    },
+    {
+     "name": "L300 (Racing)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "ridgeline",
+     "sub": "Civilian"
+    },
+    {
+     "name": "monster ridgeline",
+     "sub": "Civilian"
+    },
+    {
+     "name": "valiant",
+     "sub": "Civilian"
+    },
+    {
+     "name": "valiant (4door)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "valiant (crappy)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "valiant (python)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "pony (normal)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "pony (crappy)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "veyron",
+     "sub": "Civilian"
+    },
+    {
+     "name": "veyron (cannon)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "veyron (assault)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "air boat",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Salton Seahorse (CIV)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Fishing Boat",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Small Fishing Boat",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Speed Boat",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Barco",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Jetski (CIV)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Box Trailer",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Civ Fueltrailer",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Fuel Trailer",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Flatbed Trailer",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Offroad Motorcycle (GR)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M551",
+     "sub": "PLAV"
+    },
+    {
+     "name": "turbosquid (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "piranha",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Emplaced M101A1 (GR)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Transport (GR)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "endriago (attack)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "endriago (elite)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "endriago (superiority)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Elite",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Superiority",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Attack",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m151 softtop (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m151 softtop",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m151 (MG)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m151 (mg) (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m35 (cargo) (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m35 (guntruck) (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m35 (aa) (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m35 (fuel) (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m113 (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "m113 aa (gr)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Alouette3 Transport (PR)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Alouette3 Attack (PR)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Alouette3 Transport (PR) (Pursuit)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "t300 (empty)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "t300 (m60)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "buggy (pr)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "mark (pr)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "cutter (pr)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "salton seahorse (pr)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "jetski (pr)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "uh1 tranport (pmc)",
+     "sub": "PMC"
+    },
+    {
+     "name": "uh1 attack (pmc)",
+     "sub": "PMC"
+    },
+    {
+     "name": "mi26 (pmc)",
+     "sub": "PMC"
+    },
+    {
+     "name": "panhard",
+     "sub": "PMC"
+    },
+    {
+     "name": "panhard (assault)",
+     "sub": "PMC"
+    },
+    {
+     "name": "buggy",
+     "sub": "PMC"
+    },
+    {
+     "name": "buggy (hellfire)",
+     "sub": "PMC"
+    },
+    {
+     "name": "Cougar",
+     "sub": "PMC"
+    },
+    {
+     "name": "monster truck",
+     "sub": "PMC"
+    },
+    {
+     "name": "ext (monster)",
+     "sub": "PMC"
+    },
+    {
+     "name": "tank bike",
+     "sub": "PMC"
+    },
+    {
+     "name": "Patrol Boat (PMC)",
+     "sub": "PMC"
+    },
+    {
+     "name": "coanda transport",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "coanda transport (pursuit)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "coanda attack",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "coanda superiority",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "coanda gunship",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "esv",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ext (unarmed)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ext",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ext (gl)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ext (tow)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Austin (OC)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "guntruck (oc)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Stingray II",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Omen",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "turbosquid (oc)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "oil tanker (oc)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Alouette3 Transport (VZ)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Attack (VZ)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Elite",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Superiority",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "mi35",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "mi35 (aa)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "mi26 (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m151 softtop (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m151 .50cal (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (cargo) (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (fuel) (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (aa) (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (guntruck) (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (guntruck)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (cargo)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (fuel)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m35 (aa)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m113 (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 AA (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "m113 jammer (vz)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "scorpion90",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "amx30",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "amx30 elite",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "amx30 aa",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Patrol Boat (VZ)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310 (Non AA)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "emplaced MG",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced MG (AL)",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "emplaced GL",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced ZU23",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced TOW",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced Quad50 (GR)",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "Emplaced M101A1 (VZ)",
+     "sub": "Emplaced Weapons"
+    },
+    {
+     "name": "AH1Z (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MH53J (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Offroad Motorcycle (AL) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Softtop) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (50Cal) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (GL) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Avenger) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (TOW) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Cargo) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (semi) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Fuel) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Expandible Van) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (Minigun) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AD) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MGS) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MEWSS) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AT) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (25mm) (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "M2A3 (driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "M1A2 (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MarkV (full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LCUR (driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Allied Destroyer (Full)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Allied Destroyer (jammer)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Ka29b (full)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ10 (full)",
+     "sub": "China"
+    },
+    {
+     "name": "Mi26 (CH) (driver)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (GL) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (MG) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Semi) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Cargo) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Fuel) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (MLRS) (full)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ551 (Full)",
+     "sub": "China"
+    },
+    {
+     "name": "ZBD2000 (full)",
+     "sub": "China"
+    },
+    {
+     "name": "PLZ45 (full)",
+     "sub": "China"
+    },
+    {
+     "name": "PGZ95 (driver)",
+     "sub": "China"
+    },
+    {
+     "name": "PGZ95 Command (driver)",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ63a (full)",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ98 (full)",
+     "sub": "China"
+    },
+    {
+     "name": "HuangFeng (driver)",
+     "sub": "China"
+    },
+    {
+     "name": "HuangFeng (jammer) (driver)",
+     "sub": "China"
+    },
+    {
+     "name": "Chinese Destroyer (full)",
+     "sub": "China"
+    },
+    {
+     "name": "Chinese Destroyer (jammer)",
+     "sub": "China"
+    },
+    {
+     "name": "Ambulance (driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Armored Bank Truck (driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "ESV (Lowrider) (Civ Business (male)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (black)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (blue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (lightblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (orange)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (civ) (red)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "rtr (racing) (driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "escort (driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "R90 (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "R90 Taxi (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "CRX (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "CRX (racing) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Impact (base) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Impact (sut) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix (crappy) (Driver) (Civ Poor male)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Phoenix (racing) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Chopper (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (black)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (blue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (lightblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (orange",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (red)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "sportbike (civ) (white)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Scooter (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Sidecar Motorcycle (Full)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "El Grande (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (white)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (black)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (blue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (lightblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (orange)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Thunder (red)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Taxi (Tercel) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Taxi) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Austin (CIV) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Mark (CIV) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Garbage Truck (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Transport Truck (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Racing) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Commercial) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Crappy) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Van (Green) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W8 (normal) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (white)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (black)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (blue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (bronze)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (lightblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (orange)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (red)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (normal) (paleblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (sprint) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "W12 (Z12) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "L300 (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "L300 (Racing) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Ridgeline (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Kodiak Ridgeline (Driver) (Mechanic (male))",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Valiant (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Valiant (4door) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Valiant (crappy) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Valiant (Python) (Mechanic male)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (white)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (black)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (blue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (green)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (lightblue)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (orange)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Normal) (red)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Pony (Crappy) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Veyron (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Veyron (Assault) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Air Boat (Full)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Salton Seahorse (Civ) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Fishing Boat (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Small Fishing Boat (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Speed Boat (Full)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Barco (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Jetski (Civ) (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Offroad Motorcycle (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M551 (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Turbosquid (GR) (DriverGunner)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Piranha (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Transport (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Transport (GR) (Full) (RPG)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Endriago (Attack) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Endriago (Elite) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Endriago (Superiority) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M151 Softtop (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M151 (MG) (GR) (DriverGunner)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M151 .50Cal (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Cargo) (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Guntruck) (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (AA) (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Fuel) (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M113 (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M113 AA (GR) (Full)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Alouette3 Transport (PR) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Alouette3 Attack (PR) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "T300 (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "T300 (M60) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Mark (PR) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Cutter (PR) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Salton Seahorse (PR) (Full)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Jetski (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "UH1 Transport (PMC) (Driver)",
+     "sub": "PMC"
+    },
+    {
+     "name": "UH1 Attack (PMC) (Driver)",
+     "sub": "PMC"
+    },
+    {
+     "name": "Mi26 (PMC) (Driver)",
+     "sub": "PMC"
+    },
+    {
+     "name": "Coanda Transport (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Attack (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Superiority (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Gunship (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ESV (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (Unarmed) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (GL) (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (TOW) (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Austin (OC) (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Guntruck (OC) (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Stingray II (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Omen (Full) (OC)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Turbosquid (OC) (Full)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Alouette3 Transport (VZ) (Pursuit)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Attack (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Elite (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Superiority (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Mi35 (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "mi35 (aa driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Mi26 (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M151 Softtop (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M151 .50Cal (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Cargo) (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Fuel) (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (AA) (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Guntruck) (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 (VZ) (Full RPG)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 AA (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 Jammer (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Scorpion90 (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Amx30 (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "AMX30 Elite (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "AMX30 AA (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Patrol Boat (VZ) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310 (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310 (Non AA) (Full)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Emplaced MG (VZ)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced MG (AL) (Gunner)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced MG (OC)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced MG (CH)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced MG (PR)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced MG (Guerilla)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced GL (Driver)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle (Allied)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle (China)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle (GR)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle (OC)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Recoiless Rifle (VZ)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced ZU23 (Driver)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced TOW (Allied)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced Quad50 (Driver)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced M101A1 (GR) (Driver)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "Emplaced M101A1 (VZ) (Driver)",
+     "sub": "Emplaced Weapons (Manned)"
+    },
+    {
+     "name": "AH1Z (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MH53J (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Softtop) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (50Cal) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (GL) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Avenger) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "HMMWV (Armored) (TOW) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Cargo) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Fuel) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MTV (Expandible Van) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (Minigun) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AD) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MGS) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (MEWSS) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (AT) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "LAVIII (25mm) (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "M1A2 (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "MarkV (Driver)",
+     "sub": "Allied Nations"
+    },
+    {
+     "name": "Ka29b (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ10 (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (GL) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "NGLV (MG) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Semi) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Cargo) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (Fuel) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "SX2150 (MLRS) (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "WZ551 (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "ZBD2000 (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "PLZ45 (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ63a (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "ZTZ98 (Driver)",
+     "sub": "China"
+    },
+    {
+     "name": "Sidecar Motorcycle (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "Speed Boat (Driver)",
+     "sub": "Civilian"
+    },
+    {
+     "name": "M551 (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Turbosquid (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Piranha (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "UH1 Transport (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Endriago (Attack) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M151 Softtop (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M151 (MG) (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Cargo) (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Guntruck) (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (AA) (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M35 (Fuel) (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M113 (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "M113 AA (GR) (Driver)",
+     "sub": "PLAV"
+    },
+    {
+     "name": "Alouette3 Transport (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Alouette3 Attack (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "T300 (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "T300 (M60) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Mark (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Cutter (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Salton Seahorse (PR) (Driver)",
+     "sub": "Pirates"
+    },
+    {
+     "name": "Cougar (Driver) (Civ Business B Male)",
+     "sub": "PMC"
+    },
+    {
+     "name": "Coanda Transport (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Attack (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Superiority (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Coanda Gunship (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "ESV (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (GL) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "EXT (TOW) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Austin (OC) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Guntruck (OC) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Stingray II (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Omen (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Turbosquid (OC) (Driver)",
+     "sub": "Universal Petroleum"
+    },
+    {
+     "name": "Alouette3 Transport (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Attack (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Alouette3 Elite (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Mi35 (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M151 Softtop (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M151 (MG) (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Cargo) (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Fuel) (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (AA) (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M35 (Guntruck) (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "M113 AA (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Scorpion90 (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "AMX30 (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "AMX30 Elite (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Patrol Boat (VZ) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310 (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Type 14310 (Non AA) (Driver)",
+     "sub": "Venezuelan Army"
+    },
+    {
+     "name": "Veyron",
+     "sub": "Sports Car"
+    },
+    {
+     "name": "UH1 Transport (PMC)",
+     "sub": "Helicopter"
+    },
+    {
+     "name": "El Grande",
+     "sub": "Truck"
+    },
+    {
+     "name": "M35 (Cargo) (VZ)"
+    }
+   ]
+  },
+  {
+   "name": "Weapons",
+   "items": [
+    {
+     "name": "pistol",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Covert Pistol",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Pistol (silver)",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Hunting Pistol",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Machine Pistol (Uzi)",
+     "sub": "Machine Pistols"
+    },
+    {
+     "name": "Machine Pistol (TMP)",
+     "sub": "Machine Pistols"
+    },
+    {
+     "name": "machine pistol",
+     "sub": "Machine Pistols"
+    },
+    {
+     "name": "Machine Pistol (PP2000)",
+     "sub": "Machine Pistols"
+    },
+    {
+     "name": "assault rifle",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "assault rifle (vz)",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "Bullpup Rifle",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "combat rifle",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "carbine",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "Light MG",
+     "sub": "Automatic Rifles"
+    },
+    {
+     "name": "Automatic Rifle",
+     "sub": "Automatic Rifles"
+    },
+    {
+     "name": "Automatic Rifle (Chinese)",
+     "sub": "Automatic Rifles"
+    },
+    {
+     "name": "sMG",
+     "sub": "SMGs"
+    },
+    {
+     "name": "Covert SMG",
+     "sub": "SMGs"
+    },
+    {
+     "name": "Sniper Rifle (SVD)",
+     "sub": "Sniper Rifles"
+    },
+    {
+     "name": "Sniper Rifle",
+     "sub": "Sniper Rifles"
+    },
+    {
+     "name": "Anti-Material Rifle",
+     "sub": "Sniper Rifles"
+    },
+    {
+     "name": "Anti-Material Rifle (KSVK)",
+     "sub": "Sniper Rifles"
+    },
+    {
+     "name": "Shotgun"
+    },
+    {
+     "name": "AT Rocket",
+     "sub": "Heavy"
+    },
+    {
+     "name": "Stinger",
+     "sub": "Heavy"
+    },
+    {
+     "name": "RPG",
+     "sub": "Heavy"
+    },
+    {
+     "name": "Fuel-Air RPG",
+     "sub": "Heavy"
+    },
+    {
+     "name": "Grenade Launcher",
+     "sub": "Heavy"
+    },
+    {
+     "name": "Grenade Launcher PEP",
+     "sub": "Heavy"
+    },
+    {
+     "name": "Minigun",
+     "sub": "Special"
+    },
+    {
+     "name": "Minigun 900",
+     "sub": "Special"
+    },
+    {
+     "name": "minigun 1800",
+     "sub": "Special"
+    },
+    {
+     "name": "minigun 1000",
+     "sub": "Special"
+    },
+    {
+     "name": "Riot Gun",
+     "sub": "Special"
+    },
+    {
+     "name": "Coilgun",
+     "sub": "Special"
+    },
+    {
+     "name": "Cheat RPG",
+     "sub": "Special"
+    },
+    {
+     "name": "Assault Rifle",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "C4"
+    },
+    {
+     "name": "Carbine",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "Combat Rifle",
+     "sub": "Assault Rifles"
+    },
+    {
+     "name": "Machine Pistol",
+     "sub": "Machine Pistols"
+    },
+    {
+     "name": "Minigun 1000",
+     "sub": "Special"
+    },
+    {
+     "name": "Pistol",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Pistol (AL)",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Pistol (CH)",
+     "sub": "Pistols"
+    },
+    {
+     "name": "Pistol (GR)",
+     "sub": "Pistols"
+    },
+    {
+     "name": "rifle"
+    },
+    {
+     "name": "rpglauncher",
+     "sub": "Heavy"
+    },
+    {
+     "name": "smg",
+     "sub": "SMGs"
+    },
+    {
+     "name": "Sniper Rifle (AA Backup)",
+     "sub": "Sniper Rifles"
+    }
+   ]
+  },
+  {
+   "name": "Skins",
+   "items": [
+    {
+     "name": "OC Executive (OilCon002_Hostage)",
+     "sub": "Mission NPC"
+    },
+    {
+     "name": "VZ Deathsquad B HVT",
+     "sub": "VZ"
+    },
+    {
+     "name": "VZ Officer",
+     "sub": "VZ"
+    },
+    {
+     "name": "VZ Soldier",
+     "sub": "VZ"
+    }
+   ]
+  },
+  {
+   "name": "FX",
+   "items": [
+    {
+     "name": "Explosion (Grenade)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "carpetbomb_explosion",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Cluster Bomb Projectile",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "Explosion (Airstike Bomb Final Strike)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (AT Mine)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Bunker Buster Stage 1)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Bunker Buster Stage 2)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (C4)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Force)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Fuel Air Bomb)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (MOAB)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Rocket Artillery)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Explosion (Water Mine)",
+     "sub": "Explosion"
+    },
+    {
+     "name": "Flare Projectile Stage 2",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "Fuel Air Bomb Projectile",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "fx_Explosion_Huge",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_airstrike_distance",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_airstrike_tactnuke",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_env_smokeplume_distance_tall",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_exp_falling_debris_airstrike",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_exp_shockwave_ground",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_explosion_c4",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_explosion_pickup_money",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_explosion_pickup_rocket",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_explosion_tankhatch",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_flaresmoke_green",
+     "sub": "Particle"
+    },
+    {
+     "name": "global_particle_muzzleflash_tank",
+     "sub": "Particle"
+    },
+    {
+     "name": "Grenade MG Projectile",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "Gunship Shell",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "Light_airstrike_fuelairbomb_lrg_flash",
+     "sub": "Ordnance"
+    },
+    {
+     "name": "Light_airstrike_fuelairbomb_sml",
+     "sub": "Ordnance"
+    }
+   ]
+  },
+  {
+   "name": "Other",
+   "items": [
+    {
+     "name": "Health Pickup",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Bullet)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Small)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (1xC4)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Full C4)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Single Grenade)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Grenades)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Ammo Pickup (Rocket)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Fuel Pickup (Large)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Fuel Pickup (Small)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Cash (Case)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Cash (Medium)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Cash (Small)",
+     "sub": "Player Pickups"
+    },
+    {
+     "name": "Cash (Large)",
+     "sub": "Stealable Pallets"
+    },
+    {
+     "name": "Munitions (Carpet Bomb)",
+     "sub": "Laptop Munitions"
+    },
+    {
+     "name": "Munitions (Cruise Missile)",
+     "sub": "Laptop Munitions"
+    },
+    {
+     "name": "Munitions (Smart Bomb)",
+     "sub": "Laptop Munitions"
+    },
+    {
+     "name": "Munitions (Strategic Missile)",
+     "sub": "Laptop Munitions"
+    },
+    {
+     "name": "Munitions (Artillery)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Bombing Run)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Bunker Buster)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Cluster Bomb)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Combat Air Patrol)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Daisy Cutter)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Fuel-Air Bomb)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Laser Guided Bomb)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (MOAB)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Rocket Artillery)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Surgical Strike)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Munitions (Tank Buster)",
+     "sub": "Pallet Munitions"
+    },
+    {
+     "name": "Supply Drop (Health)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AL Ammo)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Light MG) (AL)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AL Grenade)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AL Health)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Allied)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AM AL)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AT AL)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AA)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Chinese)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AM CH)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (AT CH)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Sniper CH)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Blanco)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (C4)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Covert)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (CQB)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (FIona)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Sniper RU)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Guerilla) (Sniper)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Guerilla)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Pirate)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (RPG)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (OC)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (GL)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Sniper)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Light MG)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (VZ)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (C4) (VZ)",
+     "sub": "Supply Drop"
+    },
+    {
+     "name": "Supply Drop (Base)",
+     "sub": "Special Supply Drops"
+    },
+    {
+     "name": "Supply Drop (Blueprints)",
+     "sub": "Special Supply Drops"
+    },
+    {
+     "name": "Supply Drop (Treasure)",
+     "sub": "Special Supply Drops"
+    },
+    {
+     "name": "_global_containertransplant",
+     "sub": "World Object"
+    },
+    {
+     "name": "_global_explosivebarrel_Long_Hibernation",
+     "sub": "World Object"
+    },
+    {
+     "name": "_pmcoutpost_statueSolanobust_lowHP",
+     "sub": "World Object"
+    },
+    {
+     "name": "_vzoutpost_fueltanks_PmcCon018",
+     "sub": "World Object"
+    },
+    {
+     "name": "Verification Camera",
+     "sub": "Utility"
+    }
+   ]
+  }
+ ]
+}

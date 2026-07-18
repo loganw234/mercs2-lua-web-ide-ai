@@ -101,6 +101,70 @@
     return { from: word ? word.from : ctx.pos, options: options, validFor: /^[\w.]*$/ };
   }
 
+  /* ---- template-name autocomplete: typing inside an open "..."/'...' offers every confirmed spawnable
+     template (window.MERCS_TEMPLATES). Simple "are we after an unclosed quote on this line" heuristic --
+     matches this codebase's existing pragmatic style (no full syntax-tree lookup for editor-time checks;
+     that's what 25_lint.js's separate luaparse pass is for). */
+  var tplOptions = null;
+  function buildTemplateOptions() {
+    var data = window.MERCS_TEMPLATES || { categories: [] }, out = [];
+    data.categories.forEach(function (cat) {
+      cat.items.forEach(function (it) {
+        out.push({ label: it.name, type: "text", detail: cat.name + (it.sub ? " · " + it.sub : "") });
+      });
+    });
+    return out;
+  }
+  function templateCompletions(ctx) {
+    var m = ctx.matchBefore(/["']([^"'\n]*)$/);
+    if (!m) return null;
+    if (!tplOptions) tplOptions = buildTemplateOptions();
+    return { from: m.from + 1, options: tplOptions, validFor: /^[^"'\n]*$/ };
+  }
+
+  /* ---- hover docs: mousing over any Ess.* / native token shows the same info the doc pane (50_api.js)
+     would -- signature, tier, namespace doc, and a real call-site example for natives. Reuses the API
+     data already loaded for autocomplete rather than re-fetching anything. */
+  function escHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function tokenAt(doc, pos) {
+    var line = doc.lineAt(pos), text = line.text, i = pos - line.from, start = i, end = i;
+    function ok(ch) { return /[\w.]/.test(ch); }
+    while (start > 0 && ok(text[start - 1])) start--;
+    while (end < text.length && ok(text[end])) end++;
+    if (start === end) return null;
+    return { text: text.slice(start, end), from: line.from + start, to: line.from + end };
+  }
+  function hoverInfo(view, pos) {
+    var tok = tokenAt(view.state.doc, pos);
+    if (!tok || !/^[A-Za-z_][\w.]*$/.test(tok.text)) return null;
+    var found = (IDE.api && IDE.api.lookup) ? IDE.api.lookup(tok.text) : null;
+    var nat = null;
+    if (!found) {
+      var parts = tok.text.split(".");
+      var natives = (window.MERCS_NATIVES && window.MERCS_NATIVES.natives) || {};
+      if (parts.length === 2 && natives[parts[0]] && natives[parts[0]][parts[1]]) {
+        nat = { path: tok.text, entry: natives[parts[0]][parts[1]] };
+      }
+    }
+    if (!found && !nat) return null;
+    return {
+      pos: tok.from, end: tok.to, above: true,
+      create: function () {
+        var dom = document.createElement("div"); dom.className = "hovertip";
+        if (found) {
+          var c = found.c, tier = IDE.api.tierOf(c ? c.path : found.ns.name, false);
+          dom.innerHTML = '<div class="htsig">' + escHtml(c ? c.sig : found.ns.name) + "</div>" +
+            '<span class="httier ' + tier[0] + '">' + escHtml(tier[1]) + "</span>" +
+            (found.ns.doc ? '<div class="htdoc">' + escHtml(found.ns.doc) + "</div>" : "");
+        } else {
+          dom.innerHTML = '<div class="htsig">' + escHtml(nat.path) + '</div><span class="httier native">Native</span>' +
+            (nat.entry.example ? '<div class="htdoc">real call: ' + escHtml(nat.entry.example) + "</div>" : "");
+        }
+        return { dom: dom };
+      }
+    };
+  }
+
   /* ---- the view ---- */
   function extensions() {
     return [
@@ -118,7 +182,8 @@
       CM.indentOnInput(),
       CM.bracketMatching(),
       CM.closeBrackets(),
-      CM.autocompletion({ override: [essCompletions] }),
+      CM.autocompletion({ override: [essCompletions, templateCompletions] }),
+      CM.hoverTooltip(hoverInfo, { hideOnChange: true }),
       CM.highlightActiveLine(),
       CM.highlightSelectionMatches(),
       CM.search({ top: true }),

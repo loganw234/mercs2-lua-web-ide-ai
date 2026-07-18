@@ -27,9 +27,33 @@
   $("save").onclick = function () { save(); flash($("save"), "Saved"); };
   IDE.bus.on("save", function () { save(); flash($("save"), "Saved"); });
   $("share").onclick = function () {
-    var url = location.origin + location.pathname + "#s=" + encodeURIComponent(IDE.editor.get());
+    var code = IDE.editor.get(), name = IDE.store.active().name;
+    /* LZ-string the payload (~3-4x more script per link) and carry the script name along -- #z= is the
+       compressed form; #s= (plain encodeURIComponent, no name) is the old format, kept working forever
+       as the fallback for any link minted before this shipped, or if LZString somehow isn't on window.CM. */
+    var packed = (window.CM && CM.LZString) ? CM.LZString.compressToEncodedURIComponent(JSON.stringify({ n: name, c: code })) : null;
+    var url = packed
+      ? location.origin + location.pathname + "#z=" + packed
+      : location.origin + location.pathname + "#s=" + encodeURIComponent(code);
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { flash($("share"), "Link copied"); }, function () { prompt("Copy this link:", url); });
     else prompt("Copy this link:", url);
+  };
+
+  /* "grab what I'm aiming at" -- one click instead of a docs hunt for "how do I get a guid". Not routed
+     through IDE.runCode: this is a fixed, trusted snippet, not user code, so it skips the lint gate and
+     just needs the connected check that gate would otherwise provide. */
+  $("grabTarget").onclick = function () {
+    if (!IDE.bridge.connected()) { flash($("grabTarget"), "not connected"); return; }
+    IDE.bridge.run(
+      'local uGuid = Ess.Player.targetUnderReticle(0)\n' +
+      'if not uGuid then return nil end\n' +
+      'return tostring(uGuid) .. "\\t" .. Ess.Probe.describeSafe(uGuid)'
+    ).then(function (r) {
+      if (!r.ok || r.value == null) { flash($("grabTarget"), "nothing aimed at"); return; }
+      var parts = String(r.value).split("\t");
+      IDE.editor.insertSnippet(parts[0]);
+      flash($("grabTarget"), parts[1] ? (parts[1].length > 34 ? parts[1].slice(0, 34) + "…" : parts[1]) : "grabbed");
+    });
   };
 
   /* sidebar panels: Scripts / Examples / API */
@@ -41,6 +65,7 @@
       $("panelScripts").classList.toggle("hidden", which !== "scripts");
       $("panelExamples").classList.toggle("hidden", which !== "examples");
       $("panelApi").classList.toggle("hidden", which !== "api");
+      $("panelTemplates").classList.toggle("hidden", which !== "templates");
     };
   });
 
@@ -53,6 +78,9 @@
       $("results").classList.toggle("hidden", which !== "results");
       $("log").classList.toggle("hidden", which !== "log");
       $("logFilter").classList.toggle("hidden", which !== "log");
+      $("hlRules").classList.toggle("hidden", which !== "log");
+      $("watchPanel").classList.toggle("hidden", which !== "watch");
+      if (which !== "log") $("hlPanel").classList.add("hidden");
       $("latest").classList.add("hidden");
     };
   });

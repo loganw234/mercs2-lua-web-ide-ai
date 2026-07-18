@@ -90,7 +90,18 @@
     if (!tree.childElementCount) { var e = document.createElement("div"); e.className = "nsdoc"; e.textContent = "no matches"; tree.appendChild(e); }
   }
 
+  /* lookup(path): exact-match a dotted call/namespace path against the merged model -- used by the
+     editor's hover tooltip (20_editor.js) so it doesn't need its own copy of this data shape. */
+  function lookup(path) {
+    for (var i = 0; i < MODEL.length; i++) {
+      var ns = MODEL[i];
+      if (ns.name === path) return { ns: ns, c: null };
+      for (var j = 0; j < ns.calls.length; j++) if (ns.calls[j].path === path) return { ns: ns, c: ns.calls[j] };
+    }
+    return null;
+  }
+
   search.addEventListener("input", function () { build(search.value); });
-  IDE.api = { completions: function () { return data.completions; }, build: build };
+  IDE.api = { completions: function () { return data.completions; }, build: build, lookup: lookup, tierOf: tierOf };
   build("");
 })();
