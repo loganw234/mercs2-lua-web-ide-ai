@@ -15,6 +15,7 @@
   var PANELS = [
     ["editor",    "Editor",    "‹›", false],
     ["output",    "Output",    "▤",  false],
+    ["watch",     "Watch",     "◎",  true],
     ["scripts",   "Scripts",   "❑",  true],
     ["examples",  "Examples",  "◫",  true],
     ["api",       "API",       "ƒ",  true],

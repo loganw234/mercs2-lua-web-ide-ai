@@ -145,7 +145,6 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <div class="tabs">
         <button class="tab on" data-t="results" id="tabResults">Results</button>
         <button class="tab" data-t="log" id="tabLog">Log &amp; telemetry</button>
-        <button class="tab" data-t="watch" id="tabWatch">Watch</button>
         <span class="spacer"></span>
         <input id="logFilter" placeholder="filter results…" spellcheck="false">
         <button class="clr hidden" id="hlRules" title="Manage log highlight rules">🎨 rules</button>
@@ -162,13 +161,6 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <div class="feedwrap">
         <div class="feed" id="results"></div>
         <div class="feed hidden mono" id="log"></div>
-        <div class="watchpanel hidden" id="watchPanel">
-          <div class="watchadd">
-            <input id="watchExpr" placeholder="expression, e.g. Ess.Player.pose(0)" spellcheck="false">
-            <button class="btn small" id="watchAdd">+ Watch</button>
-          </div>
-          <div class="watchlist" id="watchList"></div>
-        </div>
         <button class="latest hidden" id="latest">↓ latest</button>
       </div>
       <div class="repl">
@@ -177,6 +169,16 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       </div>
     </div>
     </div><!-- /panelOutput -->
+
+    <div class="spanel" id="panelWatch">
+      <div class="watchpanel" id="watchPanel">
+        <div class="watchadd">
+          <input id="watchExpr" placeholder="expression, e.g. Ess.Player.pose(0)" spellcheck="false">
+          <button class="btn small" id="watchAdd">+ Watch</button>
+        </div>
+        <div class="watchlist" id="watchList"></div>
+      </div>
+    </div>
 </div><!-- /dockPool -->
 
 <!-- Settings modal. The field ids match what 82_assist.js reads/writes, so the

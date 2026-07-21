@@ -102,7 +102,9 @@
   function defaultTree() {
     var have = function (id) { return !!panels[id]; };
     var sideIds = ["scripts", "examples", "api", "templates", "inspect"].filter(have);
-    var consoleIds = ["output"].filter(have);
+    /* Output and Watch share the bottom leaf as tabs by default; the user can
+       drag Watch out to see watches alongside results. */
+    var consoleIds = ["output", "watch"].filter(have);
     var editorCol = split("col",
       [leaf(["editor"]), leaf(consoleIds.length ? consoleIds : ["editor"])],
       [68, 32]);
