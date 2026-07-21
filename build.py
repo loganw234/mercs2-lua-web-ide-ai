@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """build.py -- merge src/ into ONE standalone dist/index.html.
 
 Inlines everything (CSS, the generated Ess API JSON, the vendored ess-bridge.js, and every app/*.js) so
@@ -41,10 +41,43 @@ def main():
     natives = (SRC / "data" / "natives.json").read_text(encoding="utf-8")
     examples = (SRC / "data" / "examples.json").read_text(encoding="utf-8")
     templates = (SRC / "data" / "templates.json").read_text(encoding="utf-8")
-    # The assistant's reference pack. Bundled (not fetched) so the offline
-    # single-file build keeps working; a bigger tier can be pointed at by URL
-    # in the assistant's settings.
-    pack = (SRC / "data" / "pack.txt").read_text(encoding="utf-8")
+    # The assistant's reference packs. ALL tiers are bundled so a user can pick
+    # the biggest one their model's context can hold, offline, with no fetch.
+    # Copied from the wiki repo's helpbot/pack/ (build_pack.py --tiers); the
+    # token counts and context guidance below must track those files.
+    #   tokens: est_tokens from build_pack (chars/4). min_ctx: smallest context
+    #   that holds the pack with usable headroom for a script + a few turns +
+    #   the reply. headroom = min_ctx - tokens.
+    PACK_TIERS = [
+        {"key": "small", "label": "Small", "file": "pack-small.txt",
+         "tokens": 10930, "min_ctx": 16384, "good_ctx": 32768,
+         "note": "Core rules, gotchas, idioms, lua-bridge. Fits a 16k model with "
+                 "~5k to spare (short scripts and brief chats). 32k is comfortable "
+                 "(~21k headroom). The honest floor."},
+        {"key": "smallplus", "label": "Small+", "file": "pack-smallplus.txt",
+         "tokens": 45096, "min_ctx": 65536, "good_ctx": 131072,
+         "note": "Adds the full namespace + game reference. Needs a 64k model "
+                 "(~19k headroom for your script and the conversation)."},
+        {"key": "medium", "label": "Medium", "file": "pack-medium.txt",
+         "tokens": 98322, "min_ctx": 131072, "good_ctx": 200000,
+         "note": "Adds Ess and the resident modules -- most questions answerable "
+                 "without a wiki lookup. Needs 128k (~30k headroom)."},
+        {"key": "large", "label": "Large", "file": "pack-large.txt",
+         "tokens": 157480, "min_ctx": 200000, "good_ctx": 262144,
+         "note": "Adds spawn templates + the contract framework. The ONLY tier "
+                 "that carries the template list, so the only one that fully stops "
+                 "invented spawn names. Needs 200k (~43k headroom)."},
+        {"key": "full", "label": "Full", "file": "pack-full.txt",
+         "tokens": 240032, "min_ctx": 262144, "good_ctx": 1000000,
+         "note": "Everything, no omissions. ~16k headroom at 256k, so practical "
+                 "only on long-context hosted models (DeepSeek V4, Gemini). Local "
+                 "models generally cannot hold this."},
+    ]
+    packs = {}
+    for t in PACK_TIERS:
+        packs[t["key"]] = (SRC / "data" / "packs" / t["file"]).read_text(encoding="utf-8")
+    pack_info = [{k: t[k] for k in ("key", "label", "tokens", "min_ctx", "good_ctx", "note")}
+                 for t in PACK_TIERS]
     # Map tab data, baked by tools/gen_map.py from the webmap tensor.
     map_meta = (SRC / "data" / "map-meta.json").read_text(encoding="utf-8")
     map_heights = (SRC / "data" / "map-heights.b64").read_text(encoding="utf-8")
@@ -63,7 +96,10 @@ def main():
             .replace("/*__NATIVES__*/", "window.MERCS_NATIVES=" + guard(natives) + ";")
             .replace("/*__EXAMPLES__*/", "window.ESS_EXAMPLES=" + guard(examples) + ";")
             .replace("/*__TEMPLATES__*/", "window.MERCS_TEMPLATES=" + guard(templates) + ";")
-            .replace("/*__PACK__*/", "window.MERCS_PACK=" + json.dumps(pack) + ";")
+            .replace("/*__PACK__*/",
+                     "window.MERCS_PACKS=" + json.dumps(packs) + ";"
+                     "window.MERCS_PACK_INFO=" + json.dumps(pack_info) + ";"
+                     "window.MERCS_PACK=window.MERCS_PACKS.small;")
             .replace("/*__MAPDATA__*/",
                      "window.MERCS_MAP_META=" + guard(map_meta) + ";"
                      "window.MERCS_MAP_HEIGHTS=" + json.dumps(map_heights) + ";"

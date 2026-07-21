@@ -72,7 +72,8 @@
     baseUrl: "https://api.deepseek.com/v1",
     model: "deepseek-v4-pro",
     key: "",
-    packUrl: "",          /* blank = use the bundled pack */
+    packTier: "small",    /* which bundled tier -- see window.MERCS_PACK_INFO */
+    packUrl: "",          /* optional URL override; blank = use packTier */
     maxTokens: 4000,
     sendEditor: true,
     sendLog: true,

@@ -29,11 +29,11 @@ The trade is that **CORS becomes the user's problem** — see Known limits.
 | `src/app/85_ground.js` | **new** — ungrounded-identifier check (see below) |
 | `src/app/86_agent.js` | **new** — tool definitions + the agent loop |
 | `src/app/82_assist.js` | **new** — the panel, context capture, rendering |
-| `src/data/pack.txt` | **new** — bundled reference pack (small tier, ~14k tokens) |
+| `src/data/packs/*.txt` | **new** — all five reference-pack tiers, bundled |
 | `src/index.html` | Assistant tab + panel markup, `/*__PACK__*/` placeholder |
 | `src/styles.css` | `.ai-*` styles appended |
 | `src/app/60_ui.js` | tab switcher made generic (see below) |
-| `build.py` | inlines `pack.txt` as `window.MERCS_PACK` |
+| `build.py` | inlines every tier as `window.MERCS_PACKS` + `MERCS_PACK_INFO` |
 
 `60_ui.js` previously hid the five known panels by id, so a sixth panel stayed
 visible when you switched away from it. It now toggles every `.spanel` against
@@ -67,24 +67,37 @@ dropdown deliberately. Removing that label should mean someone actually ran it.
 
 ## Pack tiers
 
-`build_pack.py --tiers` in the wiki repo emits reduced packs:
+**All five tiers are bundled** (Assistant settings → *Bundled tier*). Pick the
+largest one your model's context can hold — the pack is sent as a fixed system
+prefix, so its tokens are spent every turn and the rest of the window is what's
+left for your script, the conversation, and the reply. The dropdown states each
+tier's cost and headroom live; the table below is the same data.
 
-| tier | tokens | for |
-|---|---|---|
-| small | 14,199 | local 7–14B @ 32k — **bundled here** |
-| small+ | 46,801 | 64k |
-| medium | 100,108 | 128k |
-| large | 159,261 | 200k |
-| full | 241,813 | 256k+ (DeepSeek V4, Gemini, GPT-5.x) |
+| tier | tokens | min context | headroom at min | adds |
+|---|---|---|---|---|
+| Small | 10.9k | 16k | ~5k | core rules, gotchas, idioms, lua-bridge |
+| Small+ | 45.1k | 64k | ~19k | full namespace + game reference |
+| Medium | 98.3k | 128k | ~30k | Ess + resident modules |
+| Large | 157.5k | 200k | ~43k | spawn templates + contract framework |
+| Full | 240k | 256k+ | ~16k | everything (hosted long-context only) |
 
-Every tier below `full` carries a banner naming the sections it lacks and
-telling the model to refuse rather than guess. That matters more than it sounds:
-the `templates` section is the only thing preventing invented spawn names, and
-it cannot fit below the `large` tier. **A local model on the small pack will
-invent template names** — the banner is what stops it doing so silently.
+Headroom = min context − pack tokens: what remains for the editor buffer, chat
+history, and the model's answer (default reply cap 4k). Small at exactly 16k is
+tight — fine for short questions, 32k is comfortable. The counts come from
+`build_pack.py --tiers` in the wiki repo; the files are copied into
+`src/data/packs/` and inlined by `build.py`, which owns the per-tier token
+counts and guidance in `PACK_TIERS`. Re-copy after regenerating the wiki packs.
 
-Point `packUrl` in settings at a bigger tier once they're published to
-`wiki.mercs2.tools/assets/pack/`.
+Every tier below Full carries a banner naming the sections it lacks and telling
+the model to refuse rather than guess. This matters: the `templates` section is
+the only thing preventing invented spawn names, and it does not fit below the
+Large tier. **A model on a small tier will invent template names** — the banner
+is what stops it doing so silently. The grounding check (`85_ground.js`) is the
+backstop when it doesn't.
+
+Bundling all tiers put the single-file build at ~4.1 MB. That was a deliberate
+trade for offline tier-switching with no fetch; a `packUrl` override still
+exists for pointing at an out-of-band pack.
 
 ## Verified
 

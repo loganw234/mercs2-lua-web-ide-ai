@@ -90,10 +90,10 @@
       var need = Math.ceil(packText.length / 4) + 1500;   /* pack + room to talk */
       if (need > ctx) {
         setStatus("Warning: " + c.model + " has a " + ctx.toLocaleString() +
-          "-token context but the reference pack needs about " +
+          "-token context but the selected pack needs about " +
           need.toLocaleString() + ". It will be silently truncated from the " +
-          "front, losing the rules that stop it inventing API names. Use a " +
-          "smaller pack tier (set Pack URL to pack-tiny.txt) or a longer-context model.",
+          "front, losing the rules that stop it inventing API names. Pick a " +
+          "smaller Bundled tier in Assistant settings, or use a longer-context model.",
           true);
       }
     }).catch(function () { /* best effort only */ });
@@ -108,9 +108,14 @@
         return r.text();
       }).then(function (t) { packText = t; return t; });
     }
-    packText = window.MERCS_PACK || "";
+    var packs = window.MERCS_PACKS || {};
+    packText = packs[c.packTier] || packs.small || window.MERCS_PACK || "";
     return Promise.resolve(packText);
   }
+
+  /* Forget the cached pack so the next question reloads the chosen tier. Called
+     when the tier/URL changes -- otherwise a switch wouldn't take until reload. */
+  function resetPack() { packText = null; }
 
   /* ---- rendering (ported from the wiki assistant) ------------------------- */
 
@@ -511,12 +516,46 @@
     $("aiBase").value = c.baseUrl;
     $("aiModel").value = c.model;
     $("aiKey").value = c.key;
+
+    var tsel = $("aiPackTier");
+    if (tsel && !tsel.options.length) {
+      (window.MERCS_PACK_INFO || []).forEach(function (t) {
+        var o = document.createElement("option");
+        o.value = t.key;
+        o.textContent = t.label + " — " + fmtTokens(t.tokens) + " tokens";
+        tsel.appendChild(o);
+      });
+    }
+    if (tsel) tsel.value = c.packTier || "small";
+    reflectPackNote();
+
     $("aiPackUrl").value = c.packUrl;
     $("aiSendEditor").checked = !!c.sendEditor;
     $("aiSendLog").checked = !!c.sendLog;
     $("aiAgent").checked = !!c.agentMode;
     var p = IDE.provider.preset(c.preset);
     $("aiNote").textContent = (p && p.note) ? p.note : "";
+  }
+
+  function fmtTokens(n) {
+    return n >= 1000 ? (Math.round(n / 100) / 10) + "k" : String(n);
+  }
+
+  /* Show the selected tier's context guidance: what it costs and what it leaves
+     for the user's script + conversation. A URL override supersedes it. */
+  function reflectPackNote() {
+    var el = $("aiPackNote"), tsel = $("aiPackTier");
+    if (!el || !tsel) return;
+    if ($("aiPackUrl") && $("aiPackUrl").value.trim()) {
+      el.textContent = "Using the Pack URL override below; the bundled tier is ignored.";
+      return;
+    }
+    var info = (window.MERCS_PACK_INFO || []).filter(function (t) { return t.key === tsel.value; })[0];
+    if (!info) { el.textContent = ""; return; }
+    var headroom = info.min_ctx - info.tokens;
+    el.textContent = "≈" + fmtTokens(info.tokens) + " tokens. Needs a " +
+      fmtTokens(info.min_ctx) + "-context model or larger (≈" + fmtTokens(headroom) +
+      " left for your script, the chat, and the reply). " + info.note;
   }
 
   function applyPreset() {
@@ -536,12 +575,13 @@
       baseUrl: $("aiBase").value.trim(),
       model: $("aiModel").value.trim(),
       key: $("aiKey").value.trim(),
+      packTier: $("aiPackTier") ? $("aiPackTier").value : "small",
       packUrl: $("aiPackUrl").value.trim(),
       sendEditor: $("aiSendEditor").checked,
       sendLog: $("aiSendLog").checked,
       agentMode: $("aiAgent").checked
     });
-    packText = null;   /* packUrl may have changed */
+    packText = null;   /* tier or packUrl may have changed */
     closeSettings();
     setStatus("Provider saved.");
     setTimeout(function () { setStatus(""); }, 1800);
@@ -559,6 +599,8 @@
     $("aiSettingsCancel").onclick = closeSettings;
     $("aiSettingsSave").onclick = saveSettings;
     $("aiPreset").onchange = applyPreset;
+    if ($("aiPackTier")) $("aiPackTier").onchange = reflectPackNote;
+    if ($("aiPackUrl")) $("aiPackUrl").oninput = reflectPackNote;
 
     /* modal dismissal: click the backdrop (not the dialog) or press Escape */
     $("settingsModal").addEventListener("mousedown", function (e) {

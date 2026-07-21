@@ -196,7 +196,10 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <label>Base URL<input id="aiBase" type="text" spellcheck="false" placeholder="https://api.deepseek.com/v1"></label>
       <label>Model<input id="aiModel" type="text" spellcheck="false" placeholder="deepseek-v4-pro"></label>
       <label>API key<input id="aiKey" type="password" spellcheck="false" placeholder="stored in this browser only"></label>
-      <label>Pack URL <small>(blank = bundled small pack)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
+      <div class="settings-section">Reference pack</div>
+      <label>Bundled tier<select id="aiPackTier"></select></label>
+      <div id="aiPackNote" class="ai-note ai-packnote"></div>
+      <label>Pack URL <small>(optional override — blank = use the bundled tier above)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
 
       <div class="settings-section">Context sent with each question</div>
       <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer</label>
