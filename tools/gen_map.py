@@ -3,15 +3,23 @@
 
 The full webmap (mercs2-webmap) is a 2.65 MB app plus ~1 MB of terrain data.
 The IDE doesn't need terrain analysis -- it needs "where am I", "what are the
-coordinates of that spot", and "what's the ground height there". So this bakes
-the 500x500 height tensor down to:
+coordinates of that spot", and "what's the ground height there". So this bakes:
 
-  map-shade.png   hillshaded relief + water, 8-bit palette, for display
+  map-white.jpg   the retail cartographic map (mercs2-tools/map.jpg), downscaled
+  map-color.png   hillshaded relief + water, for the "Color" backdrop toggle
   map-heights.b64 coarse int16 height grid for tooltips / ground-snapped teleport
 
-Both are inlined by build.py, keeping the IDE a single offline file.
+All inlined by build.py, keeping the IDE a single offline file.
 
-Source: mercs2-webmap/dist/heightmap-data/{heights.bin,meta.json}
+ORIENTATION. Both backdrops are drawn with the retail map's convention, which is
+the calibrated, pixel-perfect one from mercs2-tools/missionforge.html:
+game X is WEST-POSITIVE so +x is on the LEFT, and Z is north-up (+z at top). The
+old map-shade.png had +x increasing to the RIGHT -- it rendered mirrored. Both
+outputs here are flipped to match, and 84_map.js maps world<->image from each
+backdrop's world-edge box so the two stay consistent.
+
+Sources: mercs2-webmap/dist/heightmap-data/{heights.bin,meta.json},
+         mercs2-tools/map.jpg (8204x8204, world 0,0 at centre, +/-4102)
 """
 import base64
 import json
@@ -23,7 +31,10 @@ from PIL import Image
 
 WEBMAP = pathlib.Path(sys.argv[1] if len(sys.argv) > 1
                       else r"C:\Users\logan\source\repos\mercs2-webmap")
+MTOOLS = WEBMAP.parent / "mercs2-tools"
 OUT = pathlib.Path(__file__).resolve().parent.parent / "src" / "data"
+WHITE_PX = 2048       # downscale target for the white cartographic map
+WHITE_Q = 82         # JPEG quality -- line art on white stays crisp here
 
 SRC = WEBMAP / "dist" / "heightmap-data"
 meta = json.loads((SRC / "meta.json").read_text(encoding="utf-8"))
@@ -75,11 +86,26 @@ rgb[..., 2] = np.where(land, np.clip(base_b * s, 0, 255), rgb[..., 2]).astype(np
 # never-scanned: flat dark so it reads as "no data", not as terrain
 rgb[~scanned] = (18, 18, 22)
 
-# meta says pixel row 0 = MINIMUM world z. Screen y grows downward, and we want
-# north (+z) at the top, so flip vertically for display.
-img = Image.fromarray(np.flipud(rgb), "RGB").convert("P", palette=Image.ADAPTIVE, colors=128)
-shade_path = OUT / "map-shade.png"
-img.save(shade_path, optimize=True)
+# Orient to the retail map convention: row 0 = MAX z (north, flipud), col 0 =
+# MAX x (west/+x, fliplr). The tensor is south-first (row0=min z) and east-first
+# (col0=min x, since +x is west), so both axes flip.
+oriented = np.flipud(np.fliplr(rgb))
+img = Image.fromarray(oriented, "RGB").convert("P", palette=Image.ADAPTIVE, colors=128)
+color_path = OUT / "map-color.png"
+img.save(color_path, optimize=True)
+
+# ---- white cartographic map -------------------------------------------------
+# The retail map.jpg IS the orientation reference (west-left, north-up already),
+# so it only needs downscaling for bundle size. Full 8204x8204 is 5 MB; a 2048
+# JPEG of line-art on white stays crisp and inlines at a sane weight.
+white_path = OUT / "map-white.jpg"
+src_map = MTOOLS / "map.jpg"
+if src_map.exists():
+    wm = Image.open(src_map).convert("RGB")
+    wm = wm.resize((WHITE_PX, WHITE_PX), Image.LANCZOS)
+    wm.save(white_path, "JPEG", quality=WHITE_Q, optimize=True)
+else:
+    print("[map] WARNING: %s not found -- white map not regenerated" % src_map)
 
 # ---- coarse heights --------------------------------------------------------
 # Half resolution (32 world units/cell) is plenty for a tooltip and a
@@ -91,19 +117,32 @@ b = (cf * 10.0).astype("<i2").tobytes()
 b64_path = OUT / "map-heights.b64"
 b64_path.write_text(base64.b64encode(b).decode("ascii"), encoding="utf-8")
 
+# World-edge boxes let 84_map.js map world<->image for either backdrop with one
+# transform. Edge = world coord at that image edge (west-positive x on the left).
+# white: retail map.jpg span +/-4102 about centre, shifted by the confirmed
+#   missionforge offset of -50 -> left edge world x = 4052.
+# color: the tensor's own extent, cell edges at +/- W/2*CELL = +/-4000.
+half_color = (W / 2.0) * CELL
 info = {
     "cell": CELL, "width": W, "height": H,
     "originCellX": OX, "originCellZ": OZ,
     "seaLevel": SEA, "sentinel": SENTINEL,
     "coarseStep": step,
     "coarseW": coarse.shape[1], "coarseH": coarse.shape[0],
-    "note": ("pixel row 0 of map-shade.png is MAX world z (north) because the "
-             "source tensor is south-first and we flip for display; "
-             "world +x increases with column"),
+    "backdrops": {
+        "white": {"leftX": 4052.0, "rightX": -4152.0, "topZ": 4052.0, "botZ": -4152.0},
+        "color": {"leftX": half_color, "rightX": -half_color,
+                  "topZ": half_color, "botZ": -half_color},
+    },
+    "note": ("both backdrops are west-positive-left, north-up. world<->image is "
+             "driven by backdrops.<key> edges, not by pixel indexing."),
 }
 (OUT / "map-meta.json").write_text(json.dumps(info, indent=2), encoding="utf-8")
 
-print("[map] shade  %s  %d KB" % (shade_path.name, shade_path.stat().st_size // 1024))
+print("[map] color  %s  %d KB" % (color_path.name, color_path.stat().st_size // 1024))
+if white_path.exists():
+    print("[map] white  %s  %d KB (%dpx q%d)"
+          % (white_path.name, white_path.stat().st_size // 1024, WHITE_PX, WHITE_Q))
 print("[map] heights %s %d KB (%dx%d @ %d units)"
       % (b64_path.name, b64_path.stat().st_size // 1024,
          coarse.shape[1], coarse.shape[0], CELL * step))

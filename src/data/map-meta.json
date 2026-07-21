@@ -9,5 +9,19 @@
   "coarseStep": 2,
   "coarseW": 250,
   "coarseH": 250,
-  "note": "pixel row 0 of map-shade.png is MAX world z (north) because the source tensor is south-first and we flip for display; world +x increases with column"
+  "backdrops": {
+    "white": {
+      "leftX": 4052.0,
+      "rightX": -4152.0,
+      "topZ": 4052.0,
+      "botZ": -4152.0
+    },
+    "color": {
+      "leftX": 4000.0,
+      "rightX": -4000.0,
+      "topZ": 4000.0,
+      "botZ": -4000.0
+    }
+  },
+  "note": "both backdrops are west-positive-left, north-up. world<->image is driven by backdrops.<key> edges, not by pixel indexing."
 }

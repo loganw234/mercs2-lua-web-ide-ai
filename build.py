@@ -48,7 +48,8 @@ def main():
     # Map tab data, baked by tools/gen_map.py from the webmap tensor.
     map_meta = (SRC / "data" / "map-meta.json").read_text(encoding="utf-8")
     map_heights = (SRC / "data" / "map-heights.b64").read_text(encoding="utf-8")
-    map_shade = base64.b64encode((SRC / "data" / "map-shade.png").read_bytes()).decode("ascii")
+    map_white = base64.b64encode((SRC / "data" / "map-white.jpg").read_bytes()).decode("ascii")
+    map_color = base64.b64encode((SRC / "data" / "map-color.png").read_bytes()).decode("ascii")
 
     parts = [(SRC / "lib" / "vendor.js").read_text(encoding="utf-8"),
              (SRC / "lib" / "ess-bridge.js").read_text(encoding="utf-8")]
@@ -66,7 +67,8 @@ def main():
             .replace("/*__MAPDATA__*/",
                      "window.MERCS_MAP_META=" + guard(map_meta) + ";"
                      "window.MERCS_MAP_HEIGHTS=" + json.dumps(map_heights) + ";"
-                     "window.MERCS_MAP_SHADE=\"data:image/png;base64," + map_shade + "\";")
+                     "window.MERCS_MAP_WHITE=\"data:image/jpeg;base64," + map_white + "\";"
+                     "window.MERCS_MAP_COLOR=\"data:image/png;base64," + map_color + "\";")
             .replace("/*__BUILD__*/", "window.IDE_BUILD=" + json.dumps(build_info()) + ";")
             .replace("/*__APP__*/", guard(app)))
 

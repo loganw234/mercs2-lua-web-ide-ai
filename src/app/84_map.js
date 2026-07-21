@@ -5,23 +5,32 @@
  * coordinates of a spot are, and how high the ground is there -- so you can
  * write `Pg.Spawn(t, x, y, z)` against a real place instead of guessing numbers.
  *
- * Data is baked by tools/gen_map.py into map-shade.png (relief) and
- * map-heights.b64 (coarse int16 grid), both inlined at build time so the IDE
+ * Data is baked by tools/gen_map.py into two backdrops -- map-white.jpg (the
+ * retail cartographic map) and map-color.png (hillshaded relief) -- plus
+ * map-heights.b64 (coarse int16 grid), all inlined at build time so the IDE
  * stays a single offline file.
  *
- * Coordinate care, because two conventions bite here:
- *   - the source tensor is SOUTH-first (row 0 = min z); we flip for display so
- *     north is up, which means display row -> z is inverted.
- *   - world x runs WEST-positive in this game.
+ * Coordinate model: each backdrop carries a world-edge box in the meta
+ * (leftX/rightX/topZ/botZ = world coord at that image edge). World<->image is
+ * driven by that box, which is where the orientation lives: game X is
+ * WEST-POSITIVE so +x is the LEFT edge, and Z is north-up. This is the exact
+ * calibration from mercs2-tools/missionforge.html. (An earlier version indexed
+ * by tensor cell and rendered mirrored in x.)
  */
 (function () {
   var IDE = window.IDE, $ = IDE.$;
+  var BKEY = "m2ide.map.backdrop";
 
-  var meta = null, shade = null, heights = null;
+  var meta = null, heights = null;
+  var backdrops = {};        /* key -> {img, edges, ready} */
+  var active = "white";      /* current backdrop key */
   var view = { scale: 1, ox: 0, oy: 0 };     /* canvas transform */
   var pin = null;                             /* {x, z} world */
   var player = null;                          /* {x, y, z} world */
   var follow = false, pollTimer = null, ready = false;
+
+  function bd() { return backdrops[active]; }
+  function img() { return bd() && bd().img; }
 
   function decodeHeights(b64) {
     var bin = atob(b64);
@@ -31,21 +40,23 @@
     return new Int16Array(buf);
   }
 
-  /* ---- world <-> image ---------------------------------------------------- */
+  /* ---- world <-> image ----------------------------------------------------
+     Edge-driven, so orientation is data not code: leftX is the world x at the
+     image's left edge, etc. West-positive x means leftX > rightX. */
 
   function worldToImg(wx, wz) {
-    var col = Math.floor(wx / meta.cell) - meta.originCellX;
-    var iz = Math.floor(wz / meta.cell) - meta.originCellZ;
-    return { x: col + 0.5, y: (meta.height - 1 - iz) + 0.5 };
+    var b = bd(), e = b.edges, im = b.img;
+    return {
+      x: (wx - e.leftX) / (e.rightX - e.leftX) * im.width,
+      y: (wz - e.topZ) / (e.botZ - e.topZ) * im.height
+    };
   }
 
   function imgToWorld(px, py) {
-    var col = Math.floor(px);
-    var row = Math.floor(py);
-    var iz = (meta.height - 1) - row;
+    var b = bd(), e = b.edges, im = b.img;
     return {
-      x: (col + meta.originCellX + 0.5) * meta.cell,
-      z: (iz + meta.originCellZ + 0.5) * meta.cell
+      x: e.leftX + (px / im.width) * (e.rightX - e.leftX),
+      z: e.topZ + (py / im.height) * (e.botZ - e.topZ)
     };
   }
 
@@ -65,16 +76,16 @@
 
   function draw() {
     var cv = $("mapCanvas");
-    if (!cv || !shade) return;
+    if (!cv || !img()) return;
     var w = cv.clientWidth, h = cv.clientHeight;
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     var g = cv.getContext("2d");
     g.setTransform(1, 0, 0, 1, 0, 0);
-    g.fillStyle = "#101014";
+    g.fillStyle = active === "white" ? "#e9edf0" : "#101014";
     g.fillRect(0, 0, w, h);
     g.imageSmoothingEnabled = view.scale < 3;
     g.setTransform(view.scale, 0, 0, view.scale, view.ox, view.oy);
-    g.drawImage(shade, 0, 0);
+    g.drawImage(img(), 0, 0);
 
     function ring(p, color, r) {
       g.beginPath();
@@ -101,12 +112,12 @@
   }
 
   function fit() {
-    var cv = $("mapCanvas");
-    if (!cv || !shade) return;
-    var s = Math.min(cv.clientWidth / shade.width, cv.clientHeight / shade.height);
+    var cv = $("mapCanvas"), im = img();
+    if (!cv || !im) return;
+    var s = Math.min(cv.clientWidth / im.width, cv.clientHeight / im.height);
     view.scale = s;
-    view.ox = (cv.clientWidth - shade.width * s) / 2;
-    view.oy = (cv.clientHeight - shade.height * s) / 2;
+    view.ox = (cv.clientWidth - im.width * s) / 2;
+    view.oy = (cv.clientHeight - im.height * s) / 2;
     draw();
   }
 
@@ -169,9 +180,23 @@
     if (!meta) return;
     heights = window.MERCS_MAP_HEIGHTS ? decodeHeights(window.MERCS_MAP_HEIGHTS) : null;
 
-    shade = new Image();
-    shade.onload = function () { ready = true; fit(); };
-    shade.src = window.MERCS_MAP_SHADE || "";
+    try { var pref = localStorage.getItem(BKEY); if (pref === "white" || pref === "color") active = pref; } catch (e) {}
+
+    var srcs = { white: window.MERCS_MAP_WHITE, color: window.MERCS_MAP_COLOR };
+    ["white", "color"].forEach(function (key) {
+      var edges = meta.backdrops && meta.backdrops[key];
+      if (!edges || !srcs[key]) return;
+      var im = new Image();
+      backdrops[key] = { img: im, edges: edges, ready: false };
+      im.onload = function () {
+        backdrops[key].ready = true;
+        if (key === active) { ready = true; fit(); }
+      };
+      im.src = srcs[key];
+    });
+    /* if the saved backdrop is somehow unavailable, fall back to whatever loaded */
+    if (!backdrops[active]) active = backdrops.white ? "white" : "color";
+    reflectToggle();
 
     /* pan */
     var drag = null;
@@ -195,7 +220,7 @@
       var r = cv.getBoundingClientRect();
       var px = (e.clientX - r.left - view.ox) / view.scale;
       var py = (e.clientY - r.top - view.oy) / view.scale;
-      if (px < 0 || py < 0 || px >= shade.width || py >= shade.height) return;
+      if (px < 0 || py < 0 || px >= img().width || py >= img().height) return;
       var wpt = imgToWorld(px, py);
       setReadout(wpt.x, wpt.z);
     });
@@ -206,7 +231,7 @@
       var r = cv.getBoundingClientRect();
       var px = (e.clientX - r.left - view.ox) / view.scale;
       var py = (e.clientY - r.top - view.oy) / view.scale;
-      if (px < 0 || py < 0 || px >= shade.width || py >= shade.height) return;
+      if (px < 0 || py < 0 || px >= img().width || py >= img().height) return;
       pin = imgToWorld(px, py);
       $("mapPin").textContent = pinText();
       draw();
@@ -253,13 +278,35 @@
       IDE.runCode ? IDE.runCode(lua) : IDE.bridge.run(lua);
     };
 
+    $("mapToggle").onclick = function () {
+      var next = active === "white" ? "color" : "white";
+      if (!backdrops[next] || !backdrops[next].ready) return;   /* not loaded yet */
+      active = next;
+      try { localStorage.setItem(BKEY, active); } catch (e) {}
+      reflectToggle();
+      fit();   /* backdrops differ in pixel size, so re-fit rather than reuse the view */
+    };
+
     IDE.bus.on("status", function (s) { setPolling(s === "open"); });
     if (IDE.bridge && IDE.bridge.connected()) setPolling(true);
 
-    /* the panel is hidden at load, so the canvas has no size until shown */
-    Array.prototype.forEach.call(document.querySelectorAll('.stab[data-p="map"]'),
-      function (t) { t.addEventListener("click", function () { setTimeout(fit, 0); }); });
-    window.addEventListener("resize", function () { if (ready) draw(); });
+    /* The dock renders the panel into a sized container and fires a window
+       resize; the map has no size until then, so fit the first time real
+       dimensions appear, and just redraw afterwards. */
+    var everFit = false;
+    window.addEventListener("resize", function () {
+      var cv = $("mapCanvas");
+      if (!ready || !cv || !cv.clientWidth) return;
+      if (!everFit) { everFit = true; fit(); } else { draw(); }
+    });
+  }
+
+  /* Reflect which backdrop is active on the toggle button. */
+  function reflectToggle() {
+    var b = $("mapToggle");
+    if (!b) return;
+    b.textContent = active === "white" ? "Color" : "White";
+    b.title = active === "white" ? "Switch to the colour relief map" : "Switch to the white map";
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
