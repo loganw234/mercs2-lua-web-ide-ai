@@ -15,12 +15,12 @@
   var PANELS = [
     ["editor",    "Editor",    "‹›", false],
     ["output",    "Output",    "▤",  false],
-    ["watch",     "Watch",     "◎",  true],
     ["scripts",   "Scripts",   "❑",  true],
     ["examples",  "Examples",  "◫",  true],
     ["api",       "API",       "ƒ",  true],
     ["templates", "Templates", "⬢",  true],
     ["inspect",   "Inspect",   "🔍", true],
+    ["watch",     "Watch",     "◎",  true],
     ["assist",    "Assistant", "✦",  true],
     ["map",       "Map",       "🗺", true]
   ];
