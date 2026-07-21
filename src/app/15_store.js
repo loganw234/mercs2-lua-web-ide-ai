@@ -19,8 +19,18 @@
     var legacy = null;
     try { legacy = localStorage.getItem(IDE.cfg.scriptKey); } catch (e) {}
     var first = { id: uid(), name: legacy != null ? "My script" : "Welcome", code: legacy != null ? legacy : STARTER, mtime: Date.now() };
-    db = { active: first.id, scripts: [first] };
+    db = { active: first.id, scripts: [first], open: [first.id] };
     persist();
+  }
+  /* `open` is the tab bar's ordered set of open scripts (added for the tabbed
+     editor). Migrate an older library that predates it, and prune ids that no
+     longer exist. */
+  if (!Array.isArray(db.open)) db.open = [db.active];
+  db.open = db.open.filter(function (id) { return byIdRaw(id); });
+  if (db.open.indexOf(db.active) === -1) db.open.unshift(db.active);
+  function byIdRaw(id) {
+    for (var i = 0; i < db.scripts.length; i++) if (db.scripts[i].id === id) return db.scripts[i];
+    return null;
   }
 
   function byId(id) {
@@ -36,16 +46,25 @@
     for (i = 2; ; i++) if (!names[want + " " + i]) return want + " " + i;
   }
 
+  function ensureOpen(id) {
+    if (db.open.indexOf(id) === -1) { db.open.push(id); return true; }
+    return false;
+  }
+
   IDE.store = {
     list: function () { return db.scripts.slice(); },
     active: active,
     get: byId,
+    /* open tabs (ordered) for the tabbed editor */
+    openTabs: function () { return db.open.slice(); },
     create: function (name, code) {
       var s = { id: uid(), name: uniqueName(name || "Untitled"), code: code || "", mtime: Date.now() };
       db.scripts.push(s);
       db.active = s.id;
+      db.open.push(s.id);
       persist();
       IDE.bus.emit("scripts");
+      IDE.bus.emit("opentabs");
       IDE.bus.emit("script", s);
       return s;
     },
@@ -53,8 +72,37 @@
       var s = byId(id);
       if (!s || db.active === id) return;
       db.active = id;
+      var opened = ensureOpen(id);
       persist();
+      if (opened) IDE.bus.emit("opentabs");
       IDE.bus.emit("script", s);
+    },
+    /* Open a script as a tab and make it active. Same as setActive but named
+       for intent -- this is what the Scripts list and "+ New" call. */
+    open: function (id) {
+      var s = byId(id);
+      if (!s) return;
+      var opened = ensureOpen(id);
+      var switched = db.active !== id;
+      db.active = id;
+      persist();
+      if (opened) IDE.bus.emit("opentabs");
+      if (switched) IDE.bus.emit("script", s);
+    },
+    /* Close a tab. If it was active, fall back to the neighbouring open tab.
+       Never closes the last tab (there is always one script showing). */
+    closeTab: function (id) {
+      var i = db.open.indexOf(id);
+      if (i === -1 || db.open.length <= 1) return;
+      db.open.splice(i, 1);
+      var switched = false;
+      if (db.active === id) {
+        db.active = db.open[Math.min(i, db.open.length - 1)];
+        switched = true;
+      }
+      persist();
+      IDE.bus.emit("opentabs");
+      if (switched) IDE.bus.emit("script", active());
     },
     saveActive: function (code) {
       var s = active();
@@ -79,19 +127,24 @@
       for (var i = 0; i < db.scripts.length; i++) if (db.scripts[i].id === id) idx = i;
       if (idx < 0) return;
       db.scripts.splice(idx, 1);
+      var oi = db.open.indexOf(id);
+      if (oi !== -1) db.open.splice(oi, 1);
       if (!db.scripts.length) {
         var fresh = { id: uid(), name: "Welcome", code: STARTER, mtime: Date.now() };
         db.scripts.push(fresh);
       }
+      if (!db.open.length) db.open.push(db.scripts[0].id);
       if (db.active === id) {
-        db.active = db.scripts[Math.min(idx, db.scripts.length - 1)].id;
+        db.active = db.open[Math.min(oi < 0 ? 0 : oi, db.open.length - 1)];
         persist();
         IDE.bus.emit("scripts");
+        IDE.bus.emit("opentabs");
         IDE.bus.emit("script", active());
         return;
       }
       persist();
       IDE.bus.emit("scripts");
+      IDE.bus.emit("opentabs");
     },
     /* backup/restore: the whole library as one JSON file. Restore is always additive (merge, never
        clobber) -- imported scripts land as brand-new entries with fresh ids, name-deduped the same way
