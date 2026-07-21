@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """build.py -- merge src/ into ONE standalone dist/index.html.
 
 Inlines everything (CSS, the generated Ess API JSON, the vendored ess-bridge.js, and every app/*.js) so
@@ -9,6 +9,7 @@ the output is a single self-contained file with zero external requests. That one
 
 Edit files under src/ (or regenerate the API with tools/gen_api.py), then re-run:  python build.py
 """
+import base64
 import json
 import pathlib
 import subprocess
@@ -40,6 +41,14 @@ def main():
     natives = (SRC / "data" / "natives.json").read_text(encoding="utf-8")
     examples = (SRC / "data" / "examples.json").read_text(encoding="utf-8")
     templates = (SRC / "data" / "templates.json").read_text(encoding="utf-8")
+    # The assistant's reference pack. Bundled (not fetched) so the offline
+    # single-file build keeps working; a bigger tier can be pointed at by URL
+    # in the assistant's settings.
+    pack = (SRC / "data" / "pack.txt").read_text(encoding="utf-8")
+    # Map tab data, baked by tools/gen_map.py from the webmap tensor.
+    map_meta = (SRC / "data" / "map-meta.json").read_text(encoding="utf-8")
+    map_heights = (SRC / "data" / "map-heights.b64").read_text(encoding="utf-8")
+    map_shade = base64.b64encode((SRC / "data" / "map-shade.png").read_bytes()).decode("ascii")
 
     parts = [(SRC / "lib" / "vendor.js").read_text(encoding="utf-8"),
              (SRC / "lib" / "ess-bridge.js").read_text(encoding="utf-8")]
@@ -53,6 +62,11 @@ def main():
             .replace("/*__NATIVES__*/", "window.MERCS_NATIVES=" + guard(natives) + ";")
             .replace("/*__EXAMPLES__*/", "window.ESS_EXAMPLES=" + guard(examples) + ";")
             .replace("/*__TEMPLATES__*/", "window.MERCS_TEMPLATES=" + guard(templates) + ";")
+            .replace("/*__PACK__*/", "window.MERCS_PACK=" + json.dumps(pack) + ";")
+            .replace("/*__MAPDATA__*/",
+                     "window.MERCS_MAP_META=" + guard(map_meta) + ";"
+                     "window.MERCS_MAP_HEIGHTS=" + json.dumps(map_heights) + ";"
+                     "window.MERCS_MAP_SHADE=\"data:image/png;base64," + map_shade + "\";")
             .replace("/*__BUILD__*/", "window.IDE_BUILD=" + json.dumps(build_info()) + ";")
             .replace("/*__APP__*/", guard(app)))
 

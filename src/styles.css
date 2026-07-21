@@ -311,3 +311,119 @@ select.btn{padding:6px 8px}
 .dlrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
 a.btn{text-decoration:none;display:inline-block}
 .btn.ghost{background:transparent;color:var(--dim)}
+
+/* ===== AI assistant panel ===================================================
+   Theme-agnostic: the IDE ships light and dark, so everything here is a
+   translucent grey over whatever the theme provides, plus one accent. */
+#panelAssist { display: flex; flex-direction: column; min-height: 0; }
+.aihead-acts { margin-left: auto; display: flex; gap: 4px; }
+
+.ai-mini { font: inherit; font-size: 11px; padding: 2px 7px; border-radius: 4px;
+  cursor: pointer; color: inherit; background: rgba(128,128,128,.14);
+  border: 1px solid rgba(128,128,128,.35); }
+.ai-mini:hover { background: rgba(128,128,128,.26); }
+.ai-btn { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 5px;
+  cursor: pointer; color: #fff; background: #2b6cb0; border: 1px solid #2b6cb0; }
+.ai-btn:hover { background: #245a94; }
+.ai-btn.stopping { background: #b04343; border-color: #b04343; }
+
+.ai-log { flex: 1; overflow-y: auto; min-height: 120px; padding: 4px 0; }
+.ai-row { padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.18); }
+.ai-row.ai-user { background: rgba(128,128,128,.08); }
+.ai-who { font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  opacity: .55; margin-bottom: 3px; }
+.ai-body { font-size: 12.5px; line-height: 1.5; word-wrap: break-word; }
+.ai-body p { margin: 0 0 6px; }
+.ai-body p:last-child { margin-bottom: 0; }
+.ai-body ul, .ai-body ol { margin: 2px 0 6px; padding-left: 18px; }
+.ai-h { font-weight: 700; margin: 8px 0 3px; }
+.ai-body code { background: rgba(128,128,128,.18); padding: 1px 4px; border-radius: 3px; }
+.ai-cursor { opacity: .45; }
+
+.ai-code { margin: 6px 0; border: 1px solid rgba(128,128,128,.3); border-radius: 5px; overflow: hidden; }
+.ai-codehead { display: flex; align-items: center; justify-content: space-between;
+  padding: 2px 3px 2px 8px; background: rgba(128,128,128,.16); font-size: 10.5px; }
+.ai-codeacts { display: flex; gap: 3px; }
+.ai-code pre { margin: 0; padding: 7px 9px; overflow-x: auto;
+  background: rgba(128,128,128,.09); font-size: 11.5px; line-height: 1.45; }
+.ai-code pre code { background: none; padding: 0; }
+
+.ai-tw { overflow-x: auto; margin: 6px 0; }
+.ai-tw table { border-collapse: collapse; font-size: 11.5px; }
+.ai-tw th, .ai-tw td { border: 1px solid rgba(128,128,128,.3); padding: 3px 7px; text-align: left; }
+.ai-tw th { background: rgba(128,128,128,.14); }
+
+.ai-think { border: 1px dashed rgba(128,128,128,.45); border-radius: 5px; margin-bottom: 6px; font-size: 11.5px; }
+.ai-think summary { cursor: pointer; padding: 3px 7px; opacity: .7; }
+.ai-thinkbody { padding: 4px 8px 6px; white-space: pre-wrap; opacity: .65;
+  font-size: 11px; max-height: 180px; overflow-y: auto; }
+
+.ai-status { font-size: 11.5px; padding: 3px 10px; opacity: .8; min-height: 1em; }
+.ai-status:empty { display: none; }
+.ai-err { color: #d06565; opacity: 1; }
+
+.ai-composer { display: flex; gap: 6px; padding: 6px 8px; align-items: flex-end;
+  border-top: 1px solid rgba(128,128,128,.25); }
+.ai-composer textarea { flex: 1; font: inherit; font-size: 12.5px; resize: none;
+  padding: 5px 7px; border-radius: 5px; color: inherit; min-height: 34px; max-height: 160px;
+  background: rgba(128,128,128,.08); border: 1px solid rgba(128,128,128,.35); }
+
+.ai-settings { padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.25);
+  display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; }
+.ai-settings label { display: flex; flex-direction: column; gap: 2px; }
+.ai-settings input, .ai-settings select { font: inherit; font-size: 11.5px; padding: 3px 5px;
+  border-radius: 4px; color: inherit; background: rgba(128,128,128,.1);
+  border: 1px solid rgba(128,128,128,.35); }
+.ai-settings .ai-check { flex-direction: row; align-items: center; gap: 6px; }
+.ai-settings-acts { display: flex; gap: 6px; margin-top: 2px; }
+.ai-note { opacity: .65; font-size: 11px; }
+.ai-warn { opacity: .6; font-size: 10.5px; line-height: 1.4; }
+
+/* ===== map tab ============================================================ */
+#panelMap { display: flex; flex-direction: column; min-height: 0; }
+.maphead-acts { margin-left: auto; display: flex; gap: 4px; }
+.maphead-acts .ai-mini.on { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+.map-canvas { flex: 1; min-height: 180px; width: 100%; display: block;
+  background: #101014; cursor: crosshair; }
+.map-readout { font-size: 11px; padding: 4px 8px; opacity: .75;
+  font-family: ui-monospace, Consolas, monospace;
+  border-top: 1px solid rgba(128,128,128,.2); }
+.map-pinrow { padding: 0 8px 4px; min-height: 18px; }
+.map-pin { font-size: 11.5px; color: #d7a53a; font-family: ui-monospace, Consolas, monospace; }
+.map-acts { display: flex; gap: 4px; padding: 0 8px 8px; }
+
+/* --- agent mode: tool activity + the run_lua gate --------------------------
+   The tool list is deliberately visible rather than tucked behind a toggle.
+   Agent mode is non-streaming, so without it the panel looks frozen for the
+   whole loop -- and seeing WHAT was consulted is the point of having tools. */
+.ai-tools { margin: 0 0 8px 0; }
+.ai-tool {
+  font: 11px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  color: #8fb7d9; background: rgba(255,255,255,.04);
+  border-left: 2px solid #3f6f9c; padding: 3px 8px; margin: 2px 0;
+  border-radius: 0 3px 3px 0; white-space: pre-wrap; word-break: break-word;
+}
+.ai-tool.pending { opacity: .6; font-style: italic; }
+.ai-tool.bad { color: #d9a08f; border-left-color: #9c5a3f; }
+
+.ai-confirm {
+  border: 1px solid #9c7a3f; background: rgba(255, 200, 80, .07);
+  border-radius: 6px; padding: 10px; margin: 8px 0;
+}
+.ai-confirm-why { font-size: 12px; margin-bottom: 6px; color: #e0c88f; }
+.ai-confirm-code {
+  font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace;
+  background: rgba(0,0,0,.35); padding: 8px; border-radius: 4px;
+  max-height: 220px; overflow: auto; margin: 0 0 8px 0; white-space: pre-wrap;
+}
+.ai-confirm-acts { display: flex; gap: 8px; align-items: center; }
+
+/* Ungrounded-identifier warning. Deliberately loud: it is the only signal the
+   user gets when a model states an API name it was never shown. */
+.ai-ungrounded {
+  margin-top: 10px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
+  border-left: 3px solid #c8913f; background: rgba(255, 180, 60, .10);
+  border-radius: 0 4px 4px 0; color: #e8c489;
+}
+.ai-ungrounded strong { color: #ffcf87; }
+.ai-ungrounded .ai-ok { color: #9ccf9c; font-size: 11px; display: inline-block; margin-top: 5px; }

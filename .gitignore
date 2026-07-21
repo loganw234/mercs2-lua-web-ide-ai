@@ -11,3 +11,7 @@ Thumbs.db
 # the vendoring toolchain's local state (only needed to REgenerate src/lib/vendor.js)
 tools/vendor/node_modules/
 tools/vendor/package-lock.json
+
+# python bytecode from tools/
+__pycache__/
+*.pyc

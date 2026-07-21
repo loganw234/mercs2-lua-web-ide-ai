@@ -1,10 +1,10 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mercs2 Lua IDE</title>
-<meta name="description" content="A live in-browser Lua/Ess editor for Mercenaries 2 modding — write a script, hit Run, see the result in your running game over the lua-bridge.">
+<meta name="description" content="A live in-browser Lua/Ess editor for Mercenaries 2 modding â€” write a script, hit Run, see the result in your running game over the lua-bridge.">
 <script>/* apply a forced theme before first paint so there's no flash */
 try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")document.documentElement.setAttribute("data-theme",__t);}catch(e){}</script>
 <style>/*__CSS__*/</style>
@@ -13,13 +13,13 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 <header class="bar">
   <span class="brand">Mercs2 <b>Lua IDE</b></span>
   <span class="conn"><span class="dot" id="dot"></span><span id="state">offline</span></span>
-  <button class="btn go" id="run" title="Run (Ctrl/Cmd+Enter) — runs the selection if you have one, else the whole file">Run ▷</button>
-  <button class="btn" id="panic" title="Stop every Ess.Loop and restore the time scale — the 'my script went wild' button">■ Stop loops</button>
-  <span class="scriptname" id="scriptName" title="The open script — manage scripts in the sidebar"></span>
-  <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) — also autosaves as you type">Save</button>
+  <button class="btn go" id="run" title="Run (Ctrl/Cmd+Enter) â€” runs the selection if you have one, else the whole file">Run â–·</button>
+  <button class="btn" id="panic" title="Stop every Ess.Loop and restore the time scale â€” the 'my script went wild' button">â–  Stop loops</button>
+  <span class="scriptname" id="scriptName" title="The open script â€” manage scripts in the sidebar"></span>
+  <button class="btn" id="save" title="Save to this browser (Ctrl/Cmd+S) â€” also autosaves as you type">Save</button>
   <button class="btn" id="share" title="Copy a shareable link (script encoded in the URL)">Share</button>
-  <button class="btn" id="grabTarget" title="Grab what you're aiming at in-game (Ess.Player.targetUnderReticle) — inserts its guid at the caret">🎯 Grab target</button>
-  <button class="btn" id="tutStart" title="A guided first script: connect, spawn a taxi, find a fare, and turn it into a real mod">🎓 Tutorial</button>
+  <button class="btn" id="grabTarget" title="Grab what you're aiming at in-game (Ess.Player.targetUnderReticle) â€” inserts its guid at the caret">ðŸŽ¯ Grab target</button>
+  <button class="btn" id="tutStart" title="A guided first script: connect, spawn a taxi, find a fare, and turn it into a real mod">ðŸŽ“ Tutorial</button>
   <span class="spacer"></span>
   <input id="url" class="url" value="ws://127.0.0.1:27050" spellcheck="false" title="The lua-bridge WebSocket address">
   <button class="btn" id="connect">Connect</button>
@@ -27,14 +27,14 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 
 <div class="updbar hidden" id="updbar">
   <span>A newer build of the IDE is available.</span>
-  <a class="btn small go" id="updGet" href="https://github.com/loganw234/mercs2-lua-web-ide/releases/latest/download/mercs2-lua-ide.html" download>⬇ Download the update</a>
+  <a class="btn small go" id="updGet" href="https://github.com/loganw234/mercs2-lua-web-ide/releases/latest/download/mercs2-lua-ide.html" download>â¬‡ Download the update</a>
   <button class="btn small ghost" id="updSkip" title="Don't mention this version again">Skip this one</button>
-  <button class="updx" id="updClose" title="Dismiss">×</button>
+  <button class="updx" id="updClose" title="Dismiss">Ã—</button>
 </div>
 
 <div class="updbar hidden" id="verbar">
   <span id="verText"></span>
-  <button class="updx" id="verClose" title="Dismiss">×</button>
+  <button class="updx" id="verClose" title="Dismiss">Ã—</button>
 </div>
 
 <main class="layout">
@@ -45,17 +45,19 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <button class="stab" data-p="api">API</button>
       <button class="stab" data-p="templates">Templates</button>
       <button class="stab" data-p="inspect">Inspect</button>
+      <button class="stab" data-p="assist">Assistant</button>
+        <button class="stab" data-p="map">Map</button>
     </div>
     <div class="spanel" id="panelScripts">
       <div class="sidehead scriptshead">
         <select class="btn small scactions" id="scActions" title="Script actions">
-          <option value="" selected>Actions ▾</option>
+          <option value="" selected>Actions â–¾</option>
           <option value="new">+ New script</option>
-          <option value="import">Import .lua files…</option>
+          <option value="import">Import .lua filesâ€¦</option>
           <option value="export">Export current script</option>
           <option value="backup">Backup library (.json)</option>
-          <option value="restore">Restore library…</option>
-          <option value="deploy">⬇ Deploy as OnKey</option>
+          <option value="restore">Restore libraryâ€¦</option>
+          <option value="deploy">â¬‡ Deploy as OnKey</option>
         </select>
         <input type="file" id="scFile" accept=".lua,.txt" multiple hidden>
         <input type="file" id="scRestoreFile" accept=".json" hidden>
@@ -67,37 +69,87 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     </div>
     <div class="spanel hidden" id="panelApi">
       <div class="sidehead">
-        <input id="apiSearch" placeholder="search the API…" spellcheck="false">
+        <input id="apiSearch" placeholder="search the APIâ€¦" spellcheck="false">
       </div>
       <div class="apitree" id="apiTree"></div>
       <div class="apidoc hidden" id="apiDoc"></div>
     </div>
     <div class="spanel hidden" id="panelTemplates">
       <div class="sidehead">
-        <input id="tplSearch" placeholder="search spawnable templates…" spellcheck="false">
+        <input id="tplSearch" placeholder="search spawnable templatesâ€¦" spellcheck="false">
       </div>
       <div class="tplcredit" id="tplCredit"></div>
       <div class="apitree" id="tplTree"></div>
     </div>
     <div class="spanel hidden" id="panelInspect">
       <div class="watchadd">
-        <button class="btn small" id="inspectGrab" title="Grab what you're aiming at in-game and inspect it">🎯 Grab target</button>
+        <button class="btn small" id="inspectGrab" title="Grab what you're aiming at in-game and inspect it">ðŸŽ¯ Grab target</button>
       </div>
       <div class="watchadd">
-        <input id="inspectInput" placeholder="…or a guid/expression" spellcheck="false">
+        <input id="inspectInput" placeholder="â€¦or a guid/expression" spellcheck="false">
         <button class="btn small" id="inspectGo" title="Inspect this">Inspect</button>
       </div>
       <div class="inspecthead hidden" id="inspectHead">
         <span class="inspectexpr" id="inspectExpr"></span>
-        <button class="btn small" id="inspectClose" title="Stop inspecting">✕</button>
+        <button class="btn small" id="inspectClose" title="Stop inspecting">âœ•</button>
       </div>
       <div class="inspectbody">
-        <div class="inspectempty" id="inspectEmpty">Grab your target above, type a guid, or click 🔍 on a
-          Results value — see it live: name, position, health, faction and more, refreshing while connected.</div>
+        <div class="inspectempty" id="inspectEmpty">Grab your target above, type a guid, or click ðŸ” on a
+          Results value â€” see it live: name, position, health, faction and more, refreshing while connected.</div>
         <div class="inspectfields hidden" id="inspectFields"></div>
       </div>
     </div>
-  </aside>
+  <div class="spanel hidden" id="panelAssist">
+        <div class="sidehead">
+          <span>Assistant</span>
+          <span class="aihead-acts">
+            <button id="aiNew" class="ai-mini" title="New conversation">New</button>
+            <button id="aiGear" class="ai-mini" title="Provider settings">Settings</button>
+          </span>
+        </div>
+        <div id="aiSettings" class="ai-settings hidden">
+          <label>Provider<select id="aiPreset"></select></label>
+          <div id="aiNote" class="ai-note"></div>
+          <label>Base URL<input id="aiBase" type="text" spellcheck="false" placeholder="https://api.deepseek.com/v1"></label>
+          <label>Model<input id="aiModel" type="text" spellcheck="false" placeholder="deepseek-v4-pro"></label>
+          <label>API key<input id="aiKey" type="password" spellcheck="false" placeholder="stored in this browser only"></label>
+          <label>Pack URL <small>(blank = bundled small pack)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
+          <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer with each question</label>
+          <label class="ai-check"><input id="aiSendLog" type="checkbox"> Send recent game log</label>
+          <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it read the wiki and inspect the game)</label>
+          <div class="ai-settings-acts">
+            <button id="aiSettingsSave" class="ai-btn">Save</button>
+            <button id="aiSettingsClose" class="ai-mini">Cancel</button>
+          </div>
+          <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
+        </div>
+        <div id="aiLog" class="ai-log"></div>
+        <div id="aiStatus" class="ai-status"></div>
+        <div class="ai-composer">
+          <textarea id="aiInput" rows="2" placeholder="Ask about your script, the API, an error..."></textarea>
+          <button id="aiSend" class="ai-btn">Ask</button>
+        </div>
+      </div>
+    <div class="spanel hidden" id="panelMap">
+        <div class="sidehead">
+          <span>World map</span>
+          <span class="maphead-acts">
+            <button id="mapFit" class="ai-mini" title="Fit whole map">Fit</button>
+            <button id="mapFollow" class="ai-mini" title="Keep the player centred">Follow</button>
+          </span>
+        </div>
+        <canvas id="mapCanvas" class="map-canvas"></canvas>
+        <div id="mapReadout" class="map-readout">hover the map for coordinates</div>
+        <div class="map-pinrow">
+          <code id="mapPin" class="map-pin"></code>
+        </div>
+        <div class="map-acts">
+          <button id="mapCopy" class="ai-mini">Copy</button>
+          <button id="mapInsert" class="ai-mini">Insert</button>
+          <button id="mapTeleport" class="ai-mini">Teleport here</button>
+        </div>
+      </div>
+    </aside>
 
   <div class="hsplit" id="hsplit" title="Drag to resize the sidebar"></div>
 
@@ -105,19 +157,20 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     <div class="editor" id="editor"></div>
     <div class="vsplit" id="vsplit" title="Drag to resize the output panel"></div>
     <div class="output">
+
       <div class="tabs">
         <button class="tab on" data-t="results" id="tabResults">Results</button>
         <button class="tab" data-t="log" id="tabLog">Log &amp; telemetry</button>
         <button class="tab" data-t="watch" id="tabWatch">Watch</button>
         <span class="spacer"></span>
-        <input id="logFilter" placeholder="filter results…" spellcheck="false">
-        <button class="clr hidden" id="hlRules" title="Manage log highlight rules">🎨 rules</button>
+        <input id="logFilter" placeholder="filter resultsâ€¦" spellcheck="false">
+        <button class="clr hidden" id="hlRules" title="Manage log highlight rules">ðŸŽ¨ rules</button>
         <span class="clr" id="clr">clear</span>
       </div>
       <div class="hlpanel hidden" id="hlPanel">
         <div class="hlrulerow hladdrow">
           <input type="color" id="hlColor" value="#ffcc00" title="Rule color">
-          <input id="hlPattern" placeholder="text or /regex/i" spellcheck="false" title="Text (or /regex/flags) — a matching line gets this color">
+          <input id="hlPattern" placeholder="text or /regex/i" spellcheck="false" title="Text (or /regex/flags) â€” a matching line gets this color">
           <button class="btn small" id="hlAdd">Add</button>
         </div>
         <div id="hlList"></div>
@@ -132,25 +185,25 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
           </div>
           <div class="watchlist" id="watchList"></div>
         </div>
-        <button class="latest hidden" id="latest">↓ latest</button>
+        <button class="latest hidden" id="latest">â†“ latest</button>
       </div>
       <div class="repl">
-        <span class="replmark">›</span>
-        <input id="repl" placeholder="run one line — Enter sends it to the game, ↑ recalls history" spellcheck="false" autocomplete="off">
+        <span class="replmark">â€º</span>
+        <input id="repl" placeholder="run one line â€” Enter sends it to the game, â†‘ recalls history" spellcheck="false" autocomplete="off">
       </div>
     </div>
   </section>
 </main>
 
-<button id="themeBtn" title="Theme: auto (following your system)">◐</button>
+<button id="themeBtn" title="Theme: auto (following your system)">â—</button>
 
 <div class="tutorial hidden" id="tutorial">
   <div class="tuthead">
     <span class="tutstepno" id="tutStep"></span>
     <span class="tutnav">
-      <button class="tutarrow" id="tutBack" title="Previous step">‹</button>
-      <button class="tutarrow" id="tutFwd" title="Next step (only steps you've reached)">›</button>
-      <button class="updx" id="tutClose" title="Pause tutorial — the 🎓 button resumes right here">×</button>
+      <button class="tutarrow" id="tutBack" title="Previous step">â€¹</button>
+      <button class="tutarrow" id="tutFwd" title="Next step (only steps you've reached)">â€º</button>
+      <button class="updx" id="tutClose" title="Pause tutorial â€” the ðŸŽ“ button resumes right here">Ã—</button>
     </span>
   </div>
   <div class="tutdots" id="tutDots"></div>
@@ -164,10 +217,10 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     it to in-game any time you want a new fare.</p>
     <p class="tutchal">Where to go from here:</p>
     <ul class="tutexplain">
-      <li><code>Ess.Player.giveCash(500)</code> — pay yourself when a ride's done</li>
-      <li><code>Ess.Easy.Toast("...")</code> — announce the fare on screen</li>
-      <li>the <b>Examples</b> tab — 45 more working scripts to pull apart</li>
-      <li>hover any <code>Ess.*</code> call in your code — the docs come to you</li>
+      <li><code>Ess.Player.giveCash(500)</code> â€” pay yourself when a ride's done</li>
+      <li><code>Ess.Easy.Toast("...")</code> â€” announce the fare on screen</li>
+      <li>the <b>Examples</b> tab â€” 45 more working scripts to pull apart</li>
+      <li>hover any <code>Ess.*</code> call in your code â€” the docs come to you</li>
     </ul>
     <button class="btn small go" id="tutDoneClose">Nice</button>
   </div>
@@ -180,7 +233,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     <ol>
       <li>Install the WebSocket-capable <code>lua-bridge</code> mod and launch the game.</li>
       <li>Make sure it's listening (default <code>ws://127.0.0.1:27050</code>).</li>
-      <li>Hit <b>Connect</b> — the dot turns green and you're live.</li>
+      <li>Hit <b>Connect</b> â€” the dot turns green and you're live.</li>
     </ol>
     <p class="dim">You can still write and save scripts offline; they'll run once you connect. Editor and API reference work with no game attached.</p>
     <button class="btn" id="onboardClose">Got it</button>
@@ -192,12 +245,12 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     <h2>Still can't reach the game</h2>
     <p>After several tries the editor can't connect to <code id="blockedUrl">ws://127.0.0.1:27050</code>. Two common reasons:</p>
     <ul>
-      <li><b>The game or the lua-bridge isn't running</b> — start them and this connects on its own.</li>
-      <li><b>Your browser is blocking it</b> — some browsers refuse a hosted (<code>https</code>) page talking to <code>127.0.0.1</code>. Chrome asks once and works if you click <b>Allow</b>; others block it outright.</li>
+      <li><b>The game or the lua-bridge isn't running</b> â€” start them and this connects on its own.</li>
+      <li><b>Your browser is blocking it</b> â€” some browsers refuse a hosted (<code>https</code>) page talking to <code>127.0.0.1</code>. Chrome asks once and works if you click <b>Allow</b>; others block it outright.</li>
     </ul>
     <p><b>The fix that always works: download the editor and open it from your disk.</b> Same app, offline, no browser restrictions.</p>
     <div class="dlrow">
-      <a class="btn go" id="dlRelease" href="https://github.com/loganw234/mercs2-lua-web-ide/releases/latest/download/mercs2-lua-ide.html" download>⬇ Download the editor</a>
+      <a class="btn go" id="dlRelease" href="https://github.com/loganw234/mercs2-lua-web-ide/releases/latest/download/mercs2-lua-ide.html" download>â¬‡ Download the editor</a>
       <button class="btn" id="dlSelf">Save this page instead</button>
       <button class="btn" id="blockedSnooze">The game's just closed right now</button>
       <button class="btn ghost" id="blockedClose">Keep trying</button>
@@ -209,7 +262,9 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 <script>/*__NATIVES__*/</script>
 <script>/*__EXAMPLES__*/</script>
 <script>/*__TEMPLATES__*/</script>
-<script>/*__BUILD__*/</script>
+<script>/*__PACK__*/
+/*__MAPDATA__*/
+/*__BUILD__*/</script>
 <script>/*__APP__*/</script>
 </body>
 </html>

@@ -1,0 +1,13 @@
+{
+  "cell": 16,
+  "width": 500,
+  "height": 500,
+  "originCellX": -250,
+  "originCellZ": -250,
+  "seaLevel": -35.0,
+  "sentinel": -32768,
+  "coarseStep": 2,
+  "coarseW": 250,
+  "coarseH": 250,
+  "note": "pixel row 0 of map-shade.png is MAX world z (north) because the source tensor is south-first and we flip for display; world +x increases with column"
+}

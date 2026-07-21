@@ -72,11 +72,13 @@
       Array.prototype.forEach.call(document.querySelectorAll(".stab"), function (x) { x.classList.remove("on"); });
       t.classList.add("on");
       var which = t.getAttribute("data-p");
-      $("panelScripts").classList.toggle("hidden", which !== "scripts");
-      $("panelExamples").classList.toggle("hidden", which !== "examples");
-      $("panelApi").classList.toggle("hidden", which !== "api");
-      $("panelTemplates").classList.toggle("hidden", which !== "templates");
-      $("panelInspect").classList.toggle("hidden", which !== "inspect");
+      /* Generic: every .spanel is id="panel" + capitalised data-p, so adding a
+         sidebar panel needs no edit here. The previous hardcoded list silently
+         left any new panel visible when switching away from it. */
+      var want = "panel" + which.charAt(0).toUpperCase() + which.slice(1);
+      Array.prototype.forEach.call(document.querySelectorAll(".spanel"), function (p) {
+        p.classList.toggle("hidden", p.id !== want);
+      });
     };
   });
 

@@ -1,0 +1,118 @@
+{
+  "qwen3:14b": {
+    "pass": 10,
+    "fail": 2,
+    "invented": 0,
+    "secs": [
+      38.88626265525818,
+      13.253198623657227,
+      21.618151664733887,
+      15.70446515083313,
+      21.599853038787842,
+      21.619630098342896,
+      21.55556845664978,
+      21.169630527496338,
+      20.776236295700073,
+      21.575239419937134,
+      21.58942675590515,
+      11.473326683044434
+    ],
+    "trials": 1,
+    "per_case": {
+      "pmc-template": [
+        "ok"
+      ],
+      "debug-output": [
+        "ok"
+      ],
+      "import-rule": [
+        "ok"
+      ],
+      "timer-rearm": [
+        "ok"
+      ],
+      "lua51": [
+        "ok"
+      ],
+      "getter-truthiness": [
+        "ok"
+      ],
+      "invented-setter": [
+        "ok"
+      ],
+      "role-not-goal": [
+        "ok"
+      ],
+      "goal-location-key": [
+        "ok"
+      ],
+      "aiorders-shape": [
+        "miss"
+      ],
+      "onkey-skeleton": [
+        "miss"
+      ],
+      "refuse-unknown-ess": [
+        "ok"
+      ]
+    }
+  },
+  "qwen3:8b": {
+    "pass": 8,
+    "fail": 4,
+    "invented": 0,
+    "secs": [
+      33.15192461013794,
+      10.922322273254395,
+      14.672542572021484,
+      13.522628784179688,
+      14.559173345565796,
+      14.503181457519531,
+      14.504593133926392,
+      14.50468921661377,
+      14.624144077301025,
+      14.639411211013794,
+      14.507923603057861,
+      14.097426414489746
+    ],
+    "trials": 1,
+    "per_case": {
+      "pmc-template": [
+        "ok"
+      ],
+      "debug-output": [
+        "ok"
+      ],
+      "import-rule": [
+        "ok"
+      ],
+      "timer-rearm": [
+        "ok"
+      ],
+      "lua51": [
+        "ok"
+      ],
+      "getter-truthiness": [
+        "miss"
+      ],
+      "invented-setter": [
+        "ok"
+      ],
+      "role-not-goal": [
+        "ok"
+      ],
+      "goal-location-key": [
+        "miss"
+      ],
+      "aiorders-shape": [
+        "miss"
+      ],
+      "onkey-skeleton": [
+        "miss"
+      ],
+      "refuse-unknown-ess": [
+        "ok"
+      ]
+    }
+  }
+}
