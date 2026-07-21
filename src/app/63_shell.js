@@ -69,6 +69,14 @@
   var spacer = document.createElement("div");
   spacer.className = "actspace";
   bar.appendChild(spacer);
+  var gear = document.createElement("button");
+  gear.className = "actbtn dim";
+  gear.type = "button";
+  gear.title = "Settings";
+  gear.textContent = "⚙";
+  gear.onclick = function () { if (IDE.settings) IDE.settings.open(); };
+  bar.appendChild(gear);
+
   var reset = document.createElement("button");
   reset.className = "actbtn dim";
   reset.type = "button";

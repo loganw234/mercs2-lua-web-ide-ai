@@ -491,8 +491,10 @@
 
   /* ---- settings ---------------------------------------------------------- */
 
-  function openSettings() { $("aiSettings").classList.remove("hidden"); fillSettings(); }
-  function closeSettings() { $("aiSettings").classList.add("hidden"); }
+  function openSettings() { $("settingsModal").classList.remove("hidden"); fillSettings(); }
+  function closeSettings() { $("settingsModal").classList.add("hidden"); }
+  /* let anything (e.g. the activity-bar gear) open Settings */
+  IDE.settings = { open: openSettings, close: closeSettings };
 
   function fillSettings() {
     var c = IDE.provider.get();
@@ -554,8 +556,17 @@
     $("aiNew").onclick = newChat;
     $("aiGear").onclick = openSettings;
     $("aiSettingsClose").onclick = closeSettings;
+    $("aiSettingsCancel").onclick = closeSettings;
     $("aiSettingsSave").onclick = saveSettings;
     $("aiPreset").onchange = applyPreset;
+
+    /* modal dismissal: click the backdrop (not the dialog) or press Escape */
+    $("settingsModal").addEventListener("mousedown", function (e) {
+      if (e.target === this) closeSettings();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !$("settingsModal").classList.contains("hidden")) closeSettings();
+    });
 
     $("aiInput").addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); }

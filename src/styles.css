@@ -110,6 +110,30 @@ select.btn{padding:6px 8px}
   border-right:1px solid var(--edge);cursor:pointer}
 .edtab-add:hover{color:var(--ink);background:var(--hov)}
 
+/* ---- settings modal ---- */
+.modal-back{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-back.hidden{display:none}
+.modal{width:min(460px,94vw);max-height:88vh;display:flex;flex-direction:column;
+  background:var(--panel);border:1px solid var(--edge);border-radius:10px;
+  box-shadow:0 18px 60px rgba(0,0,0,.5);overflow:hidden}
+.modal-head{flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--edge);font-weight:600;color:var(--ink)}
+.modal-x{font-size:13px;color:var(--dim);background:transparent;border:0;cursor:pointer;
+  border-radius:6px;padding:4px 7px}
+.modal-x:hover{color:var(--ink);background:var(--hov)}
+.modal-body{flex:1;min-height:0;overflow:auto;padding:14px}
+.modal-body label{display:block;font-size:12px;color:var(--dim);margin:0 0 10px}
+.modal-body label input:not([type=checkbox]),.modal-body label select{display:block;width:100%;
+  margin-top:4px;box-sizing:border-box}
+.modal-body label.ai-check{display:flex;align-items:center;gap:8px;color:var(--ink)}
+.modal-body label.ai-check input{width:auto;margin:0}
+.settings-section{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);
+  margin:16px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--edge)}
+.settings-section:first-child{margin-top:0}
+.modal-acts{display:flex;gap:8px;align-items:center;margin-top:16px;
+  padding-top:12px;border-top:1px solid var(--edge)}
+
 /* ---- drop zones (shown while dragging a tab) ---- */
 .dropzone{position:absolute;inset:0;pointer-events:none;z-index:5}
 .dropzone.show::after{content:"";position:absolute;background:var(--accent);opacity:.22;

@@ -106,22 +106,6 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
             <button id="aiGear" class="ai-mini" title="Provider settings">Settings</button>
           </span>
         </div>
-        <div id="aiSettings" class="ai-settings hidden">
-          <label>Provider<select id="aiPreset"></select></label>
-          <div id="aiNote" class="ai-note"></div>
-          <label>Base URL<input id="aiBase" type="text" spellcheck="false" placeholder="https://api.deepseek.com/v1"></label>
-          <label>Model<input id="aiModel" type="text" spellcheck="false" placeholder="deepseek-v4-pro"></label>
-          <label>API key<input id="aiKey" type="password" spellcheck="false" placeholder="stored in this browser only"></label>
-          <label>Pack URL <small>(blank = bundled small pack)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
-          <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer with each question</label>
-          <label class="ai-check"><input id="aiSendLog" type="checkbox"> Send recent game log</label>
-          <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it read the wiki and inspect the game)</label>
-          <div class="ai-settings-acts">
-            <button id="aiSettingsSave" class="ai-btn">Save</button>
-            <button id="aiSettingsClose" class="ai-mini">Cancel</button>
-          </div>
-          <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
-        </div>
         <div id="aiLog" class="ai-log"></div>
         <div id="aiStatus" class="ai-status"></div>
         <div class="ai-composer">
@@ -194,6 +178,37 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     </div>
     </div><!-- /panelOutput -->
 </div><!-- /dockPool -->
+
+<!-- Settings modal. The field ids match what 82_assist.js reads/writes, so the
+     form logic is unchanged -- only its container became a real dialog. -->
+<div class="modal-back hidden" id="settingsModal">
+  <div class="modal" role="dialog" aria-label="Settings">
+    <div class="modal-head">
+      <span>Settings</span>
+      <button id="aiSettingsClose" class="modal-x" title="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">AI provider</div>
+      <label>Provider<select id="aiPreset"></select></label>
+      <div id="aiNote" class="ai-note"></div>
+      <label>Base URL<input id="aiBase" type="text" spellcheck="false" placeholder="https://api.deepseek.com/v1"></label>
+      <label>Model<input id="aiModel" type="text" spellcheck="false" placeholder="deepseek-v4-pro"></label>
+      <label>API key<input id="aiKey" type="password" spellcheck="false" placeholder="stored in this browser only"></label>
+      <label>Pack URL <small>(blank = bundled small pack)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
+
+      <div class="settings-section">Context sent with each question</div>
+      <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer</label>
+      <label class="ai-check"><input id="aiSendLog" type="checkbox"> Send recent game log</label>
+      <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it read the wiki and inspect the game)</label>
+
+      <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
+      <div class="modal-acts">
+        <button id="aiSettingsSave" class="ai-btn">Save</button>
+        <button id="aiSettingsCancel" class="ai-mini">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <button id="themeBtn" title="Theme: auto (following your system)">◐</button>
 
