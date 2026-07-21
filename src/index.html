@@ -38,16 +38,15 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
 </div>
 
 <main class="layout">
-  <aside class="side" id="side">
-    <div class="sidetabs">
-      <button class="stab on" data-p="scripts">Scripts</button>
-      <button class="stab" data-p="examples">Examples</button>
-      <button class="stab" data-p="api">API</button>
-      <button class="stab" data-p="templates">Templates</button>
-      <button class="stab" data-p="inspect">Inspect</button>
-      <button class="stab" data-p="assist">Assistant</button>
-        <button class="stab" data-p="map">Map</button>
-    </div>
+  <nav class="activity" id="activity" title="Panels"></nav>
+  <div class="dockroot" id="dockRoot"></div>
+</main>
+
+<!-- Panel content pool. The dock (61_dock.js) pulls these into leaves by id and
+     moves them between regions; a panel lives here whenever it is not the active
+     tab of a leaf. Nothing here should carry the 'hidden' class -- the dock, not
+     CSS, decides what is shown. -->
+<div id="dockPool" class="dockpool" hidden>
     <div class="spanel" id="panelScripts">
       <div class="sidehead scriptshead">
         <select class="btn small scactions" id="scActions" title="Script actions">
@@ -64,24 +63,24 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       </div>
       <div class="sclist" id="scList"></div>
     </div>
-    <div class="spanel hidden" id="panelExamples">
+    <div class="spanel" id="panelExamples">
       <div class="exlist" id="exList"></div>
     </div>
-    <div class="spanel hidden" id="panelApi">
+    <div class="spanel" id="panelApi">
       <div class="sidehead">
         <input id="apiSearch" placeholder="search the API…" spellcheck="false">
       </div>
       <div class="apitree" id="apiTree"></div>
       <div class="apidoc hidden" id="apiDoc"></div>
     </div>
-    <div class="spanel hidden" id="panelTemplates">
+    <div class="spanel" id="panelTemplates">
       <div class="sidehead">
         <input id="tplSearch" placeholder="search spawnable templates…" spellcheck="false">
       </div>
       <div class="tplcredit" id="tplCredit"></div>
       <div class="apitree" id="tplTree"></div>
     </div>
-    <div class="spanel hidden" id="panelInspect">
+    <div class="spanel" id="panelInspect">
       <div class="watchadd">
         <button class="btn small" id="inspectGrab" title="Grab what you're aiming at in-game and inspect it">🎯 Grab target</button>
       </div>
@@ -99,7 +98,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
         <div class="inspectfields hidden" id="inspectFields"></div>
       </div>
     </div>
-  <div class="spanel hidden" id="panelAssist">
+  <div class="spanel" id="panelAssist">
         <div class="sidehead">
           <span>Assistant</span>
           <span class="aihead-acts">
@@ -130,7 +129,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
           <button id="aiSend" class="ai-btn">Ask</button>
         </div>
       </div>
-    <div class="spanel hidden" id="panelMap">
+    <div class="spanel" id="panelMap">
         <div class="sidehead">
           <span>World map</span>
           <span class="maphead-acts">
@@ -149,13 +148,10 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
           <button id="mapTeleport" class="ai-mini">Teleport here</button>
         </div>
       </div>
-    </aside>
 
-  <div class="hsplit" id="hsplit" title="Drag to resize the sidebar"></div>
-
-  <section class="work">
     <div class="editor" id="editor"></div>
-    <div class="vsplit" id="vsplit" title="Drag to resize the output panel"></div>
+
+    <div class="spanel nopad" id="panelOutput">
     <div class="output">
 
       <div class="tabs">
@@ -192,8 +188,8 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
         <input id="repl" placeholder="run one line — Enter sends it to the game, ↑ recalls history" spellcheck="false" autocomplete="off">
       </div>
     </div>
-  </section>
-</main>
+    </div><!-- /panelOutput -->
+</div><!-- /dockPool -->
 
 <button id="themeBtn" title="Theme: auto (following your system)">◐</button>
 

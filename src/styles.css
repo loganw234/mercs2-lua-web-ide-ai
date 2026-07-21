@@ -44,21 +44,66 @@ select.btn{padding:6px 8px}
 .updx:hover{color:var(--ink)}
 
 /* ---- layout (both splits draggable -- 62_layout.js persists --sidew / --outh) ---- */
-.layout{flex:1;display:grid;grid-template-columns:var(--sidew,265px) 5px 1fr;min-height:0}
-@media (max-width:760px){ .layout{grid-template-columns:1fr} .side,.hsplit{display:none} }
-.hsplit{cursor:col-resize;background:transparent}
-.hsplit:hover,.hsplit.drag{background:var(--accent);opacity:.35}
-.vsplit{height:5px;cursor:row-resize;background:transparent;flex:none}
-.vsplit:hover,.vsplit.drag{background:var(--accent);opacity:.35}
-.side{border-right:1px solid var(--edge);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.layout{flex:1;display:flex;min-height:0}
 .sidehead{padding:9px;border-bottom:1px solid var(--edge)}
+.dockpool{display:none}
 
-/* sidebar tabs + panels */
-.sidetabs{display:flex;flex-wrap:wrap;gap:2px;padding:6px 6px 0;border-bottom:1px solid var(--edge)}
-.stab{font:12px/1 var(--efont);color:var(--dim);background:transparent;border:0;border-bottom:2px solid transparent;padding:7px 9px;cursor:pointer}
-.stab.on{color:var(--ink);border-bottom-color:var(--accent)}
-.spanel{flex:1;display:flex;flex-direction:column;min-height:0}
-.spanel.hidden{display:none}
+/* ---- activity bar ---- */
+.activity{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0;background:var(--panel);border-right:1px solid var(--edge)}
+.actbtn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;line-height:1;color:var(--dim);background:transparent;border:0;border-radius:8px;
+  cursor:pointer;position:relative;transition:background .12s,color .12s}
+.actbtn:hover{background:var(--hov);color:var(--ink)}
+.actbtn.active{color:var(--ink)}
+.actbtn.active::before{content:"";position:absolute;left:-6px;top:7px;bottom:7px;width:2px;
+  border-radius:2px;background:var(--accent)}
+.actbtn.present:not(.active){color:var(--c)}
+.actbtn.dim{font-size:15px;opacity:.6}
+.actspace{flex:1}
+
+/* ---- dock tree ---- */
+.dockroot{flex:1;min-width:0;min-height:0;overflow:hidden}
+.dsplit{display:flex;width:100%;height:100%;min-width:0;min-height:0}
+.dsplit.row{flex-direction:row}
+.dsplit.col{flex-direction:column}
+.dcell{display:flex;min-width:0;min-height:0;overflow:hidden}
+.dcell>*{flex:1;min-width:0;min-height:0}
+.dgutter{flex:none;background:transparent;z-index:2}
+.dgutter.row{width:6px;margin:0 -3px;cursor:col-resize}
+.dgutter.col{height:6px;margin:-3px 0;cursor:row-resize}
+.dgutter:hover{background:var(--accent);opacity:.4}
+
+.dleaf{display:flex;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;
+  position:relative;background:var(--panel);border:1px solid var(--edge);border-radius:6px;
+  overflow:hidden}
+.dtabs{flex:none;display:flex;align-items:stretch;gap:1px;min-height:30px;
+  background:var(--bar);border-bottom:1px solid var(--edge);overflow-x:auto}
+.dtabs::-webkit-scrollbar{height:0}
+.dtab{display:flex;align-items:center;gap:6px;padding:0 10px;font:12px/1 var(--efont);
+  color:var(--dim);cursor:pointer;border-right:1px solid var(--edge);white-space:nowrap;
+  user-select:none}
+.dtab:hover{color:var(--ink);background:var(--hov)}
+.dtab.on{color:var(--ink);background:var(--panel);box-shadow:inset 0 2px 0 var(--accent)}
+.dtab.dragging{opacity:.4}
+.dtab-x{font-size:10px;color:var(--dim);border-radius:4px;padding:2px 3px}
+.dtab-x:hover{color:var(--ink);background:var(--edge2)}
+.dbody{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.dbody>*{flex:1;min-height:0;min-width:0}
+
+/* panel content fills its dock body */
+.spanel{display:flex;flex-direction:column;min-height:0;min-width:0}
+.spanel.nopad{padding:0}
+
+/* ---- drop zones (shown while dragging a tab) ---- */
+.dropzone{position:absolute;inset:0;pointer-events:none;z-index:5}
+.dropzone.show::after{content:"";position:absolute;background:var(--accent);opacity:.22;
+  border:1px solid var(--accent);border-radius:6px;transition:all .08s}
+.dropzone.z-center.show::after{inset:8px}
+.dropzone.z-left.show::after{left:0;top:0;bottom:0;width:45%}
+.dropzone.z-right.show::after{right:0;top:0;bottom:0;width:45%}
+.dropzone.z-top.show::after{left:0;right:0;top:0;height:45%}
+.dropzone.z-bottom.show::after{left:0;right:0;bottom:0;height:45%}
 .btn.small{font-size:12px;padding:4px 9px}
 .scriptname{color:var(--dim);font:12px/1 var(--efont);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -180,7 +225,7 @@ select.btn{padding:6px 8px}
 .hovertip .htdoc{color:var(--dim);line-height:1.5;margin-top:4px}
 
 /* ---- output ---- */
-.output{height:var(--outh,38%);min-height:120px;display:flex;flex-direction:column;border-top:1px solid var(--edge);background:var(--panel)}
+.output{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--panel)}
 .tabs{position:relative;display:flex;align-items:center;gap:2px;padding:5px 8px;border-bottom:1px solid var(--edge)}
 #logFilter{font:11px/1 var(--efont);color:var(--ink);background:var(--inbg);border:1px solid var(--edge2);border-radius:5px;padding:4px 8px;width:150px;margin-right:6px}
 #logFilter.hidden{display:none}

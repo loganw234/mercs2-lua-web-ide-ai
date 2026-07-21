@@ -66,21 +66,10 @@
     });
   };
 
-  /* sidebar panels: Scripts / Examples / API */
-  Array.prototype.forEach.call(document.querySelectorAll(".stab"), function (t) {
-    t.onclick = function () {
-      Array.prototype.forEach.call(document.querySelectorAll(".stab"), function (x) { x.classList.remove("on"); });
-      t.classList.add("on");
-      var which = t.getAttribute("data-p");
-      /* Generic: every .spanel is id="panel" + capitalised data-p, so adding a
-         sidebar panel needs no edit here. The previous hardcoded list silently
-         left any new panel visible when switching away from it. */
-      var want = "panel" + which.charAt(0).toUpperCase() + which.slice(1);
-      Array.prototype.forEach.call(document.querySelectorAll(".spanel"), function (p) {
-        p.classList.toggle("hidden", p.id !== want);
-      });
-    };
-  });
+  /* Sidebar-panel switching used to live here (the .stab tabs). The dock
+     (61_dock.js) + activity bar (63_shell.js) own panel visibility now, so this
+     is gone. The output sub-tabs below stay: Results/Log/Watch are still an
+     internal tabset inside the single "Output" dock panel. */
 
   /* output tabs */
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
