@@ -312,6 +312,11 @@ def build(reason, tools, out_path):
         if "qwen3:30b-a3b" in reason:
             cser.append(("qwen3:30b-a3b score", GEN_COLOR["3"],
                          tier_values(reason["qwen3:30b-a3b"]["per_budget"], "mean"), "L", False))
+        cloud = [m for m in reason if gen_of(m) == "CLOUD"]
+        if cloud:  # add the most-complete cloud ladder as a semi-frontier reference
+            bc = max(cloud, key=lambda m: reason[m]["n"])
+            cser.append((display(bc) + " score", GEN_COLOR["CLOUD"],
+                         tier_values(reason[bc]["per_budget"], "mean"), "L", False))
         if cser:
             charts.append(linechart("How much the reference matters",
                           "give the model more of the pack: score climbs, fabrication collapses",
