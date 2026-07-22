@@ -645,6 +645,14 @@ a.btn{text-decoration:none;display:inline-block}
 .ai-budget-key .k.ide  { background: #c78f4a; }
 .ai-budget-key .k.free { background: #2f8f5b; }
 
+/* settings persistence: autosave hint + a loud warning if storage is denied */
+.ai-autosave-hint { color: #8b9199; font-size: 11px; margin-right: auto; align-self: center; }
+.ai-savewarn {
+  margin: 8px 0; padding: 8px 10px; font-size: 12px; line-height: 1.45;
+  border: 1px solid #b4553f; border-radius: 6px;
+  background: rgba(180, 85, 63, .12); color: #e0a08f;
+}
+
 /* --- assistant file attachment --------------------------------------------- */
 .ai-attach {
   flex: 0 0 auto; background: none; border: none; cursor: pointer;

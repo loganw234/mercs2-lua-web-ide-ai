@@ -1086,10 +1086,14 @@
     $("aiNote").textContent = p.note || "";
   }
 
-  function saveSettings() {
+  /* Read the whole form and persist it. Returns whether it actually stuck.
+     Called on EVERY field change (autosave) as well as from the Save button --
+     see the wiring note. Kept side-effect-light so it is cheap to call per
+     keystroke. */
+  function collectAndPersist() {
     var id = $("aiPreset").value;
     var p = IDE.provider.preset(id);
-    IDE.provider.set({
+    var ok = IDE.provider.set({
       preset: id,
       api: p ? p.api : "openai",
       baseUrl: $("aiBase").value.trim(),
@@ -1103,9 +1107,45 @@
       agentMode: $("aiAgent").checked
     });
     packText = null;   /* tier or packUrl may have changed */
+    /* Surface a real persistence failure instead of hiding it: private mode,
+       storage quota, or a file:// origin the browser won't grant storage to.
+       This is the difference between "my settings vanish on reload" being a
+       mystery and being a one-line explanation. */
+    var warn = $("aiSaveWarn");
+    if (warn) {
+      if (ok) { warn.hidden = true; warn.textContent = ""; }
+      else {
+        warn.hidden = false;
+        warn.textContent = "⚠ Couldn't save settings to this browser (" +
+          (IDE.provider.saveError() || "storage blocked") + "). If you opened " +
+          "the IDE as a file://, some browsers deny it storage — serve it over " +
+          "http (even a local server) so settings persist.";
+      }
+    }
+    return ok;
+  }
+
+  function saveSettings() {
+    var ok = collectAndPersist();
     closeSettings();
-    setStatus("Provider saved.");
-    setTimeout(function () { setStatus(""); }, 1800);
+    setStatus(ok ? "Provider saved." : "Settings could NOT be saved — see the warning in settings.", !ok);
+    setTimeout(function () { setStatus(""); }, ok ? 1800 : 5000);
+  }
+
+  /* Autosave: persist the instant any field changes, so settings survive
+     closing the modal by ANY route -- X, Cancel, the backdrop, or Escape.
+     Everything else in this IDE (scripts, layout, theme) autosaves, so a
+     Save-button-only settings panel was a trap: configure, close the normal
+     way, lose it all. The Save button stays as a reassuring explicit action. */
+  function wireAutosave() {
+    var fields = ["aiPreset", "aiBase", "aiModel", "aiKey", "aiPackTier",
+                  "aiModelCtx", "aiPackUrl", "aiSendEditor", "aiSendLog", "aiAgent"];
+    fields.forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      var ev = (el.tagName === "SELECT" || el.type === "checkbox") ? "change" : "input";
+      el.addEventListener(ev, function () { collectAndPersist(); });
+    });
   }
 
   /* ---- wiring ------------------------------------------------------------ */
@@ -1134,6 +1174,7 @@
     if ($("aiPackTier")) $("aiPackTier").onchange = reflectBudget;
     if ($("aiPackUrl")) $("aiPackUrl").oninput = reflectBudget;
     if ($("aiModelCtx")) $("aiModelCtx").oninput = reflectBudget;
+    wireAutosave();   /* persist on every change, not just the Save button */
 
     /* modal dismissal: click the backdrop (not the dialog) or press Escape */
     $("settingsModal").addEventListener("mousedown", function (e) {

@@ -100,8 +100,23 @@
     return cfg;
   }
 
+  /* Persist and VERIFY it landed. A silent catch here was hiding real failures
+     (private-mode / quota / a file:// origin the browser won't grant storage) --
+     the settings looked saved and evaporated on reload. Now the failure is
+     visible: save() returns false and stashes why, so the panel can say so. */
+  var saveErr = null;
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {}
+    try {
+      localStorage.setItem(KEY, JSON.stringify(cfg));
+      /* read-back check: some browsers accept setItem and drop it */
+      if (localStorage.getItem(KEY) == null) throw new Error("write did not stick");
+      saveErr = null;
+      return true;
+    } catch (e) {
+      saveErr = (e && (e.name || e.message)) || "unknown";
+      try { console.warn("[ai] settings NOT persisted:", saveErr); } catch (_) {}
+      return false;
+    }
   }
 
   /* ---- SSE line reader shared by both adapters ---------------------------
@@ -357,10 +372,11 @@
     set: function (patch) {
       load();
       for (var k in patch) if (k in DEFAULT) cfg[k] = patch[k];
-      save();
+      var ok = save();
       IDE.bus.emit("ai:config", cfg);
-      return cfg;
+      return ok;                      /* false = did not persist (see saveError) */
     },
+    saveError: function () { return saveErr; },
     configured: function () {
       var c = load();
       if (!c.baseUrl || !c.model) return false;

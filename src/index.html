@@ -239,9 +239,11 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it search the docs &amp; examples, inspect the game, and propose edits — changes always ask first)</label>
 
       <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
+      <div id="aiSaveWarn" class="ai-savewarn" hidden></div>
       <div class="modal-acts">
-        <button id="aiSettingsSave" class="ai-btn">Save</button>
-        <button id="aiSettingsCancel" class="ai-mini">Cancel</button>
+        <span class="ai-autosave-hint">Changes save automatically.</span>
+        <button id="aiSettingsSave" class="ai-btn">Done</button>
+        <button id="aiSettingsCancel" class="ai-mini">Close</button>
       </div>
     </div>
   </div>
