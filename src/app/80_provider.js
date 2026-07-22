@@ -211,29 +211,52 @@
     });
   }
 
-  /* Non-streaming completion, with optional tools.
+  /* Streamed completion, with optional tools.
    *
-   * The tool loop is deliberately NOT streamed. Assembling tool_calls out of
-   * SSE deltas means stitching partial JSON argument fragments across frames,
-   * and providers disagree about how they chunk them -- a good way to ship a
-   * parser that works on one backend and silently mangles another. Tool turns
-   * are short; the final answer is what the user waits on, and that still
-   * streams through chat(). */
+   * This IS streamed, so agent mode shows the model thinking and answering live
+   * -- locally-hosted users specifically want to watch and abort a run that
+   * goes off the rails. Tool calls are assembled from the SSE deltas: the
+   * OpenAI shape sends, per call index, the id + name in the first frame and
+   * the JSON arguments in fragments across later frames, so id/name are set
+   * once and arguments are concatenated. content and reasoning forward live via
+   * opts.onDelta / opts.onReasoning. Returns the same shape as before. */
   function completeOpenAI(c, messages, tools, opts) {
     var headers = { "content-type": "application/json" };
     if (c.key) headers.authorization = "Bearer " + c.key;
-    var body = { model: c.model, messages: messages, stream: false,
+    var body = { model: c.model, messages: messages, stream: true,
                  max_tokens: c.maxTokens };
     if (tools && tools.length) { body.tools = tools; body.tool_choice = "auto"; }
+    var content = "", reasoning = "", calls = [];
     return fetch(c.baseUrl.replace(/\/+$/, "") + "/chat/completions", {
       method: "POST", headers: headers, body: JSON.stringify(body), signal: opts.signal
     }).then(function (res) {
       if (!res.ok) return httpError(res);
-      return res.json();
-    }).then(function (j) {
-      var m = (j.choices && j.choices[0] && j.choices[0].message) || {};
-      return { content: m.content || "", toolCalls: m.tool_calls || [],
-               reasoning: m.reasoning_content || m.reasoning || "", raw: m };
+      return readSSE(res, function (o) {
+        var d = o.choices && o.choices[0] && o.choices[0].delta;
+        if (!d) return;
+        var r = d.reasoning_content || d.reasoning;
+        if (r) { reasoning += r; if (opts.onReasoning) opts.onReasoning(r); }
+        if (d.content) { content += d.content; if (opts.onDelta) opts.onDelta(d.content); }
+        if (d.tool_calls) {
+          for (var i = 0; i < d.tool_calls.length; i++) {
+            var tc = d.tool_calls[i];
+            var idx = tc.index != null ? tc.index : i;
+            if (!calls[idx]) calls[idx] = { id: "", type: "function", function: { name: "", arguments: "" } };
+            /* id and name arrive whole in the first frame (some backends resend
+               them every frame) -- set once. Arguments are the streamed part. */
+            if (tc.id && !calls[idx].id) calls[idx].id = tc.id;
+            if (tc.function) {
+              if (tc.function.name && !calls[idx].function.name) calls[idx].function.name = tc.function.name;
+              if (tc.function.arguments) calls[idx].function.arguments += tc.function.arguments;
+            }
+          }
+        }
+      }).then(function () {
+        var toolCalls = calls.filter(Boolean);
+        var raw = { role: "assistant", content: content };
+        if (toolCalls.length) raw.tool_calls = toolCalls;
+        return { content: content, toolCalls: toolCalls, reasoning: reasoning, raw: raw };
+      });
     });
   }
 

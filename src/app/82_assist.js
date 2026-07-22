@@ -649,16 +649,23 @@
         msgs.push({ role: h[i].role, content: h[i].content });
       }
 
-      /* Agent mode runs a non-streaming tool loop, so nothing would appear for
-         many seconds. Show each tool call as it happens instead -- it is also
-         the only way the user can see WHAT the model looked at, which is the
-         point of having tools at all. */
+      /* Agent mode streams each step (content + reasoning) live and shows each
+         tool call as it happens -- locally-hosted users want to watch the
+         thinking and abort a run heading off the rails. The reasoning streams
+         into the thought panel; the answer settles to the final step's content
+         at the end. */
       if (IDE.provider.get().agentMode && IDE.agent) {
         toolsEl.hidden = false;
         return IDE.agent.run(msgs, {
           onStep: function (name, args) {
             firstToken = firstToken || Date.now();
             stopTick();
+            /* Content streamed before this tool call was the model narrating
+               its intent; clear the answer body so the tool result and the
+               real answer that follow are not prefixed by it. Reasoning (the
+               thought panel) is kept -- it is the running log the user watches. */
+            answer = "";
+            paint();
             var detail = args.path || args.query || args.expr || args.name || args.why || "";
             var t = { name: name, detail: detail, pending: true };
             toolSteps.push(t);
@@ -690,9 +697,17 @@
           },
           confirm: function (why, code) { return askConfirm(why, code); },
           proposeEdit: function (why, code) { return askEdit(why, code); }
-        }, { signal: abortCtl.signal }).then(function (r) {
-          answer = r.content || "";
-          if (r.reasoning) reasoning += r.reasoning;
+        }, {
+          signal: abortCtl.signal,
+          /* Stream live so the run is watchable and abortable. reasoning and
+             answer are built here; do NOT re-add r.reasoning below or it
+             double-counts the final step. */
+          onReasoning: function (t) { sawToken(); reasoning += t; paint(); },
+          onDelta: function (t) { sawToken(); answer += t; paint(); }
+        }).then(function (r) {
+          /* Settle to the clean final answer (the last step's content), which
+             the onStep reset already isolated from earlier narration. */
+          if (r.content) answer = r.content;
           return null;
         });
       }
