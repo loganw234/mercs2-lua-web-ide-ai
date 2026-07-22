@@ -435,16 +435,36 @@
 
   /* ---- header: model chip + chat history ---------------------------------- */
 
+  /* Fill any <select> with the provider profiles, selecting the active one.
+     Returns the profile count so callers can hide a switcher that has nothing
+     to switch between. */
+  function fillProfileSelect(sel) {
+    if (!sel) return 0;
+    var profs = IDE.provider.profiles();
+    sel.innerHTML = "";
+    profs.forEach(function (p) {
+      var o = document.createElement("option");
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+    sel.value = IDE.provider.activeProfileId();
+    return profs.length;
+  }
+
   function refreshModel() {
     var el = $("aiModelChip");
-    if (!el) return;
-    var c = IDE.provider.get();
-    var ok = IDE.provider.configured();
-    el.textContent = ok ? (c.model || c.preset) : "choose a model…";
-    el.classList.toggle("unset", !ok);
-    var p = IDE.provider.preset(c.preset);
-    el.title = (ok ? "Model: " + c.model + (p ? "  (" + p.label + ")" : "")
-                   : "No provider configured") + " — click to change";
+    if (el) {
+      var c = IDE.provider.get();
+      var ok = IDE.provider.configured();
+      el.textContent = ok ? (c.model || c.preset) : "choose a model…";
+      el.classList.toggle("unset", !ok);
+      var p = IDE.provider.preset(c.preset);
+      el.title = (ok ? "Model: " + c.model + (p ? "  (" + p.label + ")" : "")
+                     : "No provider configured") + " — click to change";
+    }
+    /* header quick-switch: only surfaces once there's more than one profile */
+    var q = $("aiProfileQuick");
+    if (q) q.hidden = fillProfileSelect(q) <= 1;
   }
 
   function ago(ts) {
@@ -970,6 +990,8 @@
 
   function fillSettings() {
     var c = IDE.provider.get();
+    fillProfileSelect($("aiProfile"));
+    if ($("aiProfileDel")) $("aiProfileDel").disabled = IDE.provider.profiles().length <= 1;
     var sel = $("aiPreset");
     if (!sel.options.length) {
       IDE.provider.presets().forEach(function (p) {
@@ -1148,6 +1170,46 @@
     });
   }
 
+  /* Provider profiles: switching one repoints get()/set() at a different setup,
+     so reload the whole form and drop the cached pack (the tier may differ). */
+  function switchTo(id, fromSettings) {
+    IDE.provider.switchProfile(id);
+    packText = null;
+    refreshModel();
+    if (fromSettings || !$("settingsModal").classList.contains("hidden")) fillSettings();
+  }
+
+  function wireProfiles() {
+    if ($("aiProfile")) $("aiProfile").onchange = function () { switchTo(this.value, true); };
+    if ($("aiProfileQuick")) $("aiProfileQuick").onchange = function () {
+      var name = this.options[this.selectedIndex].text;
+      switchTo(this.value, false);
+      setStatus("Switched to profile: " + name);
+      setTimeout(function () { setStatus(""); }, 1600);
+    };
+    if ($("aiProfileNew")) $("aiProfileNew").onclick = function () {
+      var name = (window.prompt("Name the new profile", "New profile") || "").trim();
+      if (!name) return;
+      IDE.provider.newProfile(name, true);   /* copy current so it's a tweak, not blank */
+      packText = null; fillSettings(); refreshModel();
+    };
+    if ($("aiProfileRename")) $("aiProfileRename").onclick = function () {
+      var s = $("aiProfile"); if (!s.selectedOptions.length) return;
+      var name = (window.prompt("Rename profile", s.options[s.selectedIndex].text) || "").trim();
+      if (!name) return;
+      IDE.provider.renameProfile(IDE.provider.activeProfileId(), name);
+      fillSettings(); refreshModel();
+    };
+    if ($("aiProfileDel")) $("aiProfileDel").onclick = function () {
+      if (IDE.provider.profiles().length <= 1) return;
+      var s = $("aiProfile"), nm = s.options[s.selectedIndex].text;
+      if (!window.confirm('Delete profile "' + nm + '"? This cannot be undone.')) return;
+      IDE.provider.deleteProfile(IDE.provider.activeProfileId());
+      packText = null; fillSettings(); refreshModel();
+    };
+    IDE.bus.on("ai:profiles", refreshModel);
+  }
+
   /* ---- wiring ------------------------------------------------------------ */
 
   function init() {
@@ -1175,6 +1237,7 @@
     if ($("aiPackUrl")) $("aiPackUrl").oninput = reflectBudget;
     if ($("aiModelCtx")) $("aiModelCtx").oninput = reflectBudget;
     wireAutosave();   /* persist on every change, not just the Save button */
+    wireProfiles();   /* provider profiles: switch, new, rename, delete */
 
     /* modal dismissal: click the backdrop (not the dialog) or press Escape */
     $("settingsModal").addEventListener("mousedown", function (e) {

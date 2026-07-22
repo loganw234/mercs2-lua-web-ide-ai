@@ -18,7 +18,8 @@
  */
 (function () {
   var IDE = window.IDE;
-  var KEY = "m2ide.ai.cfg";
+  var KEY = "m2ide.ai.cfg";                  /* legacy single config -- migrated from */
+  var PKEY = "m2ide.ai.profiles.v1";         /* { active, profiles: [{id, name, ...cfg}] } */
 
   /* Presets. `tested` marks what we have actually exercised; everything else is
      "should work, unverified" -- CORS is the usual failure and it is
@@ -84,20 +85,50 @@
     agentMode: false
   };
 
-  var cfg = null;
+  /* Provider PROFILES. Users keep several named setups -- a free local model, a
+     paid frontier one, a hosted DeepSeek -- and switch between them. Internally
+     that is a list of profiles with one active; externally get()/set() operate
+     on the ACTIVE profile, so every consumer (the panel, agent loop, budget bar)
+     is unchanged. Same shape as the chats store: many named things, one current. */
+  var store = null;   /* { active, profiles: [{id, name, <DEFAULT fields>}] } */
+
+  function pid() { return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  function mkProfile(name, src) {
+    var p = { id: pid(), name: name || "Profile" };
+    for (var k in DEFAULT) p[k] = (src && k in src) ? src[k] : DEFAULT[k];
+    return p;
+  }
+
+  function activeProfile() {
+    if (!store) return null;
+    for (var i = 0; i < store.profiles.length; i++) {
+      if (store.profiles[i].id === store.active) return store.profiles[i];
+    }
+    return store.profiles[0] || null;
+  }
 
   function load() {
-    if (cfg) return cfg;
-    cfg = {};
-    for (var k in DEFAULT) cfg[k] = DEFAULT[k];
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (raw) {
-        var got = JSON.parse(raw);
-        for (var g in got) if (g in DEFAULT) cfg[g] = got[g];
-      }
-    } catch (e) { /* corrupt or blocked storage -- defaults are fine */ }
-    return cfg;
+    if (store) return activeProfile();
+    try { store = JSON.parse(localStorage.getItem(PKEY)); } catch (e) { store = null; }
+    if (!store || !Array.isArray(store.profiles) || !store.profiles.length) {
+      /* First run on profiles: fold the legacy single config into "Default",
+         then delete the old key so there is one home for provider settings. */
+      var old = null;
+      try { old = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+      var first = mkProfile("Default", old || {});
+      store = { active: first.id, profiles: [first] };
+      save();
+      try { localStorage.removeItem(KEY); } catch (e) {}
+    }
+    /* backfill any field added since a profile was written; repair bad ids */
+    store.profiles.forEach(function (p) {
+      for (var k in DEFAULT) if (!(k in p)) p[k] = DEFAULT[k];
+      if (!p.id) p.id = pid();
+      if (!p.name) p.name = "Profile";
+    });
+    if (!activeProfile()) store.active = store.profiles[0].id;
+    return activeProfile();
   }
 
   /* Persist and VERIFY it landed. A silent catch here was hiding real failures
@@ -107,9 +138,8 @@
   var saveErr = null;
   function save() {
     try {
-      localStorage.setItem(KEY, JSON.stringify(cfg));
-      /* read-back check: some browsers accept setItem and drop it */
-      if (localStorage.getItem(KEY) == null) throw new Error("write did not stick");
+      localStorage.setItem(PKEY, JSON.stringify(store));
+      if (localStorage.getItem(PKEY) == null) throw new Error("write did not stick");
       saveErr = null;
       return true;
     } catch (e) {
@@ -370,13 +400,71 @@
     },
     get: function () { return load(); },
     set: function (patch) {
-      load();
-      for (var k in patch) if (k in DEFAULT) cfg[k] = patch[k];
+      var c = load();
+      for (var k in patch) if (k in DEFAULT) c[k] = patch[k];
       var ok = save();
-      IDE.bus.emit("ai:config", cfg);
+      IDE.bus.emit("ai:config", c);
       return ok;                      /* false = did not persist (see saveError) */
     },
     saveError: function () { return saveErr; },
+
+    /* ---- profiles ---------------------------------------------------------
+       Named provider setups, one active. get()/set() above act on the active
+       one, so these are the only extra surface a caller needs. */
+    profiles: function () {
+      load();
+      return store.profiles.map(function (p) { return { id: p.id, name: p.name }; });
+    },
+    activeProfileId: function () { load(); return store.active; },
+    switchProfile: function (id) {
+      load();
+      for (var i = 0; i < store.profiles.length; i++) {
+        if (store.profiles[i].id === id) {
+          store.active = id; save();
+          IDE.bus.emit("ai:config", store.profiles[i]);
+          IDE.bus.emit("ai:profiles");
+          return true;
+        }
+      }
+      return false;
+    },
+    /* Create a profile and make it active. `copyActive` starts it from the
+       current profile's values (tweak one field) rather than blank defaults. */
+    newProfile: function (name, copyActive) {
+      load();
+      var p = mkProfile(name, copyActive ? activeProfile() : null);
+      store.profiles.push(p);
+      store.active = p.id;
+      save();
+      IDE.bus.emit("ai:config", p);
+      IDE.bus.emit("ai:profiles");
+      return p.id;
+    },
+    renameProfile: function (id, name) {
+      load();
+      if (!name || !name.trim()) return false;
+      for (var i = 0; i < store.profiles.length; i++) {
+        if (store.profiles[i].id === id) {
+          store.profiles[i].name = name.trim(); save();
+          IDE.bus.emit("ai:profiles");
+          return true;
+        }
+      }
+      return false;
+    },
+    deleteProfile: function (id) {
+      load();
+      if (store.profiles.length <= 1) return false;   /* always keep one */
+      var idx = -1;
+      for (var i = 0; i < store.profiles.length; i++) if (store.profiles[i].id === id) { idx = i; break; }
+      if (idx < 0) return false;
+      store.profiles.splice(idx, 1);
+      if (store.active === id) store.active = store.profiles[0].id;
+      save();
+      IDE.bus.emit("ai:config", activeProfile());
+      IDE.bus.emit("ai:profiles");
+      return true;
+    },
     configured: function () {
       var c = load();
       if (!c.baseUrl || !c.model) return false;

@@ -673,3 +673,14 @@ a.btn{text-decoration:none;display:inline-block}
   border-radius: 8px; pointer-events: none; z-index: 5;
 }
 .ai-composer { position: relative; }
+
+/* --- provider profiles ----------------------------------------------------- */
+.ai-profile-acts { display: flex; gap: 6px; margin: 6px 0 2px; }
+.ai-profnote { font-size: 11px; }
+/* header quick-switch: compact, sits left of the model chip */
+.ai-profile-quick {
+  font: inherit; font-size: 11px; max-width: 130px; padding: 2px 4px;
+  border-radius: 5px; border: 1px solid #33373d; background: #23262b;
+  color: #c8cdd4; cursor: pointer;
+}
+.ai-profile-quick:hover { border-color: #4a86c7; }

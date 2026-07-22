@@ -100,6 +100,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
     </div>
   <div class="spanel" id="panelAssist">
         <div class="ai-head">
+          <select id="aiProfileQuick" class="ai-profile-quick" title="Switch provider profile" hidden></select>
           <button id="aiModelChip" class="ai-model" title="Active model — click to change"></button>
           <span class="aihead-acts">
             <button id="aiNew" class="ai-icon" title="New chat">＋</button>
@@ -220,6 +221,15 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <button id="aiSettingsClose" class="modal-x" title="Close">✕</button>
     </div>
     <div class="modal-body">
+      <div class="settings-section">Profile</div>
+      <label>Provider profile<select id="aiProfile"></select></label>
+      <div class="ai-profile-acts">
+        <button id="aiProfileNew" type="button" class="ai-mini">New</button>
+        <button id="aiProfileRename" type="button" class="ai-mini">Rename</button>
+        <button id="aiProfileDel" type="button" class="ai-mini">Delete</button>
+      </div>
+      <div class="ai-note ai-profnote">Each profile is a full, independent provider setup — model, key, pack tier, everything. Keep one for a free local model and one for a paid frontier model, and switch between them.</div>
+
       <div class="settings-section">AI provider</div>
       <label>Provider<select id="aiPreset"></select></label>
       <div id="aiNote" class="ai-note"></div>
