@@ -58,6 +58,12 @@ def main():
          "tokens": 45096, "min_ctx": 65536, "good_ctx": 131072,
          "note": "Adds the full namespace + game reference. Needs a 64k model "
                  "(~19k headroom for your script and the conversation)."},
+        {"key": "ess", "label": "Ess", "file": "pack-ess.txt",
+         "tokens": 70452, "min_ctx": 98304, "good_ctx": 131072,
+         "note": "Small+ plus the whole Ess framework -- the foundational library "
+                 "most scripts build on. Fills the gap between Small+ (64k) and "
+                 "Medium (128k): sized for ~100k models, ~27k headroom. It is "
+                 "Medium without the 228-module resident dump."},
         {"key": "medium", "label": "Medium", "file": "pack-medium.txt",
          "tokens": 98526, "min_ctx": 131072, "good_ctx": 200000,
          "note": "Adds Ess and the resident modules -- most questions answerable "

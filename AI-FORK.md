@@ -67,26 +67,45 @@ dropdown deliberately. Removing that label should mean someone actually ran it.
 
 ## Pack tiers
 
-**All five tiers are bundled** (Assistant settings → *Bundled tier*). Pick the
+**All six tiers are bundled** (Assistant settings → *Bundled tier*). Pick the
 largest one your model's context can hold — the pack is sent as a fixed system
 prefix, so its tokens are spent every turn and the rest of the window is what's
-left for your script, the conversation, and the reply. The dropdown states each
-tier's cost and headroom live; the table below is the same data.
+left for your script, the conversation, and the reply.
 
 | tier | tokens | min context | headroom at min | adds |
 |---|---|---|---|---|
 | Small | 10.9k | 16k | ~5k | core rules, gotchas, idioms, lua-bridge |
 | Small+ | 45.1k | 64k | ~19k | full namespace + game reference |
-| Medium | 98.3k | 128k | ~30k | Ess + resident modules |
-| Large | 157.5k | 200k | ~43k | spawn templates + contract framework |
-| Full | 240k | 256k+ | ~16k | everything (hosted long-context only) |
+| **Ess** | **70.5k** | **~100k** | **~27k** | **+ the whole Ess framework** |
+| Medium | 98.5k | 128k | ~30k | + resident modules |
+| Large | 157.7k | 200k | ~43k | + spawn templates + contract framework |
+| Full | 240.4k | 256k+ | ~16k | everything (hosted long-context only) |
+
+The **Ess** tier exists because 100k-context models (a common local config) fell
+in a gap: Small+ wastes their window and Medium *overflows it by ~0.5k*. Ess is
+exactly "Medium minus the 228-module resident dump" — it keeps the foundational
+framework most scripts build on and drops the bulkiest pure-reference section,
+landing at ~70k so a 100k model keeps ~27k free.
 
 Headroom = min context − pack tokens: what remains for the editor buffer, chat
-history, and the model's answer (default reply cap 4k). Small at exactly 16k is
-tight — fine for short questions, 32k is comfortable. The counts come from
-`build_pack.py --tiers` in the wiki repo; the files are copied into
-`src/data/packs/` and inlined by `build.py`, which owns the per-tier token
-counts and guidance in `PACK_TIERS`. Re-copy after regenerating the wiki packs.
+history, and the model's answer. Small at exactly 16k is tight — fine for short
+questions, 32k is comfortable. The counts come from `build_pack.py --tiers` in
+the wiki repo; the files are copied into `src/data/packs/` and inlined by
+`build.py`, which owns the per-tier token counts and guidance in `PACK_TIERS`
+(each also gets the ~742-token `ide-help.txt` appended). Re-copy after
+regenerating the wiki packs.
+
+### The context-budget bar
+
+Assistant settings shows a live budget bar under the tier picker. Enter your
+model's context window and it splits the bar into **Reference pack** (the tier),
+**IDE Use**, and **Free** — the free segment is the point. IDE Use is the agent's
+per-turn overhead: the tool schemas (~1.2k, fixed) **plus whatever is attached to
+the question** — the open editor script and the game-log tail. That last part is
+computed live, which answers the recurring "why did my window fill up": a big
+open script eats real budget and the bar shows it. Leave the context blank and
+the bar just reports what the tier needs. Overflow (tier > window) turns the bar
+red and says which way to move.
 
 Every tier below Full carries a banner naming the sections it lacks and telling
 the model to refuse rather than guess. This matters: the `templates` section is
@@ -95,9 +114,9 @@ Large tier. **A model on a small tier will invent template names** — the banne
 is what stops it doing so silently. The grounding check (`85_ground.js`) is the
 backstop when it doesn't.
 
-Bundling all tiers put the single-file build at ~4.1 MB. That was a deliberate
-trade for offline tier-switching with no fetch; a `packUrl` override still
-exists for pointing at an out-of-band pack.
+Bundling all six tiers put the single-file build at ~4.55 MB. That was a
+deliberate trade for offline tier-switching with no fetch; a `packUrl` override
+still exists for pointing at an out-of-band pack.
 
 ## Verified
 

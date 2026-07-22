@@ -915,7 +915,8 @@
       });
     }
     if (tsel) tsel.value = c.packTier || "small";
-    reflectPackNote();
+    if ($("aiModelCtx")) $("aiModelCtx").value = c.modelCtx ? c.modelCtx : "";
+    reflectBudget();
 
     $("aiPackUrl").value = c.packUrl;
     $("aiSendEditor").checked = !!c.sendEditor;
@@ -929,21 +930,73 @@
     return n >= 1000 ? (Math.round(n / 100) / 10) + "k" : String(n);
   }
 
-  /* Show the selected tier's context guidance: what it costs and what it leaves
-     for the user's script + conversation. A URL override supersedes it. */
-  function reflectPackNote() {
-    var el = $("aiPackNote"), tsel = $("aiPackTier");
-    if (!el || !tsel) return;
+  /* IDE Use = what the agent adds on top of the pack every turn: the tool
+     schemas (~1.3k, fixed) plus whatever context is attached to the question --
+     the open editor script and the game-log tail (buildContext). Shown live, so
+     "why did my window fill up" is answerable at a glance: a big open script
+     costs real budget, an empty editor costs almost nothing. */
+  function ideUseTokens() {
+    var tools = (window.IDE.agent && IDE.agent.tools) ?
+      Math.round(JSON.stringify(IDE.agent.tools()).length / 4) : 0;
+    var ctx = Math.round((buildContext() || "").length / 4);
+    return { tools: tools, ctx: ctx, total: tools + ctx };
+  }
+
+  /* Render the context-budget bar plus the tier's descriptive note. Segments:
+     Reference pack | IDE Use | Free. If the model's context window is unknown,
+     the bar shows only what the agent needs and asks for the window. A URL
+     override supersedes the whole thing. */
+  function reflectBudget() {
+    var barEl = $("aiBudget"), noteEl = $("aiPackNote"), tsel = $("aiPackTier");
+    if (!barEl || !noteEl) return;
+
     if ($("aiPackUrl") && $("aiPackUrl").value.trim()) {
-      el.textContent = "Using the Pack URL override below; the bundled tier is ignored.";
+      barEl.innerHTML = "";
+      noteEl.textContent = "Using the Pack URL override below; the bundled tier and its budget are ignored.";
       return;
     }
-    var info = (window.MERCS_PACK_INFO || []).filter(function (t) { return t.key === tsel.value; })[0];
-    if (!info) { el.textContent = ""; return; }
-    var headroom = info.min_ctx - info.tokens;
-    el.textContent = "≈" + fmtTokens(info.tokens) + " tokens. Needs a " +
-      fmtTokens(info.min_ctx) + "-context model or larger (≈" + fmtTokens(headroom) +
-      " left for your script, the chat, and the reply). " + info.note;
+    var info = (window.MERCS_PACK_INFO || []).filter(function (t) { return t.key === (tsel && tsel.value); })[0];
+    if (!info) { barEl.innerHTML = ""; noteEl.textContent = ""; return; }
+
+    noteEl.textContent = info.note;
+
+    var pack = info.tokens;
+    var ide = ideUseTokens();
+    var need = pack + ide.total;
+    /* Read the LIVE input, not saved config, so the bar updates as you type
+       (fillSettings seeds the input from config on open). */
+    var ctxEl = $("aiModelCtx");
+    var ctx = Math.max(0, parseInt(ctxEl ? ctxEl.value : IDE.provider.get().modelCtx, 10) || 0);
+
+    function seg(cls, tok, basis) {
+      var w = basis > 0 ? Math.max(0, Math.min(100, tok / basis * 100)) : 0;
+      return '<span class="seg ' + cls + '" style="width:' + w.toFixed(1) + '%"></span>';
+    }
+    var bars, readout;
+    if (ctx > 0) {
+      var over = need > ctx, free = Math.max(0, ctx - need);
+      barEl.className = over ? "ai-budget over" : "ai-budget";
+      bars = seg("pack", pack, ctx) + seg("ide", ide.total, ctx) +
+        (over ? "" : seg("free", free, ctx));
+      readout = over
+        ? "⚠ This tier needs " + fmtTokens(need) + " but your window is only " +
+          fmtTokens(ctx) + " — over by " + fmtTokens(need - ctx) + ". Pick a smaller tier."
+        : "<b>" + fmtTokens(free) + " free</b> of " + fmtTokens(ctx) +
+          " for your scripts, chat and the reply · pack " + fmtTokens(pack) +
+          " + IDE Use " + fmtTokens(ide.total);
+    } else {
+      barEl.className = "ai-budget unknown";
+      bars = seg("pack", pack, need) + seg("ide", ide.total, need);
+      readout = "Needs ≈" + fmtTokens(need) + " (pack " + fmtTokens(pack) +
+        " + IDE Use " + fmtTokens(ide.total) + "). Enter your model's context " +
+        "window above to see what's left for your work.";
+    }
+    barEl.innerHTML =
+      '<div class="ai-budget-track">' + bars + '</div>' +
+      '<div class="ai-budget-read">' + readout + '</div>' +
+      '<div class="ai-budget-key"><span class="k pack"></span>pack' +
+      '<span class="k ide"></span>IDE Use (tools + open script &amp; log)' +
+      (ctx > 0 ? '<span class="k free"></span>free' : '') + '</div>';
   }
 
   function applyPreset() {
@@ -964,6 +1017,7 @@
       model: $("aiModel").value.trim(),
       key: $("aiKey").value.trim(),
       packTier: $("aiPackTier") ? $("aiPackTier").value : "small",
+      modelCtx: $("aiModelCtx") ? (parseInt($("aiModelCtx").value, 10) || 0) : 0,
       packUrl: $("aiPackUrl").value.trim(),
       sendEditor: $("aiSendEditor").checked,
       sendLog: $("aiSendLog").checked,
@@ -998,8 +1052,9 @@
     $("aiSettingsCancel").onclick = closeSettings;
     $("aiSettingsSave").onclick = saveSettings;
     $("aiPreset").onchange = applyPreset;
-    if ($("aiPackTier")) $("aiPackTier").onchange = reflectPackNote;
-    if ($("aiPackUrl")) $("aiPackUrl").oninput = reflectPackNote;
+    if ($("aiPackTier")) $("aiPackTier").onchange = reflectBudget;
+    if ($("aiPackUrl")) $("aiPackUrl").oninput = reflectBudget;
+    if ($("aiModelCtx")) $("aiModelCtx").oninput = reflectBudget;
 
     /* modal dismissal: click the backdrop (not the dialog) or press Escape */
     $("settingsModal").addEventListener("mousedown", function (e) {

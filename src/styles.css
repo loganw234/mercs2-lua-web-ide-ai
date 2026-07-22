@@ -613,3 +613,34 @@ a.btn{text-decoration:none;display:inline-block}
   border-radius: 0 6px 6px 0; color: var(--warn); }
 .ai-ungrounded strong { color: var(--warn); }
 .ai-ungrounded .ai-ok { color: var(--ok); font-size: 11px; display: inline-block; margin-top: 5px; }
+
+/* --- assistant context-budget bar -----------------------------------------
+   Shows, per pack tier, how much of the model's context the reference pack and
+   the agent's IDE Use (tool schemas + attached script/log) consume, and how
+   much is left for the user's work. The "free" segment is the point. */
+.ai-budget { margin: 8px 0 4px; font-size: 12px; }
+.ai-budget-track {
+  display: flex; height: 16px; border-radius: 4px; overflow: hidden;
+  background: #23262b; border: 1px solid #33373d;
+}
+.ai-budget-track .seg { height: 100%; display: block; }
+.ai-budget-track .seg.pack { background: #4a86c7; }   /* reference pack */
+.ai-budget-track .seg.ide  { background: #c78f4a; }   /* IDE Use */
+.ai-budget-track .seg.free { background: #2f8f5b; }   /* free for the user */
+.ai-budget.unknown .ai-budget-track { opacity: .55; }
+.ai-budget.over .ai-budget-track { border-color: #b4553f; }
+.ai-budget-read { margin-top: 5px; color: #c8cdd4; line-height: 1.45; }
+.ai-budget-read b { color: #7fd0a0; }
+.ai-budget.over .ai-budget-read { color: #e0a08f; }
+.ai-budget-key {
+  margin-top: 4px; color: #8b9199; font-size: 11px;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px;
+}
+.ai-budget-key .k {
+  width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+  margin-left: 6px;
+}
+.ai-budget-key .k:first-child { margin-left: 0; }
+.ai-budget-key .k.pack { background: #4a86c7; }
+.ai-budget-key .k.ide  { background: #c78f4a; }
+.ai-budget-key .k.free { background: #2f8f5b; }

@@ -77,6 +77,7 @@
     key: "",
     packTier: "small",    /* which bundled tier -- see window.MERCS_PACK_INFO */
     packUrl: "",          /* optional URL override; blank = use packTier */
+    modelCtx: 0,          /* user's model context window, tokens; 0 = unknown */
     maxTokens: 4000,
     sendEditor: true,
     sendLog: true,

@@ -226,6 +226,8 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <label>API key<input id="aiKey" type="password" spellcheck="false" placeholder="stored in this browser only"></label>
       <div class="settings-section">Reference pack</div>
       <label>Bundled tier<select id="aiPackTier"></select></label>
+      <label>Model context window <small>(optional — tokens; enables the budget below)</small><input id="aiModelCtx" type="number" min="0" step="1000" spellcheck="false" placeholder="e.g. 128000"></label>
+      <div id="aiBudget" class="ai-budget"></div>
       <div id="aiPackNote" class="ai-note ai-packnote"></div>
       <label>Pack URL <small>(optional override — blank = use the bundled tier above)</small><input id="aiPackUrl" type="text" spellcheck="false" placeholder="https://wiki.mercs2.tools/assets/pack/pack-medium.txt"></label>
 
