@@ -20,3 +20,13 @@ __pycache__/
 bench-local.json
 bench-deepseek.json
 bench-openrouter.json
+
+# reasoning-bench working files (backups / shakeout / snapshots) -- the live result is
+# bench-reason-results.json; these are transient
+bench-reason-results.bak*.json
+bench-reason-shakeout.json
+bench-reason-snapshot.json
+
+# generated dashboards (regenerate with tools/bench_viz.py; may embed one-off hosted data)
+bench-viz.html
+bench-viz-test.html

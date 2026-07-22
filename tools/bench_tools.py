@@ -338,7 +338,31 @@ SYSTEM_EXTRA = (
 )
 
 
+NATIVE = "http://localhost:11434/api/chat"
+LOCAL_NUM_CTX = 32768   # Cap local context. A per-request options.num_ctx is the ONLY
+                        # thing that overrides a model's Modelfile-pinned context --
+                        # neither OLLAMA_CONTEXT_LENGTH nor the OpenAI endpoint can. Without
+                        # it, a 131k/262k-context model (YaRN, the A3B MoEs, qwen3.6) loads
+                        # its full window and spills a ~32 GB KV cache into DRAM, wedging the
+                        # box. The tool loop never needs more than this.
+
+
 def post(model, messages, tools):
+    if IS_LOCAL:
+        # Native /api/chat so we can send options.num_ctx (see LOCAL_NUM_CTX). Its tools
+        # format matches, its tool_calls carry object-shaped arguments (run_case already
+        # handles that), and the reply is wrapped to the OpenAI shape run_case reads.
+        body = {"model": model, "messages": messages, "stream": False,
+                "options": {"num_ctx": LOCAL_NUM_CTX}}
+        if tools:
+            body["tools"] = tools
+        req = urllib.request.Request(
+            NATIVE, data=json.dumps(body).encode("utf-8"),
+            headers={"content-type": "application/json"})
+        with urllib.request.urlopen(req, timeout=REQ_TIMEOUT) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        return {"choices": [{"message": data.get("message") or {}}]}
+    # hosted (--base-url): OpenAI /chat/completions, unchanged.
     body = {"model": model, "messages": messages, "stream": False}
     if tools:
         body["tools"] = tools

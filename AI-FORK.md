@@ -263,15 +263,138 @@ worse advice than "you need more context".
 The assistant checks this for you on Ollama — it reads the model's real context
 length from `/api/show` and warns before you discover it through a bad answer.
 
-## Model benchmark
+**Ollama clamps `num_ctx` to the model's trained window — silently.** Asking for
+more context than a model was trained for does not extend it; Ollama caps at the
+trained length and truncates the prompt to fit (from the front, as above). The
+ceiling is the model's own, not what you request. Verified via `ollama ps` (a
+`num_ctx: 65536` request on `qwen3:14b` loads at `CONTEXT 40960`) and the
+prompt-token count (the pack truncated to ~half). Measured across the Qwen line:
 
-`python tools/bench_local.py [model ...]` scores installed Ollama models against
-the bundled pack on seven cases with machine-checkable criteria. Grading prose by
-eye across models is how you fool yourself, so `must` / `must_not` patterns decide
-it, and `must_not` is weighted harder — a confidently invented identifier costs a
-debugging session, a missing detail costs a follow-up question.
+| Model | trained context | largest pack it holds natively |
+|---|---|---|
+| qwen2.5:0.5b | 32,768 | small |
+| **qwen3:8b / qwen3:14b** | **40,960** | **small only — the 45k small+ pack does NOT fit** |
+| Qwen2.5-14B-Instruct-1M | 1,010,000 | any |
+| qwen3:30b-a3b / qwen3.6:27b / qwen3.6:35b | 262,144 | any |
 
-Results land in `bench-results.json`.
+The practical sting: **a stock `qwen3:14b` cannot hold the namespace pack.** Its
+40k window fits the small tier (which *omits* the namespace signatures) but not
+small+. To feed a 14B the full engine reference you need a long-context build — the
+`Qwen2.5-14B-Instruct-1M` (1M native), an Unsloth `Qwen3-14B-128K` YaRN GGUF (131k)
+— or an A3B MoE (`qwen3:30b-a3b` / `qwen3.6:35b`, 262k native, ~3.3B active so they
+run at roughly 14B speed).
+
+**And a large pack is slow even when it fits.** Holding the 71k Ess pack needs ~90k
+of context, and the KV cache for that spills to DRAM on a 16 GB card *even for a
+14B* — ~20 minutes per task. On consumer hardware "the reference fits" and "the
+reference is usable at speed" are different questions.
+
+## Benchmark suite
+
+Four offline harnesses against the bundled packs, plus a renderer:
+
+- **`bench_local.py`** — pack Q&A, `must` / `must_not` on 12 short cases. The
+  fastest read on "does this model invent identifiers." Grading prose by eye across
+  models is how you fool yourself, so patterns decide it, and `must_not` is weighted
+  harder — a confidently invented identifier costs a debugging session, a missing
+  detail costs a follow-up. Results: `bench-results.json`.
+- **`bench_tools.py`** — does the model actually CALL its tools (agent behaviour),
+  11 cases mirroring `86_agent.js`. Verdicts: pass / no_call / bad_call / ignored /
+  loop / unsupported. Local models are driven through Ollama's **native `/api/chat`
+  with a capped `num_ctx` (32k)** — a per-request cap is the *only* thing that overrides
+  a model's Modelfile-pinned context (neither `OLLAMA_CONTEXT_LENGTH` nor the OpenAI
+  endpoint can), so a 131k/262k-context model can't silently load a 32 GB KV cache into
+  DRAM and wedge the box. `--base-url` switches to a hosted endpoint (a real provider,
+  or Ollama-cloud models via the local proxy). Results: `bench-tools-results.json`.
+- **`bench_reason.py`** — reasoning quality SWEPT across context budget (Ollama
+  `num_ctx`), the axis the others hold fixed. Multi-step tasks (synthesis,
+  debugging, grounded refusal) on four independent signals: a **self-calibrating**
+  rubric that reads the loaded pack's own "Omitted:" banner to decide whether to
+  expect a working answer or an honest "I'd need that reference"; an objective
+  invention count reusing the fork's API JSON + full corpus (code only, so a correct
+  refusal that *names* a nonexistent call isn't punished); a `lupa` compile gate (+
+  regex for Lua-5.1-only violations 5.5 accepts); and wall-clock. Every sub-signal
+  is stored. `--regrade` re-scores stored responses with **zero** model calls (a
+  grader tweak never re-runs the models); `--trials N` uses pinned seeds for a
+  distribution. Budgets climb a pack ladder: **B1** (small, 16k ctx) → **B2** (small,
+  32k) → **B3** (small+/namespaces, 64k) → **B4** (Ess, 90k) → **B5** (medium, 128k) →
+  **B6** (large, 192k) → **B7** (the FULL 240k-token pack, 256k ctx). B4–B7 are heavy
+  stress tiers — the big-pack KV cache spills to DRAM, tens of minutes to hours per
+  task — gated by `--timeout` and by each model's native context (undersized models
+  auto-skip those tiers). `--base-url` / `--key-file` / `--max-ctx` run the SAME tasks
+  against a **hosted** model (DeepSeek, or Ollama-cloud models via the local proxy) — the
+  budget then collapses to just its pack tier, and the invention check runs on code only
+  so a correct refusal that *names* a fake call isn't punished. Results:
+  `bench-reason-results.json`.
+- **`bench_median.py`** — reads repeated `bench_reason` runs and reports the
+  DISTRIBUTION (per-trial pass counts, median, per-task reliability), because one
+  trial at these sizes swings ±2 on identical input.
+- **`bench_viz.py`** — renders the reasoning + tool-use results as a self-contained
+  HTML dashboard (inline SVG, no external deps → works as a locked-down Artifact),
+  coloured by model generation.
+- **`bench-runner.ps1` / `bench-runner.sh`** — a friendly launcher + live tracker for
+  people benchmarking their **own** models (Windows / Linux+macOS). Pick a host
+  (Ollama / LM Studio / any OpenAI-compatible endpoint), pick models from an
+  auto-discovered list, pick a depth (Quick 2× · Median 6× · Full +B3 · Heavy +B4 ·
+  Max +B5–B7), and watch streamed per-case results with a running counter. Wraps the
+  harnesses above; Heavy/Max require typing `yes` past a slow-run warning first.
+
+### The Qwen family sweep — reasoning vs context budget
+
+A sweep of the Qwen line (0.5B → 35B; generations 2.5 / 3 / 3.6; dense, A3B MoE,
+long-context builds) plus **DeepSeek-V4-pro as a hosted flagship reference**, to answer:
+what is the best-fit local model, and how much does the context budget actually matter?
+Local small-pack numbers are **6-trial medians**; DeepSeek spans the full B1–B7 ladder.
+A live dashboard of all of it renders from `bench_viz.py`.
+
+**Local, small pack (grounding discipline — the model has NO namespace reference):**
+
+| Model | small-pack median | inventions/run | tool use |
+|---|---|---|---|
+| **qwen3:14b** | **8.5–9.0** | 1.0–1.5 | 11/11 |
+| qwen3:14b-128K (YaRN) | 8.0 | 1.5 | 10/11 |
+| qwen3:8b | 7.0–8.0 | 0.5–1.5 | 8–11/11 |
+| qwen3:30b-a3b | 6.5 | 0.5 | 7/11 |
+| qwen2.5-coder (any size) | — | 1–6 | **0–1/11** |
+
+- **`qwen3:14b` is the local pick** — best small-pack median, tight variance, flawless
+  tool use. Your default, now confirmed over repeats.
+- **Generation ≫ size** holds: qwen3:8b beats qwen2.5-coder:32b (4× its size) and every
+  2.5 model. The coder line is an **agentic trap** — 0–1/11 tools at every size (it's
+  the weights, not the template: it declares `tools:true` and still never emits a call).
+- **The 30B-A3B has a split personality:** *weakest* local on the small pack (6.5 — it
+  wants to write code, not refuse when blind) but the **best** once handed the namespace
+  reference (B3: 9/10, 0 inventions, at ~14B speed via 3.3B active). "Best when informed"
+  and "cautious when blind" are different skills; no single model wins both.
+- **Two blind spots no local solves:** the Lua getter-truthiness debug task and the
+  refuse-when-the-reference-is-missing task — every local lands ~1–2/6. Prime tie-breakers.
+
+**DeepSeek-V4-pro (flagship) — the clearest proof that the reference is the mechanism.**
+Run across the whole ladder (small 11k → full 240k pack):
+
+| pack | median | inventions/run |
+|---|---|---|
+| small | 7.0 | **3.7** |
+| small+ (namespaces) | 8.5 | 0.8 |
+| ess | 8.5 | 1.0 |
+| medium | 9.0 | **0.2** |
+| full 240k | 9.0 | 0.3 |
+
+- **More reference → higher score AND collapsing fabrication.** Score 7→9, inventions
+  3.7→0.2 across a 20× context range. Grounding is not a small-model crutch.
+- **The flagship invents MORE than the local Qwens when blind** — 3.7/run on the small
+  pack, the highest of *anything* tested (qwen3:14b ~1.0), and its small-pack median
+  (7.0) sits **below** qwen3:14b's (8.5). Absent the reference, the disciplined local
+  14B is both higher-scoring and far safer.
+- **But hand it the whole wiki and it's near-flawless** (medium/full: median 9, ~0.2
+  inventions) — and the local 14B **cannot reach those tiers** (its 40k context ceiling).
+
+**The recommendation, settled:** it is *not* "flagship > local." On the small pack most
+local hosts run, a disciplined **qwen3:14b matches or beats the flagship and invents far
+less**; the flagship's edge appears only once it holds the full reference, which needs
+its 1M window. **The pack tier you can afford matters as much as the model choice.**
+Default local: `qwen3:14b`; `qwen3:30b-a3b` if you have the VRAM and want the full
+namespace reference in context; never the coder line for agent mode.
 
 ## Grounding check (`85_ground.js`) — the main safeguard
 
