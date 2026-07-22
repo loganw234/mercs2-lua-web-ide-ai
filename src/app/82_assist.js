@@ -1302,6 +1302,16 @@
     refreshModel();
     refreshChips();
     autoGrow();
+
+    /* Chats hydrate from IndexedDB asynchronously (81_chats.js). The first
+       renderAll above runs against the not-yet-hydrated store, so re-render once
+       the restored sessions are in -- and again if the history panel is open. */
+    if (IDE.chats.ready) {
+      IDE.chats.ready().then(function () {
+        renderAll();
+        if (histShown()) renderHist();
+      });
+    }
   }
 
   function flash(btn, txt) {
