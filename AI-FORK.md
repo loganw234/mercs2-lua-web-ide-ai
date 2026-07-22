@@ -290,26 +290,52 @@ likely to be invented.
 ## Agent mode (tool calling)
 
 Off by default; a checkbox in Assistant settings. When on, `86_agent.js` runs a
-loop of up to 6 tool round trips before answering.
+loop of up to **10** tool round trips before answering, with **11 tools** across
+three gate classes.
+
+**Read-only, auto-run (no gate):**
+
+| Tool | What it returns |
+|---|---|
+| `search_wiki(query)` | keyword search over the whole wiki (via its search index) |
+| `read_wiki_page(path)` | a live wiki page, HTML stripped to text |
+| `search_api(query)` | the bundled Ess API + engine natives |
+| `search_examples(query)` | the bundled smoke-tested example scripts |
+| `read_example(name)` | one example's full source |
+| `search_templates(query)` | the bundled spawnable-template list |
+| `get_editor()` | the current editor buffer |
+| `get_ide_state()` | live IDE facts: bridge connection, delivery mode, open scripts |
+| `inspect_game(expr)` | a read-only Lua expression in the running game, **allowlist-gated** |
+
+**Changes something — never silent, always an explicit gate:**
 
 | Tool | Gate |
 |---|---|
-| `search_wiki(query)` | none — keyword search over the whole wiki |
-| `read_wiki_page(path)` | none — fetches the live wiki, HTML stripped to text |
-| `search_templates(query)` | none — the bundled template list |
-| `inspect_game(expr)` | **allowlisted read-only**, auto-runs |
-| `run_lua(code, why)` | **explicit user click, every call** |
-| `get_editor()` | none |
+| `run_lua(code, why)` | a click that shows the exact Lua first — **every call** |
+| `propose_script(code, why)` | a **diff + Apply** — nothing replaces the editor until you apply |
 
-The `inspect_game` / `run_lua` split is the whole safety design: the model may
-look around the running game freely, but anything that could change it stops for
-a click that shows the exact Lua first. "Let it explore" must not silently mean
+The split is the whole safety design: the model may read reference material and
+look around the running game freely, but anything that could change the game
+(`run_lua`) or your editor (`propose_script`) stops for an explicit action that
+shows exactly what will happen first. "Let it explore" must not silently mean
 "let it act".
 
-Agent mode does **not** stream (assembling `tool_calls` out of SSE deltas means
-stitching partial JSON across frames, and providers disagree on chunking). The
-tool list renders live instead, so the panel shows progress and — more usefully —
-shows *what was consulted*.
+**It streams — by design** (as of the "stream agent mode live" work). The loop
+requests `stream:true`, the provider forwards content and reasoning deltas as
+they arrive and assembles `tool_calls` from the SSE frames (accumulating partial
+JSON argument fragments by index), and the panel paints token-by-token across
+every step. So a local-hosting user can watch the thinking and **abort** a run
+going off the rails — the Send button becomes Stop, or press Esc. The tool chips
+still render live above the answer, so you see *what* was consulted too. (An
+earlier build did not stream the agent loop and this section said so — the code
+now does.)
+
+Caveat worth knowing: if tokens still arrive in one block, the loop isn't holding
+them — some backends **buffer** the response when the request carries tools, and
+a few models emit their whole answer in a single chunk. That is provider/model
+behaviour, not the client. This was reported once and not yet re-confirmed live
+against a specific local backend, so if a tester sees no live streaming, check
+the backend's streaming-with-tools behaviour first.
 
 ### Search, and why it's not embeddings
 
