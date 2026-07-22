@@ -66,6 +66,39 @@ separate code; everything else is a base-URL/model change.
 **Only DeepSeek is marked tested** — the others are labelled `(untested)` in the
 dropdown deliberately. Removing that label should mean someone actually ran it.
 
+## Provider profiles
+
+A profile is a **full, independent provider setup** — preset, base URL, model,
+key, pack tier, context window, the send-editor/log toggles, agent mode. Users
+keep several (a free local model for routine work, a paid frontier one to step
+up, a hosted DeepSeek) and switch between them without re-typing keys and URLs.
+
+The design point is that it cost almost nothing downstream: `IDE.provider.get()`
+and `set()` still act on the **active** profile, so the panel, the agent loop,
+and the context-budget bar never learned that profiles exist. It is the same
+"many named things, one current" shape as the chats store.
+
+- **Storage** (`80_provider.js`): moved from a single `m2ide.ai.cfg` object to
+  `{ active, profiles: [{id, name, …cfg}] }` under `m2ide.ai.profiles.v1`, with
+  the same quota-verifying `save()` that reports a failure instead of swallowing
+  it. First run folds the legacy single config into a **"Default"** profile and
+  deletes the old key — automatic, like the IndexedDB chat migration.
+- **API**: `profiles()`, `activeProfileId()`, `switchProfile(id)`,
+  `newProfile(name, copyActive)`, `renameProfile(id, name)`,
+  `deleteProfile(id)` (never removes the last one).
+- **Settings modal**: a Profile section — select + New / Rename / Delete. *New*
+  copies the current profile, so a second setup is a one-field tweak, not a
+  blank slate.
+- **Header quick-switch**: a compact `<select>` beside the model chip, shown
+  **only once there are two or more** profiles, so you can jump local↔frontier
+  mid-session without opening settings. Switching drops the cached pack (tiers
+  may differ between profiles) and repaints the model chip.
+
+Verified in-browser: the legacy config migrates to Default and frees the old
+key; a second profile is fully isolated (its model/key/tier do not touch
+Default's); the quick-switch flips the active config and the chip; every profile
+and the active selection survive a reload; deleting always leaves at least one.
+
 ## Pack tiers
 
 **All six tiers are bundled** (Assistant settings → *Bundled tier*). Pick the
