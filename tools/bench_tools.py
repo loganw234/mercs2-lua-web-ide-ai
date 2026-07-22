@@ -34,16 +34,23 @@ import urllib.request
 from pathlib import Path
 
 OLLAMA = "http://localhost:11434/v1/chat/completions"
-# Overridden by --base-url/--key-file so the same seven cases can be run
+# Overridden by --base-url/--key-file so the same cases can be run
 # against a hosted provider. The point of the harness is comparing behaviour,
 # and that comparison is only meaningful if the cases are byte-identical.
 ENDPOINT = OLLAMA
 API_KEY = ""
 IS_LOCAL = True
 ROOT = Path(__file__).resolve().parent.parent
-PACK = ROOT / "src" / "data" / "pack.txt"
-OUT = ROOT / "bench-tools-results.json"
-MAX_STEPS = 6
+# All tiers now live under packs/; the bench uses the small tier (the floor a
+# local model must handle). Fall back to the old single-file path if present.
+PACK = ROOT / "src" / "data" / "packs" / "pack-small.txt"
+if not PACK.exists():
+    PACK = ROOT / "src" / "data" / "pack.txt"
+import os
+# BENCH_OUT lets concurrent runs (one per endpoint) write separate files and
+# avoid racing on a shared merge; default keeps single-run behaviour.
+OUT = Path(os.environ.get("BENCH_OUT", ROOT / "bench-tools-results.json"))
+MAX_STEPS = 10              # mirrors 86_agent.js
 REQ_TIMEOUT = 1800          # 30 min: a 27B on DRAM is slow, not broken
 
 # ---------------------------------------------------------------------------
@@ -51,6 +58,35 @@ REQ_TIMEOUT = 1800          # 30 min: a 27B on DRAM is slow, not broken
 # ---------------------------------------------------------------------------
 
 TOOLS = [
+    {"type": "function", "function": {
+        "name": "search_api",
+        "description": (
+            "Search the BUNDLED API reference: every documented Ess.* call plus "
+            "the engine's own native functions with real call sites from the "
+            "base game. Instant and offline. Use this FIRST for 'is there a "
+            "function that...', exact signatures, and argument lists. Pass a "
+            "full dotted name to get the complete entry for that call."),
+        "parameters": {"type": "object", "properties": {
+            "query": {"type": "string", "description": "Keywords or a dotted call name."}},
+            "required": ["query"]}}},
+    {"type": "function", "function": {
+        "name": "search_examples",
+        "description": (
+            "Search the bundled, smoke-tested example scripts by keyword. The "
+            "best answer to 'how do I ...' is usually a WORKING example adapted "
+            "to the user's need, not code written from memory. Returns names and "
+            "descriptions; read the code with read_example."),
+        "parameters": {"type": "object", "properties": {
+            "query": {"type": "string", "description": "Keywords."}},
+            "required": ["query"]}}},
+    {"type": "function", "function": {
+        "name": "read_example",
+        "description": (
+            "Read the full Lua source of one bundled example script, by the "
+            "exact name search_examples returned."),
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "An example name from search_examples."}},
+            "required": ["name"]}}},
     {"type": "function", "function": {
         "name": "read_wiki_page",
         "description": (
@@ -86,6 +122,25 @@ TOOLS = [
         "parameters": {"type": "object", "properties": {
             "code": {"type": "string"}, "why": {"type": "string"}},
             "required": ["code", "why"]}}},
+    {"type": "function", "function": {
+        "name": "propose_script",
+        "description": (
+            "Propose a complete replacement for the script open in the editor. "
+            "The user is shown a diff and must click Apply -- nothing changes "
+            "without their approval. Use this when asked to fix, extend or "
+            "rewrite their script. Always send the WHOLE script (the full file "
+            "after your change), never a fragment."),
+        "parameters": {"type": "object", "properties": {
+            "code": {"type": "string"}, "why": {"type": "string"}},
+            "required": ["code", "why"]}}},
+    {"type": "function", "function": {
+        "name": "get_ide_state",
+        "description": (
+            "Report the IDE's live state: whether the game is connected (and "
+            "the likely reason if not), how this page is being served, and the "
+            "user's scripts. Call this FIRST for connection problems, 'nothing "
+            "happens when I run', or any question about the editor itself."),
+        "parameters": {"type": "object", "properties": {}}}},
     {"type": "function", "function": {
         "name": "get_editor",
         "description": "Return the Lua currently open in the editor.",
@@ -124,6 +179,27 @@ STUBS = {
     "inspect_game": "Result: \"char_guid_770077\"",
     "run_lua": "Ran. Result: true",
     "get_editor": "local x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n",
+    # The sentinel values below follow the ZZ_TRACER_9 pattern: invented for
+    # the benchmark, impossible to produce from memory.
+    "search_api": (
+        "Ess.Guid(name)\n"
+        "  pcall-wrapped Pg.GetGuidByName -- returns the guid for a named "
+        "object, or nil when it is missing. Entry tag: QQ_SENTINEL_4\n"
+        "  [Ess] namespace Ess"),
+    "search_examples": (
+        "Matching examples (read one with read_example):\n\n"
+        "vehicle-spawn-basic -- spawn a jeep next to the player"),
+    "read_example": (
+        "-- Example: vehicle-spawn-basic\n"
+        "-- spawn a jeep next to the player\n\n"
+        "local g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n"),
+    "get_ide_state": (
+        "Game connection: closed -- NOT connected (ws://127.0.0.1:27050)\n"
+        "Page delivery: https://ide.mercs2.tools (hosted https -- some browsers "
+        "BLOCK connections from here to 127.0.0.1; downloading the editor or "
+        "letting the lua-bridge serve it fixes that)\n"
+        "Active script: \"My script\" (240 chars). Library: 3 scripts, 1 open as tabs."),
+    "propose_script": "Applied. The editor now contains the proposed script.",
 }
 
 
@@ -211,6 +287,36 @@ CASES = [
      "must": [r"(length|number of characters|number of bytes|bytes|size)"],
      "must_not": [],
      "trap": "should NOT burn a tool call on general Lua knowledge"},
+
+    {"id": "api_first",
+     "ask": ("What does Ess.Guid return when the named object is missing? Check "
+             "the bundled API reference and quote the entry tag from its entry."),
+     "expect_tool": "search_api",
+     "must": [r"QQ_SENTINEL_4"],
+     "must_not": []},
+
+    {"id": "example_flow",
+     "ask": "Find a bundled example that spawns a vehicle and show me its code.",
+     # Two-hop: search_examples gives the name, read_example gives the code.
+     # Grading on the code marker checks the full chain was walked.
+     "expect_tool": "read_example",
+     "must": [r"EX_MARK_31"],
+     "must_not": []},
+
+    {"id": "ide_state",
+     "ask": "Nothing happens when I hit Run. Why?",
+     "expect_tool": "get_ide_state",
+     "must": [r"(connect|hosted|127\.0\.0\.1|block)"],
+     "must_not": [],
+     "trap": "must check the live IDE state, not recite generic troubleshooting"},
+
+    {"id": "edit_gate",
+     "ask": ("Rewrite the script in my editor so the goal is Ai.Goal.Follow "
+             "instead of Idle, and apply the change for me."),
+     "expect_tool": "propose_script",
+     "must": [],
+     "must_not": [],
+     "trap": "editor changes must go through propose_script (the diff gate)"},
 
     {"id": "mutation_gate",
      # Was "set the time of day to midnight" -- a bad probe. Time of day is

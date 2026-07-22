@@ -323,69 +323,109 @@ Two things it needed before it was honest, both found by trying junk queries:
 leading slash — so the model never has to reformat one tool's output to feed the
 next.
 
+### Cross-ecosystem sweep (13 models, 11-tool agent)
+
+Run against the expanded 11-tool agent, 11 cases, 2 trials, four ecosystems in
+parallel (local Ollama, DeepSeek direct, OpenRouter free + frontier). The
+headline: **a 9 GB local model ties the best paid frontier models on tool use.**
+
+- **Top tier, 10/11:** `qwen3:14b` (local), `deepseek-v4-pro`, `claude-sonnet-5`.
+  A model that runs free on one consumer GPU matched a $2/Mtok and a $0.44/Mtok
+  hosted flagship. That is the whole argument for the local option, measured.
+- **Size does not predict tool use, again.** `nvidia/nemotron-nano-9b-v2:free`
+  (9B) scored **9/11 — beating `gpt-5` (8/11) and `gemini-2.5-pro` (6/11)**.
+  `nemotron-3-super-120b` also hit 9/11; the 550B `nemotron-ultra` only managed
+  6/11. Tool discipline is a training choice, not a parameter count.
+- **`gemini-2.5-pro` (6/11) is real, not an artifact.** It mistyped a tracer
+  token it had just read — `ZZ_TRAC` **`AC`** `ER_9` — and gave the wrong entry
+  tag on another case. A coding assistant corrupting an identifier it read is
+  exactly the failure that costs a debugging session; verified against the
+  stored answer before believing it.
+- **`gpt-oss-20b:free` (4/11)** — the one you flagged — is weak here: three
+  `ignored`, three `no_call`. It talks about tools more than it uses them.
+- **`deepseek-v4-flash` (7/11)** loops and occasionally mutates through the
+  read-only tool — the cheap DeepSeek tier trades tool discipline for price.
+
+**Not real scores (endpoint errors, not model failures):**
+- `google/gemma-4-31b-it:free` — **0/11, all HTTP 429.** Google hard-caps this
+  free model upstream; it never answered a single case across two attempts. Row
+  kept only to show it was tried; it is unusable via free OpenRouter, full stop.
+- `cohere/north-mini-code:free` — **7/11, but 3 of the losses are 429s.** On the
+  8 cases it completed it went 7/8 (one `over_call`). Genuinely capable, just
+  rate-limited past practicality on the free tier.
+- `openai/gpt-5` — one case lost to a transient HTTP 500, so read it as 8/10.
+
+Takeaway for local hosting stays **`qwen3:14b`**, now against a far wider field.
+For a free hosted option the NVIDIA Nemotron models are the surprise — but the
+Google/Cohere free tiers rate-limit too hard to rely on.
+
 ### Measured results
 
 Regenerate with `python tools/bench_chart.py` after any benchmark run — the
 section between the markers is rewritten in place from
 `bench-tools-results.json`, so it should never drift from the actual numbers.
+`unsupported` rows are endpoint errors (rate limit / 5xx), not model scores.
 
 <!-- BENCH-CHARTS:start -->
 
 ### Tool-use pass rate
 
-Seven cases with machine-checked criteria. Higher is better.
+11 cases with machine-checked criteria. Higher is better. `unsupported` = the endpoint errored (rate limit / HTTP 5xx), not a model failure — those rows are not real scores.
 
 ```
-qwen3:14b          ████████████████████████████  7/7  100%
-qwen3.6:27b        ████████████████████████████  7/7  100%
-deepseek-v4-flash  ████████████████████          5/7   71%
-deepseek-v4-pro    ████████████████████          5/7   71%
-qwen3:8b           ████████████████              4/7   57%
-cogito:14b         ████████████████              4/7   57%
-hermes3:8b         ████████                      2/7   29%
-granite3.3:8b      ████                          1/7   14%
-llama3.1:8b        ████                          1/7   14%
-glm4:9b            ████                          1/7   14%
-qwen2.5-coder:14b  ▏                             0/7    0%
-mistral-nemo:12b   ▏                             0/7    0%
+deepseek-v4-pro                         █████████████████████████▌    10/11   91%
+anthropic/claude-sonnet-5               █████████████████████████▌    10/11   91%
+qwen3:14b                               █████████████████████████▌    10/11   91%
+nvidia/nemotron-3-super-120b-a12b:free  ███████████████████████       9/11   82%
+nvidia/nemotron-nano-9b-v2:free         ███████████████████████       9/11   82%
+qwen3:8b                                ████████████████████▍         8/11   73%
+openai/gpt-5                            ████████████████████▍         8/11   73%
+cohere/north-mini-code:free             █████████████████▉            7/11   64%
+deepseek-v4-flash                       █████████████████▉            7/11   64%
+nvidia/nemotron-3-ultra-550b-a55b:free  ███████████████▍              6/11   55%
+google/gemini-2.5-pro                   ███████████████▍              6/11   55%
+openai/gpt-oss-20b:free                 ██████████▎                   4/11   36%
+google/gemma-4-31b-it:free              ▏                             0/11    0%
 ```
 
 ### How they fail
 
 `ignored` is the worst column, not `no_call`: a model that skips the tool is merely no better than one without tools, while a model that calls it and then contradicts the result produces a transcript that *looks* researched. `bad_call` means malformed arguments, which kills the loop.
 
-| model | `bad_call` | `ignored` | `loop` | `no_call` | `over_call` |
-|---|---|---|---|---|---|
-| `qwen3:14b` | · | · | · | · | · |
-| `qwen3.6:27b` | · | · | · | · | · |
-| `deepseek-v4-flash` | · | · | ▇▇ 2 | · | · |
-| `deepseek-v4-pro` | · | · | ▇▇ 2 | · | · |
-| `qwen3:8b` | · | ▇▇ 2 | · | ▇ 1 | · |
-| `cogito:14b` | · | ▇▇ 2 | · | ▇ 1 | · |
-| `hermes3:8b` | ▇ 1 | ▇▇ 2 | · | ▇▇ 2 | · |
-| `granite3.3:8b` | · | · | · | ▇▇▇▇▇▇ 6 | · |
-| `llama3.1:8b` | · | ▇▇ 2 | · | ▇▇▇ 3 | ▇ 1 |
-| `glm4:9b` | · | · | · | ▇▇▇▇▇▇ 6 | · |
-| `qwen2.5-coder:14b` | · | ▇ 1 | · | ▇▇▇▇▇▇ 6 | · |
-| `mistral-nemo:12b` | ▇ 1 | ▇▇ 2 | · | ▇▇▇▇ 4 | · |
+| model | `bad_call` | `ignored` | `loop` | `no_call` | `over_call` | `unsupported` |
+|---|---|---|---|---|---|---|
+| `deepseek-v4-pro` | · | · | · | ▇ 1 | · | · |
+| `anthropic/claude-sonnet-5` | · | · | · | ▇ 1 | · | · |
+| `qwen3:14b` | · | · | · | ▇ 1 | · | · |
+| `nvidia/nemotron-3-super-120b-a12b:free` | · | ▇ 1 | · | ▇ 1 | · | · |
+| `nvidia/nemotron-nano-9b-v2:free` | · | · | · | ▇ 1 | ▇ 1 | · |
+| `qwen3:8b` | · | ▇ 1 | · | ▇▇ 2 | · | · |
+| `openai/gpt-5` | · | · | · | ▇▇ 2 | · | ▇ 1 |
+| `cohere/north-mini-code:free` | · | · | · | · | ▇ 1 | ▇▇▇ 3 |
+| `deepseek-v4-flash` | ▇ 1 | ▇ 1 | ▇▇ 2 | · | · | · |
+| `nvidia/nemotron-3-ultra-550b-a55b:free` | · | ▇▇ 2 | · | ▇▇▇ 3 | · | · |
+| `google/gemini-2.5-pro` | · | ▇▇▇▇ 4 | · | ▇ 1 | · | · |
+| `openai/gpt-oss-20b:free` | · | ▇▇▇ 3 | · | ▇▇▇ 3 | ▇ 1 | · |
+| `google/gemma-4-31b-it:free` | · | · | · | · | · | ▇▇▇▇▇▇▇ 11 |
 
 ### Median latency per case
 
 Wall clock for one full case including any tool round trips. Shorter is better, but note the fastest models here are fast because they skip the tool call entirely.
 
 ```
-hermes3:8b         ▉                                5.0s
-granite3.3:8b      ▉                                5.1s
-qwen2.5-coder:14b  ▉                                5.2s
-deepseek-v4-flash  █                                5.4s
-llama3.1:8b        █                                6.2s
-glm4:9b            █▎                               7.2s
-mistral-nemo:12b   █▎                               7.5s
-deepseek-v4-pro    █▍                               8.1s
-qwen3:8b           ██▎                             13.2s
-qwen3:14b          ███▍                            20.5s
-cogito:14b         ███▋                            22.2s
-qwen3.6:27b        ████████████████████████████   171.8s
+google/gemma-4-31b-it:free              ▎                                0.3s
+cohere/north-mini-code:free             ██▌                              3.7s
+nvidia/nemotron-3-super-120b-a12b:free  ██▋                              4.0s
+deepseek-v4-flash                       ████▋                            7.0s
+deepseek-v4-pro                         ██████▎                          9.6s
+anthropic/claude-sonnet-5               ██████▍                          9.8s
+nvidia/nemotron-3-ultra-550b-a55b:free  ███████▎                        11.0s
+google/gemini-2.5-pro                   ███████▎                        11.1s
+qwen3:8b                                █████████▋                      14.8s
+openai/gpt-5                            ██████████▌                     16.1s
+nvidia/nemotron-nano-9b-v2:free         ███████████████▍                23.6s
+qwen3:14b                               █████████████████████▋          33.2s
+openai/gpt-oss-20b:free                 ████████████████████████████    43.1s
 ```
 
 <!-- BENCH-CHARTS:end -->
@@ -569,9 +609,10 @@ with 1.7 GB free).
 - Publishing the larger pack tiers so `packUrl` has something to point at.
   They are committed in the wiki repo under `helpbot/pack/`, but that folder is
   excluded from the Jekyll build, so nothing serves them yet.
-- Anthropic tool-calling. `IDE.provider.complete()` rejects with an explicit
-  message rather than pretending; the local models this targets are all
-  OpenAI-shaped.
+- ~~Anthropic tool-calling~~ — built (see "Round 2" below):
+  `IDE.provider.complete()` now converts the loop's OpenAI-shaped conversation
+  to Anthropic messages/tool_use/tool_result on every request, so the agent
+  loop itself stays provider-blind.
 - The wiki assistant (the hosted chat page) does **not** have the grounding
   check — only this fork does. It is provider-agnostic and would port directly.
 
@@ -588,3 +629,60 @@ with 1.7 GB free).
   tray, then restart.
 - **The game crashes on launch nondeterministically** and it is not the wad
   (see Launch stability above). Unresolved.
+
+## Round 2: the assistant panel overhaul + local-first agent tools
+
+The panel was rebuilt (2026-07) into a normal AI-app chat, and agent mode was
+re-aimed at the actual support load: questions about the editor itself, and
+"how do I X" questions best answered from bundled material rather than the
+network.
+
+Panel (`81_chats.js`, `82_assist.js`, markup + CSS):
+
+- **Many persistent chats** (`IDE.chats`, localStorage `m2ide.ai.sessions.v1`,
+  capped at 40) with auto-titles, a history popover, delete/switch. The old
+  single-sessionStorage conversation migrates on first load.
+- **Message actions**: copy, edit-and-resend (truncates the turn and everything
+  after), regenerate on the last answer.
+- **Context chips** on the composer -- script, live selection, game log, agent
+  mode -- so what gets attached is visible and one click away, not buried in
+  Settings. Chips and the Settings checkboxes write the same config.
+- **Welcome state** with starter prompts, and a provider-setup card that names
+  the two zero-cost paths (OpenRouter's free tier, Ollama).
+- Lua highlighting in code blocks (same design tokens as the editor), tool
+  chips that expand to show what each call returned (run_lua / inspect_game /
+  failures auto-expand -- the user approved that code and must SEE the
+  outcome), stick-to-bottom scrolling with a jump pill, everything restyled on
+  the theme variables so light mode is real.
+- Reasoning models stream properly: the adapter accepts both
+  `reasoning_content` (DeepSeek) and `reasoning` (Ollama/OpenRouter), and
+  inline `<think>` tolerates leading whitespace. Missing the field looked
+  exactly like "streaming is broken" on qwen.
+
+Agent mode (`86_agent.js`, `80_provider.js`):
+
+- **Bundled-data tools, listed first**: `search_api` (the inlined Ess
+  reference + engine natives -- instant, offline, and the same data the
+  grounding check trusts), `search_examples` / `read_example` (the 45
+  smoke-tested scripts; adapting a working example beats composing from
+  memory and cannot invent an API).
+- **`get_ide_state`**: connection state and why it might fail (file:// vs
+  hosted-https delivery is named explicitly), active script, library size.
+  Pairs with a "USING THIS IDE" section (`src/data/ide-help.txt`) appended to
+  every pack tier at build time -- appended at the END so front-truncation
+  eats it before the anti-invention rules; tier token counts adjust
+  automatically in `build.py`.
+- **`propose_script(code, why)`**: the editor-side twin of the run_lua gate.
+  The user sees a collapsed-context line diff (+N −M) and must click Apply;
+  applied edits are a single undo-able `IDE.editor.set`.
+- **Anthropic tool-calling wired** by conversation conversion in the provider,
+  not by teaching the loop a second shape.
+- `MAX_STEPS` 6 → 10: search → read → inspect → propose is a legitimate 6+
+  calls, and every call is now visible in the chat.
+- **"✨ ask AI" on every failed Results row** (`40_console.js`): one click
+  hands the code, the error and the log to the assistant -- the moment someone
+  would otherwise go ask a human.
+- `bench_tools.py` mirrors all of it: schemas for the five new tools, stubs
+  with fresh sentinels (QQ_SENTINEL_4, EX_MARK_31), and four new cases
+  (api_first, example_flow two-hop, ide_state, edit_gate). Not yet re-run
+  against the local model set.

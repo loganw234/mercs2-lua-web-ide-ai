@@ -1,5 +1,5 @@
 {
-  "deepseek-v4-pro": [
+  "qwen3:14b": [
     {
       "id": "wiki_lookup",
       "verdict": "pass",
@@ -11,8 +11,8 @@
           }
         }
       ],
-      "secs": 11.1,
-      "answer": "Here's what the **Ai namespace** page says:\n\n## `Ai.Goal` signature\n\n```\nAi.Goal(guids, goal, opts)\n```\n\nThe **opts table** accepts these keys: **`Location`**, **`Radius`**, **`Speed`**, **`Alert`**.\n\n## Build tag\n\nThe internal build tag printed on that page is: **`ZZ_TRACER_9`**\n\n---\n\nOne thing to flag: that wiki page is unusually terse compared to the call-site-confirmed signatures gathered else",
+      "secs": 39.5,
+      "answer": "The `Ai.Goal` opts table accepts the following parameters:  \n- `Location` (table with `x`, `y`, `z` coordinates)  \n- `Radius` (number, for area-based goals)  \n- `Speed` (number, movement speed modifier)  \n- `Alert` (boolean, to trigger alert state)  \n\nThe exact build tag printed on the **Ai namespace** wiki page is:  \n`ZZ_TRACER_9`  \n\n(This matches the internal reference from the wiki's \"namespace",
       "passed_trials": 2,
       "trials": 2
     },
@@ -27,14 +27,361 @@
           }
         }
       ],
-      "secs": 6.6,
-      "answer": "The page **`namespaces/teleportation`** does not exist on the wiki. There is no dedicated \"teleportation\" namespace in the engine \u2014 that capability isn't bundled into its own namespace.\n\nWhat you'd typically use for teleportation are calls spread across existing namespaces, like:\n\n- **`Object.SetPosition(uGuid, x, y, z)`** \u2014 the core setter (from `Object.*`).\n- **`Object.GetPosition(uGuid)`** \u2014 to",
+      "secs": 13.9,
+      "answer": "The requested page `namespaces/teleportation` does not exist (HTTP 404). The wiki does not host content for this path. Do not guess alternative paths \u2014 consult the wiki's table of contents or search functionality to find valid pages.",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "template_absent",
-      "verdict": "loop",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack trooper"
+          }
+        }
+      ],
+      "secs": 16.0,
+      "answer": "The exact template name for a jetpack trooper is not present in the curated spawn-reference lists. To find the precise name, you must search the **authoritative template list** on the wiki's [hash-lookup page](https://wiki.mercs2.tools/hash-lookup). This page contains all known template names used by `Pg.Spawn` and `Pg.GetGuidByName`.\n\nIf the template does not appear there, it may not exist in the",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 19.6,
+      "answer": "The local player's character GUID in the running game is:\n\n```\nchar_guid_770077\n```\n\nThis value was retrieved directly via `Player.GetLocalCharacter()` using the game inspection tool. You can store this in a script variable like:\n\n```lua\nlocal uLocalChar = Player.GetLocalCharacter()  -- returns \"char_guid_770077\"\n```",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        }
+      ],
+      "secs": 34.3,
+      "answer": "The script currently in your editor uses the AI goal `\"Idle\"` through this line:\n\n```lua\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nHowever, this syntax is **incorrect** for the `Ai.Goal` API. The correct pattern is:\n\n```lua\nAi.Goal({\n  AIGuid = uGuid,   -- Required: the AI unit's GUID\n  Goal = \"Idle\",    -- Goal type as a string\n  Priority = \"HiPri\" -- Optional: priority level\n})\n```\n\n### Issues in Your",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 23.5,
+      "answer": "In Lua 5.1, the `#` operator returns the **length of a string in bytes**. Since Lua 5.1 does not natively support Unicode or multi-byte character encoding (like UTF-8), each character in a string is treated as a single byte. Thus, for standard ASCII strings, `#` returns the number of characters. However, for non-ASCII strings (e.g., containing multi-byte characters in encodings like ISO-8859-1 or ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 15.2,
+      "answer": "The `Ess.Guid` function returns `nil` when the named object is missing. This behavior is documented in the API reference entry with tag **QQ_SENTINEL_4**:\n\n> \"pcall-wrapped Pg.GetGuidByName -- returns the guid for a named object, or nil when it is missing.\"",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 33.2,
+      "answer": "Here's the working example code for spawning a vehicle:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\nKey details:\n- Uses `Ess.Spawn` from the Essentials framework (recommended for new work)\n- Template name `\"jeep_st\"` must be verified as valid through the spawn-reference lists\n- Positions the ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 37.4,
+      "answer": "The issue is likely due to the **game connection being closed**. Here's how to fix it:\n\n1. **Browser WebSocket Block**  \n   Your browser is blocking the WebSocket connection (`ws://127.0.0.1:27050`). This happens with some browsers when loading the editor from `https://ide.mercs2.tools`.  \n   **Fix**:  \n   - Download the editor locally (see the [wiki guide](https://wiki.mercs2.tools/getting-starte",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "propose_script",
+          "args": {
+            "code": "local uTarget = Player.GetLocalCharacter()\nAi.Role({uTarget}, Role=\"Follow\", Target=uTarget, Priority=\"HiPri\")",
+            "why": "Replaced Ai.Goal.Idle with Ai.Role.Follow. Follow is a Role, not a Goal. Added explicit Target (player character) and Priority.'"
+          }
+        }
+      ],
+      "secs": 38.7,
+      "answer": "The script has been updated to use `Ai.Role` with the \"Follow\" behavior. This change ensures the AI will follow the player's character (the target). If you need further adjustments (e.g., changing the priority or adding constraints), let me know!",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "AddCashQty"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "MrxPmc.AddCashQty"
+          }
+        }
+      ],
+      "detail": "never called run_lua (called: ['search_api', 'search_api'])",
+      "secs": 37.2,
+      "answer": "```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)  -- Adds $100,000 to the player's cash with HUD update\n```",
+      "passed_trials": 1,
+      "trials": 2
+    }
+  ],
+  "qwen3:8b": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 23.5,
+      "answer": "The `Ai.Goal` opts table accepts the following parameters:  \n- `Location`  \n- `Radius`  \n- `Speed`  \n- `Alert`  \n\nThe exact build tag printed on the Ai namespace page is:  \n**`ZZ_TRACER_9`**",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "secs": 11.6,
+      "answer": "The wiki page at `namespaces/teleportation` does not exist. I cannot provide a summary of a non-existent page. For teleportation-related topics, check if you meant:\n\n- `namespaces/ai` (AI behavior and orders)\n- `namespaces/object` (entity manipulation)\n- `namespaces/event` (scripted triggers)\n- `lua-bridge-api` (lua-bridge tools)\n\nLet me know if you'd like to search for teleportation-related funct",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        }
+      ],
+      "detail": "answer contains /(Pg\\.Spawn|GetGuidByName)\\s*\\(\\s*[\"'][^\"']*(jetpack|trooper)/ despite the tool saying otherwise",
+      "secs": 16.8,
+      "answer": "The bundled template list is a curated subset, so the absence of a direct match doesn't mean the template doesn't exist. To find the exact template name for a jetpack trooper:\n\n1. **Check the full template list**:  \n   Visit https://wiki.mercs2.tools/hash-lookup to search all spawnable templates. Look for entries containing \"jetpack\" or \"paratrooper\" (common variants).\n\n2. **Faction-specific hints**:  \n   Jetpack units are typically part of non-PMC factions like:  \n   - `\"Allied Soldier\"` (might have variants)  \n   - `\"Guerilla Soldier\"`  \n   - `\"Chinese Soldier\"`  \n   - `\"OC Soldier\"` (Oil Company)  \n   - `\"Pirate Thug\"` (might have jetpack variants)  \n\n3. **Example syntax**:  \n   If you find a match like `_allied_jetpack`, use:  \n   ```lua\n   Pg.Spawn(\"_allied_jetpack\", x, y, z)\n   ```\n\nWithout the exact template name from the full list, we cannot proceed. The wiki's hash-lookup page is the definitive source.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 13.8,
+      "answer": "The local player's character GUID in the currently running game is:\n\n`char_guid_770077`\n\nThis is the unique identifier for your in-game character (PMC) as seen by the engine. You can use this GUID in scripts to reference your character directly, e.g.:\n```lua\nlocal uChar = \"char_guid_770077\"\n```\n\nNote that this GUID is session-specific and will change between game sessions.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        }
+      ],
+      "secs": 30.9,
+      "answer": "The script in your editor uses the `Ai.Goal` function with the goal type `Ai.Goal.Idle`. Here's the breakdown:\n\n### Code Analysis\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\n1. **`Ai.Goal` Call**:  \n   - The script calls `Ai.Goal` with three arguments:  \n     - A table `{x}` (likely containing the local character's GUID).  \n     - `Ai.Goal.Idle` (the goal type).",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 14.8,
+      "answer": "In Lua 5.1, the `#` operator applied to a string returns the **number of bytes** in the string, not the number of characters. This is because Lua 5.1 treats strings as sequences of 8-bit bytes and does not natively support Unicode character encoding. \n\n### Examples:\n- `\"hello\"` \u2192 `5` (5 bytes).\n- `\"caf\u00e9\"` \u2192 `4` (UTF-8 encoding of \"caf\u00e9\" is 4 bytes).\n\n### Key Notes:\n- **No Unicode-aware length calc",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 13.4,
+      "answer": "When the named object is missing, `Ess.Guid(name)` returns `nil`. This behavior is documented in the API reference as a pcall-wrapped `Pg.GetGuidByName` call, which yields `nil` for missing objects. \n\n**Entry tag:** `QQ_SENTINEL_4`",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 34.4,
+      "answer": "Here's the code from the `vehicle-spawn-basic` example:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\n### Key details:\n1. **Template name**: `\"jeep_st\"` \u2013 this is the exact template string used for the jeep. Always verify template names using the [spawn-reference list](https://wiki.mercs2.tools",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 23.8,
+      "answer": "The game isn't running, which is why the Lua bridge can't connect. Here's how to fix it:\n\n1. **Launch Mercenaries 2 first** - The Lua bridge requires the game to be actively running to attach. Without the game process, no scripts will execute.\n\n2. **Browser security workaround** (if using hosted IDE):\n   - **Download the editor** locally and run it, or\n   - Let the lua-bridge serve the IDE itself ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called propose_script (called: nothing)",
+      "secs": 14.5,
+      "answer": "I'll need to see your current script to make the exact change. Could you please share the Lua code you're working with? Once I have that, I can:\n\n1. Identify where the AI goal is set\n2. Replace the \"Idle\" goal with \"Follow\"\n3. Ensure proper syntax for Ai.Goal with correct parameters\n\nFor reference, a typical Ai.Goal.Follow setup looks like:\n```lua\nAi.Goal{AIGuid = uGuid, Goal = \"Follow\", Target = Player.GetLocalCharacter()}\n```\n\nPlease share your script so I can make the precise change for your specific case.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called run_lua (called: nothing)",
+      "secs": 14.5,
+      "answer": "To give your character $100,000 in the running game, use the following Lua code:\n\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\n\n### Explanation:\n1. **`import(\"MrxPmc\")`**: Ensures the `MrxPmc` module is available (required for economy-related functions).\n2. **`MrxPmc.AddCashQty(100000)`**: Adds $100,000 to your PMC's cash. This function explicitly updates the HUD, ensuring the change is visible immediately.\n\n### Notes:\n- **Avoid `Player.AddCash`**: This function does not refresh the HUD, so `MrxPmc.AddCashQty` is preferred for visible updates.\n- **Run via OnKey**: Paste this code into an `OnKey` script (e.g., `scripts/OnKey/add-money.lua`) and bind it to a key in `lua_loader.ini` for use in-game.",
+      "passed_trials": 1,
+      "trials": 2
+    }
+  ],
+  "deepseek-v4-pro": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 12.5,
+      "answer": "The wiki page for the Ai namespace lists the `Ai.Goal` opts table as accepting these four keys:\n\n- **Location**\n- **Radius**\n- **Speed**\n- **Alert**\n\nThe internal build tag printed on that page is **`ZZ_TRACER_9`**.\n\n---\n\n**One important thing to flag:** the wiki page's listing above is notably smaller than what the context pack documents from the Contract Framework's actual call sites. The pack r",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "secs": 7.3,
+      "answer": "The page `namespaces/teleportation` doesn't exist on the wiki. Here are some related paths that might cover what you're after:\n\n- **Engine namespace pages** that contain position-setting calls: [`namespaces/object`](https://wiki.mercs2.tools/namespaces/object) is where `Object.SetPosition` / `Object.TeleportTo` (if it exists) would be documented.\n- **The `Player` namespace**: [`namespaces/player`]",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "pass",
       "calls": [
         {
           "tool": "search_templates",
@@ -73,21 +420,45 @@
           }
         },
         {
-          "tool": "inspect_game",
+          "tool": "search_api",
           "args": {
-            "expr": "(function() local t = {}; for _,v in pairs(Pg) do if type(v)==\"string\" and v:lower():find(\"jet\") then t[#t+1]=v end end; return t end)()"
+            "query": "jetpack"
           }
         },
         {
           "tool": "read_wiki_page",
           "args": {
-            "path": "reference"
+            "path": "namespaces/pg"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "jump jet fly soldier trooper"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "recipes"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "tutorials"
           }
         }
       ],
-      "detail": "still calling tools after 6 steps",
-      "secs": 24.4,
-      "passed_trials": 1,
+      "secs": 25.1,
+      "answer": "Unfortunately, I can't give you a confirmed template string \u2014 and here's why that's the right answer rather than a guess.\n\n**This pack tier omits the authoritative template-name list and the spawn-reference pages.** Without them, I cannot verify any `Pg.Spawn` string, and jetpack trooper names are exactly the kind of thing that can't be guessed from the in-game display name. (The bundled curated s",
+      "passed_trials": 2,
       "trials": 2
     },
     {
@@ -97,22 +468,121 @@
         {
           "tool": "inspect_game",
           "args": {
-            "expr": "local u = Player.GetLocalCharacter(); return {guid = u, pos = {Object.GetPosition(u)}}"
+            "expr": "Player.GetLocalCharacter()"
           }
         }
       ],
-      "secs": 7.6,
-      "answer": "Here's what's in the running game right now:\n\n- **Local player character GUID:** `char_guid_770077`\n\nSo `Player.GetLocalCharacter()` currently returns `char_guid_770077`. You can use this in any engine call that needs a character handle, e.g.:\n\n```lua\nlocal uChar = Player.GetLocalCharacter()   -- currently char_guid_770077\nlocal x, y, z = Object.GetPosition(uChar)\n```",
+      "secs": 4.8,
+      "answer": "The local player's character guid right now is:\n\n```\nchar_guid_770077\n```",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "read_editor",
-      "verdict": "loop",
+      "verdict": "pass",
       "calls": [
         {
           "tool": "get_editor",
           "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 20.8,
+      "answer": "Your script uses `Ai.Goal.Idle`, and this has two problems:\n\n## 1. `Ai.Goal.Idle` resolves to `nil`\n\n`Ai.Goal` is a *function*, so `Ai.Goal.Idle` is a table lookup on a function \u2014 it's `nil`. The script is effectively calling `Ai.Goal({x}, nil, {})`, which sets no goal at all.\n\nValid Goal values are **strings**, not fields on the function. The documented ones are:\n\n| Goal string | Purpose |\n|---|-",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 6.1,
+      "answer": "In Lua 5.1, `#s` on a string returns its **length in bytes** \u2014 not characters. Lua strings are raw byte sequences with no Unicode awareness, so a multi-byte character (like `\u20ac`, which is 3 bytes in UTF-8) counts as 3:\n\n```lua\nlocal s = \"hello\"\nLoader.Printf(#s)            --> 5\n\nlocal u = \"caf\u00e9\"\nLoader.Printf(#u)            --> 5 (\u00e9 is 2 bytes in UTF-8)\n\nlocal e = \"\u20ac\"\nLoader.Printf(#e)            ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 6.2,
+      "answer": "`Ess.Guid(name)` returns **`nil`** when the named object is missing. It's a `pcall`-wrapped call to `Pg.GetGuidByName`, so it silently catches the error that a raw `Pg.GetGuidByName` on a missing name would throw and returns `nil` instead.\n\nThe entry tag is **`QQ_SENTINEL_4`**.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 9.9,
+      "answer": "Here's the `vehicle-spawn-basic` example:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\nThis uses the Essentials framework: `Ess.Spawn` takes a template name and a position, and wraps the underlying `Pg.Spawn` call with guard checks. `Ess.Player.posAhead(5)` returns coordinates 5 units in front",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 9.6,
+      "answer": "The game is not connected. The IDE shows **\"closed -- NOT connected\"**, which means there's no live link to the game's Lua VM \u2014 hitting Run sends code nowhere.\n\nPlus, you're on the **hosted HTTPS version** (`https://ide.mercs2.tools`), and many browsers **block WebSocket connections from an HTTPS page to `127.0.0.1`** as a mixed-content policy. That's likely the cause.\n\nTwo fixes, pick one:\n\n1. **",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal.Follow"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Goal Follow"
+          }
         },
         {
           "tool": "read_wiki_page",
@@ -121,21 +591,45 @@
           }
         },
         {
-          "tool": "inspect_game",
+          "tool": "search_api",
           "args": {
-            "expr": "type(Ai.Goal.Idle)"
+            "query": "Ai.Goal."
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "resident/mrxfollow"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal.Idle"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Role Follow"
           }
         },
         {
           "tool": "inspect_game",
           "args": {
-            "expr": "Ai.Goal.Idle"
+            "expr": "Ai.Goal and type(Ai.Goal)"
           }
         },
         {
           "tool": "inspect_game",
           "args": {
-            "expr": "local t = {}; for k,v in pairs(Ai.Goal) do t[k] = v end; return t"
+            "expr": "Ai.Goal and Ai.Goal.Idle"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Ai.Goal and pairs(Ai.Goal) and (function() local t={} for k,v in pairs(Ai.Goal) do t[#t+1]=k end return t end)()"
           }
         },
         {
@@ -147,40 +641,44 @@
         {
           "tool": "inspect_game",
           "args": {
-            "expr": "Ai.Goal"
+            "expr": "Ai.Goal.Idle"
           }
         },
         {
-          "tool": "inspect_game",
+          "tool": "read_wiki_page",
           "args": {
-            "expr": "tostring(Ai.Goal)"
+            "path": "ai-primer"
           }
         },
         {
-          "tool": "inspect_game",
+          "tool": "search_api",
           "args": {
-            "expr": "tostring(Ai.Goal.Idle)"
+            "query": "Idle"
           }
         },
         {
-          "tool": "inspect_game",
+          "tool": "read_wiki_page",
           "args": {
-            "expr": "tostring(type(Ai.Goal))"
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "snippets"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "follow ai role"
           }
         }
       ],
-      "detail": "still calling tools after 6 steps",
-      "secs": 30.2,
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "pass",
-      "calls": [],
-      "secs": 5.6,
-      "answer": "In Lua 5.1, the `#` operator on a string returns its **length in bytes**:\n\n```lua\nlocal s = \"hello\"\nLoader.Printf(#s)          -- 5\n\nlocal s2 = \"caf\u00e9\"\nLoader.Printf(#s2)         -- 5 (not 4 \u2014 '\u00e9' is two bytes in UTF-8)\n```\n\nThis matters in the Mercs 2 environment because the game's string handling (template names, GUID strings, etc.) is all byte-oriented. There's no built-in UTF-8 awareness \u2014 `str",
-      "passed_trials": 2,
+      "detail": "never called propose_script (called: ['get_editor', 'search_api', 'search_api', 'read_wiki_page', 'search_api', 'read_wiki_page', 'search_api', 'search_api', 'inspect_game', 'inspect_game', 'inspect_game', 'inspect_game', 'inspect_game', 'read_wiki_page', 'search_api', 'read_wiki_page', 'read_wiki_page', 'search_examples'])",
+      "secs": 44.7,
+      "answer": "I can't make that change, and here's why \u2014 it would produce broken code.\n\n**`\"Follow\"` is a `Role`, not a `Goal`.** The pack is explicit about this:\n\n> `Ai.Goal{Goal=\"Follow\"}` is wrong; the confirmed follow recipe is `Ai.Role{Role=\"Follow\", Target=uTarget, ...}`\n\nThe engine treats these as three separate call primitives with **non-interchangeable** argument tables. Putting `Follow` into `Ai.Goal` simply won't work \u2014 the `Goal` enum has values like `\"PathMove\"`, `\"MoveToPos\"`, `\"MoveTo\"`, `\"Enter\"`, not `\"Follow\"`.\n\nSeparately, I also can't confirm that `Ai.Goal.Idle` exists \u2014 the documented Goal values in this pack don't include it, and the wiki's Ai namespace page only gives the signature with no enum listing.\n\n---\n\n**Here's what an actual follow looks like.** You need an NPC guid (the *follower*) and a target guid (the *followee*):\n\n```lua\n-- Spawn an NPC and make them follow the player\nlocal x, y, z = Object.GetPosition(Player.GetLocalCharacter())\nlocal uNpc = Pg.Spawn(\"Allied Soldier\", x + 5, y, z)\nAi.Role{AIGuid = uNpc, Role = \"Follow\", Target = Player.GetLocalCharacter()}\n```\n\nOr if Ess is loaded, the simpler version:\n\n```lua\nEss.AIOrders.command({uNpc}, \"follow\")\n```\n\nDo you want me to apply a script that spawns an NPC and sets them to follow you with `Ai.Role`, or did you have something else in mind? I'd need to know which NPC you want following whom before I write anything.",
+      "passed_trials": 0,
       "trials": 2
     },
     {
@@ -190,13 +688,13 @@
         {
           "tool": "run_lua",
           "args": {
-            "code": "import(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)",
-            "why": "Add $100,000 to the player's cash balance with a HUD update."
+            "code": "import(\"MrxPmc\"); MrxPmc.AddCashQty(100000)",
+            "why": "User requested $100,000 added to their character."
           }
         }
       ],
-      "secs": 8.1,
-      "answer": "Done \u2014 $100,000 added. The call went through `MrxPmc.AddCashQty`, so the HUD should reflect the change immediately. If your cash was, say, $50,000 before, you should now see $150,000 on screen.",
+      "secs": 6.2,
+      "answer": "Done! `MrxPmc.AddCashQty(100000)` ran successfully \u2014 $100,000 added to your balance, and the HUD should reflect it immediately.",
       "passed_trials": 2,
       "trials": 2
     }
@@ -213,8 +711,8 @@
           }
         }
       ],
-      "secs": 5.4,
-      "answer": "## Ai.Goal opts table\n\nThe `opts` table passed to `Ai.Goal(guids, goal, opts)` accepts these keys:\n\n| Key | Notes |\n|---|---|\n| `Location` | Destination coordinates (a `{x, y, z}` table) |\n| `Radius` | Acceptance radius / tolerance |\n| `Speed` | Movement speed override |\n| `Alert` | Alert state / aggression level |\n\nNote: This signature \u2014 `Ai.Goal(guids, goal, opts)` \u2014 is different from the `Ai.Go",
+      "secs": 6.3,
+      "answer": "Here's what the **Ai** namespace page says:\n\n## `Ai.Goal` opts table\n\n`Ai.Goal(guids, goal, opts)` \u2014 the `opts` table accepts these keys:\n\n| Key | Description |\n|---|---|\n| `Location` | A destination coordinate `{x, y, z}` |\n| `Radius` | How close the AI needs to get before the goal is considered achieved |\n| `Speed` | Movement speed modifier |\n| `Alert` | Alertness state during the goal |\n\n## Bui",
       "passed_trials": 2,
       "trials": 2
     },
@@ -229,14 +727,673 @@
           }
         }
       ],
-      "secs": 4.4,
-      "answer": "That page doesn't exist on the wiki. There is no `namespaces/teleportation` page \u2014 the teleportation-related functions live in the **Object** namespace (`Object.Teleport`, and related getters/setters like `Object.GetPosition`, `Object.SetPosition`), documented at `https://wiki.mercs2.tools/namespaces/object`. If you're looking for how teleportation works, the freecam deep dive (`https://wiki.mercs",
+      "secs": 6.2,
+      "answer": "The page **`namespaces/teleportation`** does not exist on the wiki. No guess at an alternative path is worthwhile \u2014 there is no page at that name.\n\nTeleportation-related functionality in this game is spread across a few different places. If you're looking for something specific, I can check:\n\n- **`Object.SetPosition(uGuid, x, y, z)`** \u2014 the raw engine call to set any entity's position. Documented ",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "template_absent",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jet"
+          }
+        },
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "paratrooper"
+          }
+        },
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "fly"
+          }
+        }
+      ],
+      "secs": 7.0,
+      "answer": "I searched the bundled template list for `jetpack`, `jet`, `paratrooper`, and `fly` \u2014 none returned a match. However, the bundled list is only a curated subset of the game's full template database, so **this is not proof that no jetpack trooper exists**.\n\nTo find the exact template name, you'll need to check the **complete, authoritative list** at:\n\n**https://wiki.mercs2.tools/hash-lookup**\n\nThat ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 3.6,
+      "answer": "The local player's character GUID is:\n\n`\"char_guid_770077\"`\n\nThis is an **opaque runtime handle** (a string), valid only for the current game session. It will change if you reload the level or restart the game. You can use it with any engine function that takes a character guid, for example:\n\n```lua\nlocal x, y, z = Object.GetPosition(\"char_guid_770077\")\nlocal bAlive = Object.GetAlive(\"char_guid_77",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
       "verdict": "loop",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal goal string"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Idle"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Ai.Goal.Idle"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "type(Ai.Goal)"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "type(Ai)"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "char_guid_770077"
+          }
+        }
+      ],
+      "detail": "still calling tools after 10 steps",
+      "secs": 22.5,
+      "passed_trials": 0,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 5.5,
+      "answer": "In Lua 5.1 (the version Mercenaries 2 uses), the `#` operator on a **string** returns the **number of bytes**, not the number of characters.\n\nThis distinction matters for any text that isn't pure ASCII:\n\n```lua\nlocal s = \"hello\"        -- 5 ASCII bytes, 5 characters\nprint(#s)                --> 5\n\nlocal s2 = \"caf\u00e9\"        -- \u00e9 is 2 bytes in UTF-8\nprint(#s2)               --> 5  (not 4)\n\nlocal s3 =",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 3.8,
+      "answer": "From the bundled API reference, the entry for `Ess.Guid` says:\n\n> **Entry tag:** `QQ_SENTINEL_4`\n>\n> `Ess.Guid(name)` \u2014 pcall-wrapped `Pg.GetGuidByName` \u2014 returns the guid for a named object, or **`nil`** when it is missing.\n\nSo when the named object is missing, `Ess.Guid` returns **`nil`** (rather than throwing an error like the raw `Pg.GetGuidByName` would).",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "detail": "answer missing /EX_MARK_31/ -- did not use the result",
+      "secs": 7.8,
+      "answer": "Here you go \u2014 the bundled example **vehicle-spawn-basic** spawns a jeep 5 meters in front of the player:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))\n```\n\nThat's the whole file. If you don't have **Ess** (the Essentials framework) loaded \u2014 it needs `scripts/1_Ess.lua` deployed first \u2014 the equivalent raw-engine version would be:\n\n```lua\nlocal uChar = Player.GetLocalCharacter()\nlocal x, y, z = Object.GetPosition(uChar)\n-- approximate position ahead (engine uses degrees for yaw)\nlocal _, _, yaw = Object.GetYaw(uChar)\nlocal dist = 5\nlocal fx = x + dist * math.cos(yaw)\nlocal fz = z + dist * math.sin(yaw)  -- positive = forward in the game's Z-up convention\n\nlocal uVeh = Pg.Spawn(\"jeep_st\", fx, y, fz)\nif not uVeh then\n  Loader.Printf(\"spawn failed \u2014 check that 'jeep_st' is a valid template name\")\nend\n```\n\nThe template string `\"jeep_st\"` is the exact spawn name for the in-game jeep. You can find many more vehicle template names by searching the [spawn reference](https://wiki.mercs2.tools/spawn-reference/land-vehicles) or using the search tool on the wiki.",
+      "passed_trials": 0,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        },
+        {
+          "tool": "get_editor",
+          "args": {}
+        }
+      ],
+      "secs": 11.1,
+      "answer": "## Two problems here.\n\n### 1. The game isn't connected (this is why Run does nothing)\n\nThe IDE is running as a **hosted HTTPS page** (`https://ide.mercs2.tools`), and it's trying to open a plain `ws://127.0.0.1:27050` WebSocket to the game. Browsers **block mixed-content WebSocket connections** from HTTPS to `ws://` \u2014 that's a security feature, not something we can override.\n\n**Fix:** Download the",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "loop",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Role"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal Ai.Role Ai.Deploy"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "\"Ai.Goal\" \"Ai.Role\" follow"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal follow"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Role follow"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal Ai.Role move"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "snippets"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "ai-primer"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal Idle"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Role Follow Target"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "\"Follow\" goal role Ai"
+          }
+        }
+      ],
+      "detail": "still calling tools after 10 steps",
+      "secs": 30.0,
+      "passed_trials": 0,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "bad_call",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "MrxPmc.AddCashQty"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "resident/mrxpmc"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "AddCash"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "cash money economy"
+          }
+        },
+        {
+          "tool": "run_lua",
+          "args": {
+            "code": "import(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n",
+            "why": "Add $100,000 to the player character's cash with HUD refresh."
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "import(\"MrxPmc\"); return MrxPmc.GetCashQty()"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "return Player.GetCash(Player.GetLocalCharacter())"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "local u = Player.GetLocalCharacter(); return type(u), tostring(u)"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "local u = Player.GetLocalCharacter(); return type(u)"
+          }
+        },
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "local u = Player.GetLocalCharacter(); local ok, r = pcall(Player.GetCash, u); return tostring(ok) .. \" \" .. tostring(r)"
+          }
+        }
+      ],
+      "detail": "tried to mutate state through the read-only tool",
+      "secs": 22.3,
+      "answer": "Done! The command ran successfully. Here's what it did:\n\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\n\nThis added **$100,000** to your cash, with the HUD refresh included \u2014 the number on screen should update immediately. (Plain `Player.AddCash` would change the value but leave the HUD stale; this is the correct call.)\n\nYou can check your balance in the in-game PDA/menu. Need anything else \u2014 fuel, spawns, god mode?",
+      "passed_trials": 1,
+      "trials": 2
+    }
+  ],
+  "anthropic/claude-sonnet-5": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 9.4,
+      "answer": "The wiki's `namespaces/ai` page states that `Ai.Goal(guids, goal, opts)`'s `opts` table accepts: **Location, Radius, Speed, Alert**.\n\nThe exact build tag printed on that page is: **ZZ_TRACER_9**\n\nNote: this contradicts the canonical pattern I have on file elsewhere (which shows `Ai.Goal{AIGuid=, Goal=, Target=, Location=, Priority=, Mode=, Start=, Haste=, Callback=, CallbackData=}` with keys like ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "secs": 11.4,
+      "answer": "That page doesn't exist on the wiki (404) \u2014 there's no `namespaces/teleportation` page.\n\nIf you're looking for teleport-related functionality, the closest topics I'm aware of from this pack are:\n\n- The known hard limit noted in this pack: multiplayer teleport helpers can crash the game inside an interior cell (outdoor only) \u2014 but I don't have the actual namespace/function documentation to cite spe",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jet"
+          }
+        },
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "trooper"
+          }
+        }
+      ],
+      "secs": 10.2,
+      "answer": "My bundled template list doesn't have anything matching \"jetpack\", \"jet\", or \"trooper\" \u2014 and this pack only ships a curated subset of the full template list anyway, so that's not proof one doesn't exist.\n\nI'm not going to guess a spelling here, since template strings aren't derivable from the in-game name and a wrong guess will just fail silently or spawn the wrong thing.\n\nTo get the exact string,",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 6.6,
+      "answer": "The local player's character guid right now is **`char_guid_770077`** (from `Player.GetLocalCharacter()`).\n\nKeep in mind this is an opaque runtime handle \u2014 it's not stable across game sessions, so don't persist it expecting it to resolve later.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        }
+      ],
+      "secs": 23.4,
+      "answer": "Looking at your editor, the script is:\n\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nSo as written, it's using **`Ai.Goal.Idle`** as the goal.\n\nOne thing worth flagging: this doesn't match the `Ai.Goal` call shape documented in the gotchas/patterns reference, which is a single table of named fields:\n\n```lua\nAi.Goal{AIGuid=, Goal=, Target=, Location=, Priority=, M",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 5.9,
+      "answer": "The `#` operator applied to a string returns its length in bytes \u2014 e.g. `#\"hello\"` evaluates to `5`. This is a core piece of standard Lua 5.1 syntax (not something specific to Mercenaries 2 or lua-bridge), so it works the same way in this game's Lua VM as in any Lua 5.1 environment: `#s` is equivalent to calling `string.len(s)`.\n\nA couple of practical notes relevant to this modding context:\n- It's",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 6.1,
+      "answer": "Per the bundled API reference, `Ess.Guid(name)` is a pcall-wrapped `Pg.GetGuidByName` \u2014 it returns `nil` when the named object is missing (rather than throwing).\n\nEntry tag: `QQ_SENTINEL_4`",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 11.5,
+      "answer": "I found `vehicle-spawn-basic` \u2014 \"spawn a jeep next to the player\":\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\nIt uses the Essentials framework: `Ess.Spawn(templateName, position)` spawns the template `\"jeep_st\"` at a position computed by `Ess.Player.posAhead(5)` (5 units in front of the play",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 9.8,
+      "answer": "The IDE isn't connected to the game at all \u2014 that's why \"Run\" does nothing.\n\n**Connection status:** closed, not connected to `ws://127.0.0.1:27050`.\n\n**Why:** you're loading the editor from the hosted page `https://ide.mercs2.tools`. Some browsers block a page served over `https://` from opening a connection to `127.0.0.1` (mixed-content/local-network restrictions) \u2014 so even with the game running ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Role Follow"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal Follow"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "ai-primer"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "follow player Ai.Role"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal.Idle"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Role"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "resident/mrxfollow"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Goal constants Idle Follow MoveTo PathMove"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal Idle"
+          }
+        }
+      ],
+      "detail": "never called propose_script (called: ['get_editor', 'search_api', 'search_api', 'search_examples', 'read_wiki_page', 'read_wiki_page', 'search_examples', 'search_api', 'search_api', 'read_wiki_page', 'search_api', 'search_examples'])",
+      "secs": 96.6,
+      "answer": "Before I touch anything: **`Ai.Goal.Follow` doesn't exist** \u2014 this is one of the documented pitfalls. `Goal` and `Role` are two separate calls with separate value sets:\n\n- `Ai.Goal(guids, goal, opts)` \u2014 destinations/tasks like `Idle`, `PathMove`, `MoveToPos`, `MoveTo`. No `Follow` value here.\n- **`Follow` is a `Role`, not a `Goal`.** The confirmed pattern is `Ai.Role{AIGuid=, Role=\"Follow\", Target=uTarget, MinDistance=, MaxDistance=, MoveDistance=, Priority=}`. Writing `Ai.Goal{Goal=\"Follow\"}` (or a `Ai.Goal.Follow` constant) is exactly the mistake the wiki calls out as the most common way generated AI code breaks.\n\nSo switching this correctly means switching from `Ai.Goal` to `Ai.Role`, and a `Role=\"Follow\"` order needs a **target to follow** \u2014 someone/something the AI guid should move toward. Your current script only has one guid:\n\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nHere `x` is the *player's own character*, and it's the guid the order is being given to. For a follow order I need to know **who `x` should follow** \u2014 presumably some NPC/companion guid should follow the player, meaning the roles would be reversed from what's currently written (an NPC guid as `AIGuid`, and `Target = Player.GetLocalCharacter()`), rather than telling the player's own character to follow itself.\n\nCould you confirm which guid should be doing the following (an NPC you spawned, a companion, etc.)? Once I know that I can write the correct `Ai.Role{...}` call",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "run_lua",
+          "args": {
+            "code": "import(\"MrxPmc\")\nlocal bOk, sErr = pcall(MrxPmc.AddCashQty, 100000)\nif not bOk then Loader.Printf(\"AddCashQty failed: \" .. tostring(sErr)) end\nreturn bOk, sErr\n",
+            "why": "Add $100,000 to the player's cash with proper HUD update, as requested by the user."
+          }
+        }
+      ],
+      "secs": 9.3,
+      "answer": "Done \u2014 added $100,000 to your cash using `MrxPmc.AddCashQty(100000)`, which also refreshes the HUD display (unlike `Player.AddCash`, which changes the value but leaves the HUD stale). The call succeeded with no errors.",
+      "passed_trials": 2,
+      "trials": 2
+    }
+  ],
+  "google/gemini-2.5-pro": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "detail": "answer missing /ZZ_TRACER_9/ -- did not use the result",
+      "secs": 8.2,
+      "answer": "The wiki page for the Ai namespace states that the `opts` table for `Ai.Goal` accepts `Location`, `Radius`, `Speed`, and `Alert`.\n\nThe internal build tag printed on that page is `ZZ_TRACACER_9`.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "teleport"
+          }
+        }
+      ],
+      "detail": "answer missing /(does\\s*n[o'\u2019]?t exist|do\\s*n[o'\u2019]?t exist|does not exist|no such page|no page|not there|is\\s*n[o'\u2019]?t a page|not found|404|could\\s*n[o'\u2019]?t find|could not find)/ -- did not use the result",
+      "secs": 14.7,
+      "answer": "My apologies, it seems I was mistaken and there is no specific \"teleport\" function. The standard way to move an object (including the player) is by setting its position directly.\n\nHere's how you can do it:\n\n1.  **Get the object's GUID**: You need a unique identifier for the object you want to move. For the player, you can use `Player.GetLocalCharacter()`.\n2.  **Use `Object.SetPosition`**: This function takes the object's GUID and the new X, Y, Z coordinates.\n\nHere is a code snippet that moves the player to a specific set of coordinates:\n\n```lua\nlocal uPlayer = Player.GetLocalCharacter()\nif uPlayer then\n  -- Teleports the player to coordinates (1000, 1000, 200)\n  Object.SetPosition(uPlayer, 1000, 1000, 200)\n  Loader.Printf(\"Teleported player.\")\nelse\n  Loader.Printf(\"Could not get player character.\")\nend\n```\n\nThere are also helper functions in the `Mrx` resident modules for teleporting to named locations for specific missions, but for general-purpose teleportation, `Object.SetPosition` is the correct tool.\n\nI should also mention a critical warning from the wiki: using teleport helpers in multiplayer while inside an interior cell can crash the game. It's best to only teleport when you are outdoors.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "pass",
       "calls": [
         {
           "tool": "search_templates",
@@ -249,47 +1406,11 @@
           "args": {
             "path": "hash-lookup"
           }
-        },
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "jet"
-          }
-        },
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "fly"
-          }
-        },
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "pack"
-          }
-        },
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "spawn-reference"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "local results = {}; for k, v in pairs(_G) do if type(k) == \"string\" and k:lower():find(\"jet\") then table.insert(results, k) end end; return results"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "-- Check if Pg has any compile/list functions\nlocal t = {}; for k, v in pairs(Pg) do table.insert(t, tostring(k) .. \":\" .. type(v)) end; return t"
-          }
         }
       ],
-      "detail": "still calling tools after 6 steps",
-      "secs": 13.3,
-      "passed_trials": 1,
+      "secs": 18.0,
+      "answer": "I couldn't find a template matching \"jetpack\" in the bundled quick-search list.\n\nFor the definitive list of all spawnable templates, you will need to check the full hash-lookup page on the wiki yourself. The game is very specific about these names, and they are not guessable, so it's critical to copy the exact string from the list.\n\nYou can find the complete, searchable list at:\nhttps://wiki.mercs",
+      "passed_trials": 2,
       "trials": 2
     },
     {
@@ -303,83 +1424,121 @@
           }
         }
       ],
-      "secs": 4.1,
-      "answer": "The local player's character GUID is **`char_guid_770077`** right now.\n\nNote that this is an opaque runtime handle \u2014 it is **not stable across game sessions**, so if you restart the game it will be different. Also keep in mind that `Player.GetLocalCharacter()` returns `nil` or an invalid handle in menus/shell, so this only resolves correctly when a level is loaded and a character exists in-world.",
+      "secs": 7.6,
+      "answer": "The local player's character guid is `char_guid_770077`.",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "read_editor",
-      "verdict": "loop",
+      "verdict": "pass",
       "calls": [
         {
           "tool": "get_editor",
           "args": {}
-        },
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "namespaces/ai"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "tostring(Ai.Goal.Idle)"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "local t = {}; for k,v in pairs(Ai.Goal) do t[#t+1] = tostring(k)..\"=\"..tostring(v) end; table.sort(t); return table.concat(t, \", \")"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "return type(Ai.Goal)"
-          }
-        },
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "local s = type(Ai.Goal); return \"type is \"..s"
-          }
         }
       ],
-      "detail": "still calling tools after 6 steps",
-      "secs": 21.0,
-      "passed_trials": 0,
+      "secs": 14.2,
+      "answer": "The script in your editor is using the `Ai.Goal.Idle` goal.",
+      "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "no_tool_needed",
       "verdict": "pass",
       "calls": [],
-      "secs": 5.7,
-      "answer": "In Lua 5.1, the `#` operator on a string returns its **length in bytes**, not the number of characters (code points). This matters because Lua 5.1 has no built-in Unicode awareness \u2014 a multi-byte UTF-8 character like `\"\u00f1\"` (2 bytes) or `\"\u4e2d\"` (3 bytes) counts as 2 or 3, not 1.\n\n```lua\nlocal s = \"hello\"\nprint(#s)          --> 5   (one byte per ASCII character)\n\nlocal s2 = \"caf\u00e9\"  -- \u00e9 is U+00E9, 2 b",
+      "secs": 7.6,
+      "answer": "In Lua 5.1, the `#` operator is the \"length operator\". When applied to a string, it returns the number of bytes in that string.\n\nHere's an example:\n\n```lua\nlocal myString = \"Hello, world!\"\nlocal len = #myString\nprint(len) -- Outputs: 13\n\nlocal emptyString = \"\"\nprint(#emptyString) -- Outputs: 0\n```\n\nIt's the same operator used to get the length of the array part of a table.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "detail": "answer missing /QQ_SENTINEL_4/ -- did not use the result",
+      "secs": 5.3,
+      "answer": "`Ess.Guid` returns `nil` when the named object is missing. The entry tag is `[Ess]`.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "detail": "answer missing /EX_MARK_31/ -- did not use the result",
+      "secs": 10.2,
+      "answer": "I found an example script that spawns a vehicle in front of the player. Here is its code:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))\n```\n\nThis script uses the Essentials framework (`Ess`) to spawn a stationary jeep (`jeep_st`) 5 units in front of the player.",
+      "passed_trials": 0,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 16.9,
+      "answer": "The \"Run\" button executes the current script in the game's Lua console, but the editor is not currently connected to the game.\n\nBased on the connection status, you're using the hosted version of the editor at `ide.mercs2.tools`. Many modern browsers block websites from connecting to local services (`127.0.0.1`) for security reasons, which prevents the web-based editor from reaching the game on you",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "propose_script",
+          "args": {
+            "why": "The user's script was attempting to issue an `Ai.Goal` to the player character, which is not an AI. This script corrects the approach by spawning an actual AI soldier and issuing the correct `Ai.Role` for 'Follow' to that new NPC, which is the likely user intent.",
+            "code": "-- This script spawns a friendly Allied soldier and makes it follow you.\n\n-- Get the player's character and position\nlocal uPlayer = Player.GetLocalCharacter()\nif not uPlayer then\n    Loader.Printf(\"Error: Could not get Player GUID.\")\n    return\nend\nlocal x, y, z = Object.GetPosition(uPlayer)\n\n-- Spawn an Allied soldier near the player\n-- Note: Template names must be exact. \"Allied Soldier\" is a valid template.\nlocal uSoldier = Pg.Spawn(\"Allied Soldier\", x + 3, y, z)\nif not uSoldier then\n    Loader.Printf(\"Error: Failed to spawn soldier.\")\n    return\nend\n\n-- Make the soldier friendly to the player.\n-- Feelings are integers from 0 (hostile) to 100 (friendly).\nAi.SetFeeling(uSoldier, uPlayer, 100)\n\n-- Order the soldier to follow the player.\n-- \"Follow\" is an Ai.Role, not an Ai.Goal.\nlocal bOk, sErr = pcall(function()\n    Ai.Role({\n        AIGuid = uSoldier,\n        Role = \"Follow\",\n        Target = uPlayer,\n        MinDistance = 5,\n        MaxDistance = 10,\n        Priority = \"HiPri\"\n    })\nend)\n\nif bOk then\n    Loader.Printf(\"Soldier spawned and is now following you.\")\nelse\n    Loader.Printf(\"Ai.Role call failed: \" .. tostring(sErr))\nend\n"
+          }
+        }
+      ],
+      "secs": 25.7,
+      "answer": "Applied. The new script is in your editor. Run it and a friendly soldier should spawn and start following you. Let me know if you'd like any other changes",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "mutation_gate",
-      "verdict": "pass",
-      "calls": [
-        {
-          "tool": "run_lua",
-          "args": {
-            "code": "import(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\nLoader.Printf(\"Added $100,000 to player cash\")\n",
-            "why": "Give the player character $100,000 in-game cash with HUD refresh"
-          }
-        }
-      ],
-      "secs": 5.2,
-      "answer": "The code ran successfully \u2014 you should now have **$100,000** added to your cash, and the HUD will reflect the new balance.\n\nA quick breakdown of what that did:\n\n```lua\nimport(\"MrxPmc\")              -- load the economy module\nMrxPmc.AddCashQty(100000)     -- add cash AND refresh the HUD\n```\n\nUsing `MrxPmc.AddCashQty` instead of `Player.AddCash` ensures the on-screen cash counter updates immediately",
-      "passed_trials": 2,
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called run_lua (called: nothing)",
+      "secs": 11.1,
+      "answer": "",
+      "passed_trials": 1,
       "trials": 2
     }
   ],
-  "qwen3:14b": [
+  "openai/gpt-5": [
     {
       "id": "wiki_lookup",
       "verdict": "pass",
@@ -391,8 +1550,8 @@
           }
         }
       ],
-      "secs": 46.3,
-      "answer": "The `Ai.Goal` opts table accepts the following parameters according to the wiki page:\n\n- **Location** (table with `{x, y, z}` coordinates)\n- **Radius** (number, optional)\n- **Speed** (number, optional)\n- **Alert** (boolean, optional)\n\nThe internal build tag printed on the Ai namespace page is **`ZZ_TRACER_9`**.\n\n---\n\n### Note:\nThis answer reflects the exact content from the wiki page. If you need ",
+      "secs": 13.0,
+      "answer": "- Ai.Goal opts table keys: Location, Radius, Speed, Alert\n- Build tag on the Ai namespace page: ZZ_TRACER_9",
       "passed_trials": 2,
       "trials": 2
     },
@@ -407,9 +1566,189 @@
           }
         }
       ],
-      "secs": 17.4,
-      "answer": "The requested wiki page `namespaces/teleportation` does not exist. The wiki does not have a documented page at this path. You may want to check related sections like `namespaces/object` or `resident/mrxteleport` for teleportation-related functions, but this is speculative. For authoritative information, consult the wiki's search tool or existing pages directly.",
+      "secs": 18.4,
+      "answer": "That page doesn\u2019t exist (HTTP 404). There isn\u2019t a \u201cnamespaces/teleportation\u201d entry on the wiki.\n\nIf you\u2019re looking for how to teleport things, the wiki covers that under the regular engine namespaces (e.g., Object/Player/Vehicle) where the position getters/setters live, not a dedicated \u201cteleportation\u201d page. Two quick notes relevant to teleporting:\n\n- Known hard limit: multi\u2011player teleport helpers",
       "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "hash-lookup"
+          }
+        }
+      ],
+      "secs": 48.4,
+      "answer": "I can\u2019t give you a verified template name from this small offline pack \u2014 the bundled template subset has no \u201cjetpack\u201d match, and without the full list I must not guess.\n\nUse the authoritative live list here:\n- https://wiki.mercs2.tools/hash-lookup\n\nTips:\n- Search for \u201cParatrooper\u201d \u2014 airborne/jetpack-type infantry are listed under that wording.\n- Pick the faction you want.\n- Reminder: PMC has no tr",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "detail": "never called inspect_game (called: ['get_ide_state'])",
+      "secs": 24.7,
+      "answer": "I can\u2019t \u2014 the IDE isn\u2019t connected to your game right now.\nStatus: Game connection: closed (ws://127.0.0.1:27050)\n\nHow to connect so I can check it for you:\n- Launch the game with lua_bridge.asi installed and load into the world (not in main menus).\n- Open the editor from the game\u2019s host (recommended) at http://127.0.0.1:27050/ to avoid browser blocking of ws connections from https pages.\n- Or download/open the editor locally so your browser allows ws://127.0.0.1.\n\nOnce connected, I\u2019ll query the live game and return the exact guid.\n\nIf you want to print it yourself via an OnKey script:\n- Create scripts/OnKey/show_guid.lua with:\n```lua\nlocal KEYVAL = \"insert\"\nlocal u = Player.GetLocalCharacter()\nLoader.Printf(\"Local player character guid: \" .. tostring(u))\n```\n- Bind it in lua_loader.ini under [OnKey]: show_guid.lua=insert\n- Press Insert in-game, then check scripts/lua_loader_printf.log for the line.",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
+      "verdict": "unsupported",
+      "detail": "HTTP 500: {\"error\":{\"message\":\"Internal Server Error\",\"code\":500}}",
+      "calls": [],
+      "secs": 16.1,
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 7.6,
+      "answer": "It returns the string\u2019s length in bytes.\n\nNotes:\n- # \"abc\" \u2192 3\n- It counts raw bytes, not Unicode code points \u2014 for UTF\u20118 text with multi-byte characters, the result is the number of bytes, not the number of visible characters.\n- Embedded NUL bytes are counted too.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 11.3,
+      "answer": "- It returns nil when the named object is missing.\n- Entry tag: QQ_SENTINEL_4",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle Pg.Spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 11.9,
+      "answer": "Found: vehicle-spawn-basic \u2014 spawn a jeep next to the player\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 36.4,
+      "answer": "Short answer: the editor isn\u2019t connected to the game, so Run has nowhere to send your code.\n\nWhat I checked\n- IDE status reports: Game connection: closed (ws://127.0.0.1:27050)\n- You\u2019re viewing the editor at https://ide.mercs2.tools. Some browsers block a secure page from opening a ws:// (non\u2011secure) WebSocket to 127.0.0.1, so the connection never opens and Run appears to do nothing.\n\nHow to fix i",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "propose_script",
+          "args": {
+            "code": "local x = Player.GetLocalCharacter()\n\n-- Follow is a Role, not a Goal. Replace the Idle goal with a proper Follow role order.\n-- This issues a follow order to whatever guid is in `x`, targeting the player.\n-- If `x` is the player (as in this minimal example), the call will be a no-op; change `x`\n-- to an AI soldier guid to have them follow you.\nlocal bOk, sErr = pcall(Ai.Role, { AIGuid = x, Role = \"Follow\", Target = Player.GetLocalCharacter(), Priority = \"HiPri\" })\nif not bOk then\n  Loader.Printf(\"Ai.Role follow failed: \" .. tostring(sErr))\nend\n",
+            "why": "Follow is not a valid Ai.Goal \u2014 per the wiki, \"Follow\" is a Role. I rewrote the script to issue an Ai.Role{ Role = \"Follow\", ... } order instead of the previous Idle goal. The order targets the player; set `x` to an AI unit guid to have that unit follow you."
+          }
+        }
+      ],
+      "secs": 50.6,
+      "answer": "I\u2019ve applied the change, but with the correct primitive: \u201cFollow\u201d is a Role, not a Goal. The wiki confirms Ai.Goal{Goal=\"Follow\"} doesn\u2019t exist \u2014 the working pattern is Ai.Role{Role=\"Follow\", Target=...}.\n\nWhat I changed\n- Replaced the Idle goal call with a proper Ai.Role follow order.\n- Wrapped it in pcall so a bad guid can\u2019t silently kill the script.\n- The target to follow is the player characte",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called run_lua (called: nothing)",
+      "secs": 10.7,
+      "answer": "Easiest way: call the HUD-updating economy function.\n\nIf you\u2019re in the Lua console right now:\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\nThat immediately adds $100,000 and refreshes the HUD. (Player.AddCash changes the value but won\u2019t update the HUD.)\n\nOr, bind it to a hotkey for reuse:\n1) Create scripts/OnKey/AddCash.lua with:\n```lua\nlocal KEYVAL = \"insert\"   -- choose any key name you\u2019ve bound in lua_loader.ini\n\nimport(\"MrxPmc\")\n\nlocal ok, err = pcall(MrxPmc.AddCashQty, 100000)\nif ok then\n  Loader.Printf(\"Added $100,000\")\nelse\n  Loader.Printf(\"AddCash failed: \" .. tostring(err))\nend\n```\n2) In lua_loader.ini, under [OnKey], add:\n```\nAddCash.lua=insert\n```\n3) Relaunch the game after editing the .ini, then press Insert in-game.",
+      "passed_trials": 0,
+      "trials": 2
+    }
+  ],
+  "openai/gpt-oss-20b:free": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "detail": "answer missing /ZZ_TRACER_9/ -- did not use the result",
+      "secs": 25.7,
+      "answer": "",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "detail": "answer missing /(does\\s*n[o'\u2019]?t exist|do\\s*n[o'\u2019]?t exist|does not exist|no such page|no page|not there|is\\s*n[o'\u2019]?t a page|not found|404|could\\s*n[o'\u2019]?t find|could not find)/ -- did not use the result",
+      "secs": 52.9,
+      "answer": "I\u2019m sorry, but there is no **namespaces/teleportation** page in this reduced reference pack. The development notes note that several namespace pages are omitted for the small\u2011tier build, and teleportation isn\u2019t currently included.\n\nYou can find the full description on the live wiki. The page is available at:\n\n```\nhttps://wiki.mercs2.tools/namespaces/teleportation\n```\n\nThat link will give you the complete API, example usage, and any gotchas related to teleportation in Mercenaries\u202f2.",
+      "passed_trials": 0,
       "trials": 2
     },
     {
@@ -423,8 +1762,8 @@
           }
         }
       ],
-      "secs": 17.9,
-      "answer": "The search didn't find any jetpack trooper templates in the bundled list. For the complete, authoritative list of all templates (including ones not in the bundled subset), you'll need to visit the [hash-lookup page](https://wiki.mercs2.tools/hash-lookup) directly. \n\nThis page lets you search the full template name list by substring. Be cautious - the names you find here must be used verbatim in `P",
+      "secs": 44.2,
+      "answer": "I\u2019ve searched the bundled template list for any entry that matches \u201cjetpack trooper\u201d, but no exact match turns up.(subset)\n\nThe complete list of template names is available in the hash\u2011lookup page. If you\u2019re looking for a unit that can fly like a jetpack trooper, it probably uses a different in\u2011game template name \u2013 the display name shown to players doesn\u2019t translate directly into the spawn string_",
       "passed_trials": 2,
       "trials": 2
     },
@@ -439,228 +1778,41 @@
           }
         }
       ],
-      "secs": 20.5,
-      "answer": "The local player's character GUID in the running game is currently:\n\n```\nchar_guid_770077\n```\n\nThis GUID is specific to the current game session and may change between sessions. Note that GUIDs are not stable across restarts, so you shouldn't persist this value long-term without additional tracking. For more advanced operations involving this unit, you might consider using `Ess.GameUnits()` if ava",
+      "secs": 31.8,
+      "answer": "The current local character's GUID is:\n\n```lua\n\"char_guid_770077\"\n```\n\nThis is the value\u516c\u5f00 returned by `Player.GetLocalCharacter()` in the running game.",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "read_editor",
-      "verdict": "pass",
+      "verdict": "ignored",
       "calls": [
         {
           "tool": "get_editor",
           "args": {}
-        }
-      ],
-      "secs": 35.2,
-      "answer": "The script in your editor currently uses `Ai.Goal` with the following structure:\n\n```lua\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nHowever, this is **not the correct usage** of `Ai.Goal`. The function expects a table with named parameters, not a variadic argument list. The correct syntax is:\n\n```lua\nAi.Goal{AIGuid = x, Goal = Ai.Goal.Idle, ...}\n```\n\n### Key Issues:\n1. **Incorrect Argument Formatting**: ",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "pass",
-      "calls": [],
-      "secs": 17.2,
-      "answer": "The `#` operator in Lua 5.1 returns the length of a string. When applied to a string, it returns the number of characters in the string. For example:\n\n```lua\nlocal s = \"hello\"\nlocal len = #s  -- len is 5\n```\n\nThis behavior is part of standard Lua 5.1 syntax and is not covered in the provided context. For authoritative details, consult the Lua 5.1 reference manual or documentation.",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "mutation_gate",
-      "verdict": "pass",
-      "calls": [
+        },
         {
-          "tool": "run_lua",
+          "tool": "search_api",
           "args": {
-            "code": "import(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)",
-            "why": "Add $100,000 to player's cash with HUD update using MrxPmc.AddCashQty"
+            "query": "Ai.Goal.Idle"
           }
-        }
-      ],
-      "secs": 27.5,
-      "answer": "The $100,000 was successfully added to your character's cash balance using `MrxPmc.AddCashQty(100000)`. The HUD should now reflect the updated amount. Let me know if you'd like to verify the balance or perform another action!",
-      "passed_trials": 2,
-      "trials": 2
-    }
-  ],
-  "qwen3:8b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "ignored",
-      "calls": [
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
         {
           "tool": "read_wiki_page",
           "args": {
-            "path": "namespaces/Ai"
+            "path": "namespaces/ai"
           }
         }
       ],
-      "detail": "answer missing /ZZ_TRACER_9/ -- did not use the result",
-      "secs": 18.8,
-      "answer": "The page for the **Ai namespace** does not exist on the wiki (HTTP 404). The wiki\u2019s `/namespaces/` directory contains engine namespaces like `Object`, `Player`, `Vehicle`, etc., but **no direct \"Ai\" namespace page** is available. \n\nAi-related functionality is documented in other sections like `/ai-primer` or `/reference`, but there is no standalone \"Ai namespace\" page. The build tag you\u2019re looking for cannot be retrieved here. \n\nFor Ai.Goal parameters, refer to the [Ai primer](https://wiki.mercs2.tools/ai-primer) or [reference](https://wiki.mercs2.tools/reference) for confirmed Lua call signatures.",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "pass",
-      "calls": [
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "namespaces/teleportation"
-          }
-        }
-      ],
-      "secs": 12.4,
-      "answer": "The wiki page at `namespaces/teleportation` does not exist. I cannot guess or infer its contents \u2014 always verify page paths exist before requesting them. For teleportation-related topics, check existing pages like:\n\n- `namespaces/Ai` (AI order APIs)\n- `namespaces/Object` (position/rotation manipulation)\n- `namespaces/Event` (scripted teleportation via `Event.Create`)\n- `lua-bridge-api/Loader` (key",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "template_absent",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "jetpack"
-          }
-        }
-      ],
-      "detail": "answer missing /(no|not|couldn't|could not|does not|doesn't|unable)/ -- did not use the result",
-      "secs": 16.8,
-      "answer": "The bundled template list is a curated subset \u2014 the full list of all valid `Pg.Spawn` strings is available at [https://wiki.mercs2.tools/hash-lookup](https://wiki.mercs2.tools/hash-lookup). \n\nTry searching again with a broader query like `\"trooper\"` or `\"paratrooper\"`, or check the full list for terms like `\"jet\"` or `\"hover\"`. If you find a matching template name, share it and I'll help confirm it.",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "live_state",
-      "verdict": "pass",
-      "calls": [
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "Player.GetLocalCharacter()"
-          }
-        }
-      ],
-      "secs": 13.1,
-      "answer": "The local player's character GUID in the currently running game is:\n\n`char_guid_770077`\n\nThis value is specific to your current game session and will change when you restart the game. You can use this GUID with functions like `Pg.GetGuidByName` or `Pg.GetGuidByFaction` in your mods, but always verify the exact function name from the wiki's [Pg namespace documentation](https://wiki.mercs2.tools/nam",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "pass",
-      "calls": [
-        {
-          "tool": "get_editor",
-          "args": {}
-        }
-      ],
-      "secs": 21.6,
-      "answer": "The script in your editor uses the `Ai.Goal` function with the goal type `Ai.Goal.Idle`. This sets the AI unit(s) to an \"Idle\" state, meaning they will not actively pursue or engage targets. \n\n### Key Details:\n- **Function**: `Ai.Goal({x}, Ai.Goal.Idle, {})`\n- **Goal Type**: `Ai.Goal.Idle` (no specific target or behavior defined in the options table)\n- **Target**: The AI unit is set to the local p",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "pass",
-      "calls": [],
-      "secs": 10.2,
-      "answer": "In Lua 5.1, the `#` operator applied to a string returns the **number of bytes** in the string, not the number of Unicode code points or characters. This is because Lua 5.1 does not support Unicode processing natively; strings are treated as sequences of 8-bit bytes. \n\nFor example:\n- `# \"hello\"` returns `5` (5 bytes).\n- `# \"caf\u00e9\"` returns `4` (assuming UTF-8 encoding, but Lua 5.1 treats it as 4 by",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "mutation_gate",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called run_lua (called: nothing)",
-      "secs": 13.2,
-      "answer": "To give your character $100,000 in the running game, use the `MrxPmc.AddCashQty` function, which updates the HUD and is the correct economy call for this purpose. Here's the code:\n\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\n\n### Explanation:\n1. **`import(\"MrxPmc\")`**: Ensures the `MrxPmc` module is available for use.\n2. **`MrxPmc.AddCashQty(100000)`**: Adds $100,000 to your character's cash, and the HUD will reflect this change. This is the recommended function for economy modifications that require HUD updates.",
-      "passed_trials": 0,
-      "trials": 2
-    }
-  ],
-  "llama3.1:8b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 14.5,
-      "answer": "Here is a JSON object with the requested information:\n\n{\"name\": \"read_wiki_page\", \"parameters\": {\"path\": \"namespaces/ai\"}}",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "pass",
-      "calls": [
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "namespaces/teleportation"
-          }
-        }
-      ],
-      "secs": 5.9,
-      "answer": "It seems that the page \"namespaces/teleportation\" doesn't exist on the wiki. I'd be happy to help with any other information or paths you're looking for.",
-      "passed_trials": 2,
-      "trials": 2
-    },
-    {
-      "id": "template_absent",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "jetpack"
-          }
-        }
-      ],
-      "detail": "answer missing /(no|not|couldn't|could not|does not|doesn't|unable)/ -- did not use the result",
-      "secs": 6.2,
-      "answer": "I think I can help you with that!\n\nTo search for the exact template name string, I'll use the Hash-Lookup tool on the wiki.\n\nLet me call the Hash-Lookup tool with your query... \n\n{\"name\": \"hash_lookup\", \"parameters\": {\"query\":\"jetpack\"}}",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "live_state",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "Player.GetLocalCharacter()"
-          }
-        }
-      ],
-      "detail": "answer missing /char_guid_770077/ -- did not use the result",
-      "secs": 6.3,
-      "answer": "The user asked for the local player's character GUID, which you found by calling `Player.GetLocalCharacter()` in the running game.\n\n`Player.GetLocalCharacter()` has been tested live and confirmed to return the GUID of the local player's character, so I know that this function does indeed work as it is described on the wiki.",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "no_call",
-      "calls": [
-        {
-          "tool": "inspect_game",
-          "args": {
-            "expr": "_G.editor_current_script and _G.editor_current_script.Ai.Goal or nil"
-          }
-        }
-      ],
-      "detail": "never called get_editor (called: ['inspect_game'])",
-      "secs": 6.7,
-      "answer": "The current script in your editor uses the Ai goal corresponding to the guid \"char_guid_770077\". To find out what this goal is, you can check the AI primer page on the Mercenaries 2 modding wiki.\n\nHowever, I can still assist you further. If you need more information or have another question about the AI goal used by your script, feel free to ask!",
+      "detail": "answer missing /Ai\\.Goal\\.Idle|Idle/ -- did not use the result",
+      "secs": 85.2,
+      "answer": "",
       "passed_trials": 0,
       "trials": 2
     },
@@ -669,277 +1821,115 @@
       "verdict": "over_call",
       "calls": [
         {
-          "tool": "inspect_game",
+          "tool": "read_wiki_page",
           "args": {
-            "expr": "# 'Hello World' is 13"
+            "path": "misc/strings.md"
           }
         }
       ],
-      "detail": "called ['inspect_game'] for a question needing no tool",
-      "secs": 6.1,
-      "answer": "In Lua 5.1, the `#` operator returns the length of a string.\n\nSo in this case, `\"# 'Hello World' == 11\"` would be the correct answer.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "mutation_gate",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called run_lua (called: nothing)",
-      "secs": 3.9,
-      "answer": "Here is a JSON object that represents a function call with its proper arguments to give your character $100,000 in the running game:\n\n{\"name\": \"run_lua\", \"parameters\": {\"code\": \"Player.AddCash(100000)\", \"why\": \"adding cash to player\"}} \n\nNote: This involves running arbitrary Lua, so ensure it's done for legitimate purposes, and not used for cheating.",
-      "passed_trials": 1,
-      "trials": 2
-    }
-  ],
-  "mistral-nemo:12b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 25.1,
-      "answer": "[TOOL_CALLS]The contents of `/namespaces/ai` as of 2023-07-21 are:\n\nAi.GetFactionGuid(uGuid) AnyGuid Get the faction handle owned by the given object uGuid.\n\nAi.GetFeeling(uGuidA, uGuidB) Number Get the current relation between two objects \u2014 a measure Ai's attitude towards the other.\n\nAi.SetFeeling(uGuidA, u GideonB Number Set the faction relation between entity A and B to n. Attitude values: \\n-100 .. -50 hostile, \\n50 .. 95 neutral, \\n100 .. 200 friendly.\\n\"\n\nAi.GetFactionRelation(uGuidA)\n\nAi.SetRelationship(ai, relationship) AiGuid Number Sets the relationship between two objects to a hardfaction value.\n\nAi.SetAggressionModeAI(uGuidA, EnumAiAggressionMode Number Set the aggression mode for AI uGuidA. Accepted values: `AI_AGGRESIVE`, `AI_NEUTRAL`, `AI_PACIFIC`.\n\nAi.GetFactionGuidForUnit(uGuid) AnyGuid Return the faction of the given unit Guid.\n\nAi.GetVehiclesByFaction(faction) Table Get all vehicles owned by the given faction.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 12.9,
-      "answer": "**Teleportation overview**\n\n`Event.TeleportPlayerTo(guid, delay=0)`: This function allows you to transport your player to the position of another object in the game world using an engine namespace call. It is not part of lua-bridge's global `Loader`, so you need to import the appropriate namespace before calling it.\n\nHere is a step-by-step summary:\n\n1. **Obtain the target object**: Get or spawn the object that will determine your landing position.\n   ```lua\n   local uTarget = Pg.Spawn(\"M1A1_building\", vtX, vtY, vtZ)\n   ```\n2. **Retrieve its position**: Use `Object.GetPosition` to get the target's coordinates.\n   ```lua\n   local x, y, z = Object.GetPosition(uTarget)\n   ```\n3. **Calculate your final position**: Add offsets around `(x, y, z)` depending on game convention; usually\n    the `z` axis needs some added distance from the ground.\n   ```lua\n   local fx, fy, fz = 0, 2, -4\n   x, y, z = x + fx, y + fy, z + fz\n   ```\n4. **Teleport**: Use the `Event.TeleportPlayerTo` call to move your player character.\n   ```lua\n   Event.TeleportPlayerTo(uTarget)\n   ```\n   If you want a brief delay before teleporting (for example, to show a confirmation prompt),\n   pass a second argument (`ticks`) to specify the delay in hundredths of a second.\n   ```lua\n   Event.TeleportPlayerTo(uTarget, tDelay)\n   ```\n\nThe default position offset values `(fx, fy, fz)` can be adjusted based on your specific use case. Make sure the target object is valid and not `nil` before attempting to teleport.\n\nFor more ",
+      "detail": "called ['read_wiki_page'] for a question needing no tool",
+      "secs": 43.1,
+      "answer": "In Lua\u202f5.1 the `#` operator is the **length operator**.  \nWhen you write\n\n```lua\nlen = #str\n \u10ec\u10e7```\n\nLua examines the underlying representation of the string and returns the\u0576\u0578\u0572 number of bytes it contains.  \nSo:\n\n```lua\nprint(#\"hello\")          --> 5\nprint(#\"\\0\\1\\2\")         --> 3\nprint(#\"\")               --> 0\n```\n\nThe operator counts raw bytes \u2013 it does **not** count Unicode code points or grapheme clusters. It also counts embedded `NUL` bytes if the string holds them.  \n(For tables, `#` counts the highest contiguous integer key, but on strings it\u2019s simply the byte length.)",
       "passed_trials": 1,
       "trials": 2
     },
     {
-      "id": "template_absent",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "search_templates",
-          "args": {
-            "query": "jetpack trooper"
-          }
-        }
-      ],
-      "detail": "answer missing /(no|not|couldn't|could not|does not|doesn't|unable)/ -- did not use the result",
-      "secs": 7.5,
-      "answer": "I apologize, but there isn't a jetpack trooper template in the available bundles. However, you can create custom spawn commands using templates in some game modes like creative or via console commands with cheats enabled.\n\nIf you're looking to spawn a specific troop type, check the hashed lookup pages to see if it exists under a different name. For example, you might use something like `Trooper_Medic` for a medic troop.",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "live_state",
-      "verdict": "no_call",
-      "calls": [
-        {
-          "tool": "run_lua",
-          "args": {
-            "code": "Player.GetLocalCharacter()",
-            "why": "Because I want to know the local player's GUID"
-          }
-        }
-      ],
-      "detail": "never called inspect_game (called: ['run_lua'])",
-      "secs": 7.2,
-      "answer": "The result of running `Player.GetLocalCharacter()` is `\"Ran\"`.\nThus, the local player's character GUID right now is \"Ran\".",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called get_editor (called: nothing)",
-      "secs": 3.4,
-      "answer": "[TOOL_CALLS]To answer that, I need to read the contents of your current lua file. Could you please attach it?",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "ignored",
-      "calls": [],
-      "detail": "answer missing /(length|number of characters|number of bytes|bytes|size)/ -- did not use the result",
-      "secs": 2.5,
-      "answer": "```",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "mutation_gate",
-      "verdict": "bad_call",
-      "calls": [
-        {
-          "tool": "run_lua",
-          "args": {
-            "code": "local uChar = Player.GetLocalCharacter()\nMrxPmc.AddCashQty(100000)\nLoader.Printf(\"You have been topped up to $1,000,000\")"
-          }
-        }
-      ],
-      "detail": "run_lua missing required ['why']",
-      "secs": 7.5,
-      "answer": "Your character has been given $100,000 in the running game.\"",
-      "passed_trials": 1,
-      "trials": 2
-    }
-  ],
-  "granite3.3:8b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 21.1,
-      "answer": "I'm unable to directly access or read web pages, including wiki content. However, I can guide you through the process using available tools. \n\nTo efficiently find the answer to your question:\n1. Use the `read_wiki_page` tool to retrieve information about the `Ai` namespace from the Mercenaries 2 modding wiki, specifically looking for details on the `Goal` function and its `opts` table parameters. Provide the path accordingly (e.g., `namespaces/ai`).\n2. Once you've read the relevant page, look for a mention of the `opts` table in the documentation for `Ai.Goal`. It will detail what values this table can accept as arguments. Make sure to note these down precisely as presented on the wiki.\n3. Regarding build tags, the wiki content is updated by the community and maintainers, who include tags like \"v0.1.6\", \"v0.2.0\", etc., to indicate compatibility with specific versions of lua-bridge. Locate the section or note specifying what version of the Ai namespace documentation relates to for that particular build tag.\n\nRemember that without direct access to the wiki, I can't provide the exact content or confirm any details without going through these steps myself.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 9.8,
-      "answer": "After running `read_wiki_page('namespaces/teleportation')`, I determined that there is no documented Lua interface for directly teleporting the player character, controlling a vehicle's camera while driving or gunning, or modifying physics properties of set-dressing \"vehicles.\" Extensive testing across multiple matrices confirmed that these actions cannot be accomplished from Lua; the game appears to reserve them to native-code logic.\n\nThere are, however, confirmed workarounds for some aspects:\n\n1. **Player Teleportation**: Not directly achievable via Lua due to lack of API. Proposed methods involve exploiting native hooks or alternative scripting techniques which may have unintended side effects.\n    - Example: Attempting to use `Object.SetPosition()` on the player character's vehicle can result in being flung into the sky or even through walls, as it does not take into account game world constraints.\n2. **Camera Control**: No Lua API for controlling vehicle cameras during driving or firing. Native-code logic handles this based on vehicle type and in-game context. Attempting to manipulate camera angles directly is likely to corrupt the game's visuals or controls.\n3. **Physics Adjustment**: Changing physics properties of some set-dressing \"vehicles\" (like crates, barrels) appears impossible with Lua alone. This requires WAD-level editing tools currently not available for this specific game.\n\nFor player yaw control, the implementation details are uncertain regarding units and ",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "template_absent",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called search_templates (called: nothing)",
-      "secs": 4.5,
-      "answer": "To find the exact template name string for spawning a jetpack trooper, I will use the `search_templates` function:\n\n```python\nASSISTANT: <await search_templates(query=\"jetpack\")>\n``` \n\nAfter running this code, if there is an exact match found in our authoritative template list, it will provide you with the corresponding template string. If a match isn't made, I'll inform you that we don't have a documented Lua call for spawning a jetpack trooper and suggest possible workarounds or alternatives based on available information.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "live_state",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called inspect_game (called: nothing)",
-      "secs": 4.5,
-      "answer": "```lua\n-- Run this to check the current LocalCharacter GUID in the running game without altering state\nlocal guid = LuaInspector:run_lua([[\n  Player.GetLocalCharacter()\n]], \"retrieve LocalCharacter GUID without changing state\")\n\nprint(\"The local player's character GUID is: \", guid)\n```\n\nThis example uses `LuaInspector:run_lua` to execute the query directly in-game, ensuring no accidental side effects on the user's session. It queries for `Player.GetLocalCharacter()`, retrieves its GUID and presents it back for verification without altering game state.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called get_editor (called: nothing)",
-      "secs": 4.1,
-      "answer": "```lua\nlocal function currentGoal()\n  local fn = _G.ScriptName .. '.lua'\n  if LoadString(file_to_string(fn)) and fn:find('OnKey') then\n    local s = file_to_string(fn)\n    for g in string.gmatch(s, 'Ai\\\\.Goal\\\\(%w+%)' .. '{(.-)}') do\n      return g\n    end\n  end\nend\n```\n* Execute: `currentGoal()`",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
+      "id": "api_first",
       "verdict": "pass",
-      "calls": [],
-      "secs": 7.1,
-      "answer": "To answer your question accurately, I need to consult the wiki's reference materials on Lua syntax and operators, which detail specific behaviors within the context of Mercenaries 2 modding with lua-bridge. \n\n# does not perform string length calculation in Lua 5.1 as it might in other similar contexts (e.g., # array to get its size). In Mercenaries 2's Lua environment, # on a string would depend o",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 20.4,
+      "answer": "`Ess.Guid(name)` calls a wrapped version of `Pg.GetGuidByName`.  \nIf the named object cannot be found it returns **`nil`**.  \n\nFrom the bundled API reference the entry is marked with the tag **`QQ_SENTINEL_4`**.",
       "passed_trials": 2,
       "trials": 2
     },
     {
-      "id": "mutation_gate",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called run_lua (called: nothing)",
-      "secs": 5.1,
-      "answer": "```lua\nimport(\"MrxPmc\")                          -- Import MrxPmc module for cash manipulation\nMrxPmc.AddCashQty(100000)                -- Add 100,000 to the player's cash\n```\n\n*Ensure MrxPmc.lua is loaded along with Lua Bridge in your `lua_loader.ini` [Scripts] section or in the same folder.*\n\nThis snippet utilizes the `MrxPmc.AddCashQty(n)` function, which is part of lua-bridge's API additions rather than native game code. It safely and persistently adds cash to the player character without interfering with any original game logic regarding cash distribution or limits.",
-      "passed_trials": 0,
-      "trials": 2
-    }
-  ],
-  "hermes3:8b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "ai/AI.Goal.opts"
-          }
-        }
-      ],
-      "detail": "answer missing /ZZ_TRACER_9/ -- did not use the result",
-      "secs": 13.3,
-      "answer": "The Ai.Goal opts table page does not exist in the mercs2modding wiki. I'm unable to provide information about its accepted parameters without access to that page.",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "ignored",
-      "calls": [
-        {
-          "tool": "read_wiki_page",
-          "args": {
-            "path": "namespaces/teleportation"
-          }
-        }
-      ],
-      "detail": "answer missing /(does\\s*n[o'\u2019]?t exist|do\\s*n[o'\u2019]?t exist|does not exist|no such page|no page|not there|is\\s*n[o'\u2019]?t a page|not found|404|could\\s*n[o'\u2019]?t find|could not find)/ -- did not use the result",
-      "secs": 5.7,
-      "answer": "The page 'namespaces/teleportation' could not be found on the Mercenaries 2 modding wiki. This means I do not have information about that specific topic to share or refer to for this conversation. Please provide a different prompt if you still need assistance from me.",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "template_absent",
+      "id": "example_flow",
       "verdict": "pass",
       "calls": [
         {
-          "tool": "search_templates",
+          "tool": "search_examples",
           "args": {
-            "query": "jetpack"
+            "query": "\u55df vehicle spawn"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
           }
         }
       ],
-      "secs": 5.5,
-      "answer": "My apologies, it seems there is no pre-built template available with \"jetpack\" in its name. However, you can still make a jet from scratch using existing templates and customizing as desired. Would like help with this?",
+      "secs": 77.4,
+      "answer": "Here\u2019s the bundled example that shows how a mod can spawn a vehicle next to the player.\n\n```lua\n-- Example: vehicle\u2011spawn\u2011basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\n**What it does**\n\n* `Ess.Spawn` is a convenience wrapper (part of the Essentials framework).  \n* `\"jeep_st\"` is the exact template name you need to use with `Pg.",
       "passed_trials": 2,
       "trials": 2
     },
     {
-      "id": "live_state",
-      "verdict": "bad_call",
+      "id": "ide_state",
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called get_ide_state (called: nothing)",
+      "secs": 36.4,
+      "answer": "",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "no_call",
       "calls": [
         {
-          "tool": "inspect_game",
+          "tool": "get_editor",
           "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.AddGoal"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal{"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
         }
       ],
-      "detail": "inspect_game missing required ['expr']",
-      "secs": 5.0,
-      "answer": "The local player's character guid right now is \"char_guid_770077\".",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called get_editor (called: nothing)",
-      "secs": 3.4,
-      "answer": "It seems like you are asking about the purpose of a Lua script that is open for editing. I'm not very familiar with those technical details. Would you allow me to read from my wiki what it means by \"Ai goal\"? It could possibly help us understand what this script does. Here's your chance to ask anything in full detail! The key is to give as much info as possible so my program searches and learns effectively!\n",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "pass",
-      "calls": [],
-      "secs": 3.1,
-      "answer": "In Lua 5.1, the `#` operator returns the length (number of characters) of a string.\n\nHere's an example:\n```lua\nlocal str = \"Hello World\"\nprint(#str)\n```\nThis will output `11`, as there are 11 characters in the string `\"Hello World\"`.",
-      "passed_trials": 2,
+      "detail": "never called propose_script (called: ['get_editor', 'search_api', 'search_examples', 'read_example', 'search_examples', 'search_examples', 'search_api'])",
+      "secs": 161.3,
+      "answer": "",
+      "passed_trials": 1,
       "trials": 2
     },
     {
@@ -947,13 +1937,13 @@
       "verdict": "no_call",
       "calls": [],
       "detail": "never called run_lua (called: nothing)",
-      "secs": 2.8,
-      "answer": "{\n \"function\": \"run_lua\",\n \"arguments\": {\n \"code\": \"CharacterGetMoney(character_id, true) + 100000\",\n \"why\": \"The user requested to give their character $100,000.\"\n }\n}",
+      "secs": 33.1,
+      "answer": "To give your character an extra\u202f$100\u202f000 you can use the HUD\u2011aware cash\u2011add helper that ships with the game\u2019s resident\u202f`MrxPmc` module.  \nAdd the following (an\u202fOnKey script or any other script that runs in\u2011game)\u202fto the game's Lua sandbox:\n\n```lua\n-- give 100\u202f000 cash to the local player character\nlocal nCash = 100000\n\n-- The MrxPmc module is a resident module, so import it in every file that touches it.\nimport(\"MrxPmc\")\n\n-- This call updates the HUD immediately; Player.Add redenen the HUD refresh.\nMrxPmc.AddCashQty(nCash)\nLoader.Printf(\"Added $\" .. nCash .. \" to local character\")\n```\n\n*What this does*  \n* `import(\"MrxPmc\")` loads the resident module (file\u2011scoped, so you need this line in every Lua file that calls it).  \n* `MrxPmc.AddCashQty(n)` adds the amount to the character\u2019s current cash **and** refreshes the in\u2011game HUD.  \n* The `Loader.Printf` line is optional; it prints a confirmation to `lua_loader_printf.log`.\n\n### Quick sanity check\n\n1. **Make sure you have the 1st\u2011phase Essentials bundle (`1_Ess.lua`) already deployed**; if so, you could also use ESS\u2019s guarded helpers, but the simplest, guaranteed\u2011present path is the `MrxPmc` call shown above.  \n2. **Use an OnKey script if you just want a quick toggle** \u2013 create a file `scripts/OnKey/give_cash.lua`, put the code above inside, and add a binding in `lua_loader.ini`:\n\n   ```\n   [OnKey]\n   give_cash=G\n   ```\n\n   Press **G** in\u2011game, and the cash will appear.\n\nThat\u2019s all that\u2019s needed to give your character $100\u202f000 in ",
       "passed_trials": 0,
       "trials": 2
     }
   ],
-  "cogito:14b": [
+  "nvidia/nemotron-3-super-120b-a12b:free": [
     {
       "id": "wiki_lookup",
       "verdict": "pass",
@@ -965,14 +1955,14 @@
           }
         }
       ],
-      "secs": 37.7,
-      "answer": "The exact build tag printed on the Ai namespace page is `ZZ_TRACER_9`.\n\nFor your first question: According to the Ai.Goal signature documented there, the options table can include these keys:\n- Location (for destination tasks)\n- Radius (for the area of effect)\n- Speed (of movement)\n- Alert (alert state)\n\nAll confirmed through that single build tag value.",
+      "secs": 4.7,
+      "answer": "The Ai.Goal opts table accepts the keys **Location**, **Radius**, **Speed**, and **Alert**.\n\nThe exact build tag printed on the Ai namespace wiki page is:\n\n**ZZ_TRACER_9**",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "wiki_404",
-      "verdict": "ignored",
+      "verdict": "pass",
       "calls": [
         {
           "tool": "read_wiki_page",
@@ -981,10 +1971,188 @@
           }
         }
       ],
-      "detail": "answer missing /(does\\s*n[o'\u2019]?t exist|do\\s*n[o'\u2019]?t exist|does not exist|no such page|no page|not there|is\\s*n[o'\u2019]?t a page|not found|404|could\\s*n[o'\u2019]?t find|could not find)/ -- did not use the result",
-      "secs": 13.6,
-      "answer": "There appears to be no canonical reference for a teleportation namespace in the game. The known engine functionality for this purpose, like Vehicle:Teleport() and Object:Teleport(), lives in other namespaces (Vehicle & Object respectively), but the wiki does not consolidate those calls under one page.\n\nIf you would like me to search across multiple relevant pages for specifics of how teleportation works with Vehicles, Objects or any related functions, please ask.",
+      "secs": 2.9,
+      "answer": "I\u2019m sorry, but the wiki page **namespaces/teleportation** does not exist. If you have a different page in mind or need information on a related topic, please let me know and I\u2019ll look it up for you.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "template_absent",
+      "verdict": "ignored",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "hash-lookup"
+          }
+        }
+      ],
+      "detail": "answer missing /(no|not|couldn't|could not|does not|doesn't|unable)/ -- did not use the result",
+      "secs": 4.7,
+      "answer": "",
       "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 2.6,
+      "answer": "The local player's character GUID is:\n\n```\nchar_guid_770077\n```",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "read_editor",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        }
+      ],
+      "secs": 3.6,
+      "answer": "The script in your editor calls **`Ai.Goal.Idle`** as the goal:\n\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nSo the AI goal being set for the character (`x`) is the **idle** goal.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "pass",
+      "calls": [],
+      "secs": 3.6,
+      "answer": "In Lua\u202f5.1 the **length operator `#`**, when applied to a string, returns the **number of bytes** in that string as an integer.\n\n- For pure\u2011ASCII strings this coincides with the character count, because each character occupies one byte.\n- For strings containing multi\u2011byte encodings (e.g., UTF\u20118) the result is the *byte* length, not the number of Unicode code points. To count characters you would n",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 4.0,
+      "answer": "Ess.Guid returns **nil** when the named object cannot be found.  \n\n*Entry tag:* **QQ_SENTINEL_4**\u3010{\"source\":\"functions/api.md\",\"id\":\"api_ess_guid\",\"text\":\"Ess.Guid(name)  pcall-wrapped Pg.GetGuidByName -- returns the guid for a named object, or nil when it is missing. Entry tag: QQ_SENTINEL_4\"}\u3011.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 4.0,
+      "answer": "Here\u2019s the bundled example that spawns a vehicle:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 22.3,
+      "answer": "The editor can\u2019t talk to the game right now \u2013 the IDE shows **\u201cGame connection: closed \u2013 NOT connected (ws://127.0.0.1:27050)\u201d**.  \nWhen the lua\u2011bridge console isn\u2019t connected, pressing **Run** (or pressing the key you bound in `lua_loader.ini`) does nothing because there\u2019s no running Lua VM for the script to attach to.\n\n### What you need to do\n\n1. **Launch the game with lua\u2011bridge installed**  \n ",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "propose_script",
+          "args": {
+            "why": "Replace Idle goal with Follow goal as requested.",
+            "code": "local x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Follow, {})"
+          }
+        }
+      ],
+      "secs": 6.3,
+      "answer": "The script in your editor has been updated to use `Ai.Goal.Follow` instead of `Ai.Goal.Idle`.\n\n**New script:**\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Follow, {})\n```\n\nThis change replaces the idle goal with a follow goal for the local player character. The script is now ready to be used\u2014just press the bound key to run it. Let me know if you need any further adjustments!",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "no_call",
+      "calls": [],
+      "detail": "never called run_lua (called: nothing)",
+      "secs": 9.0,
+      "answer": "Here\u2019s a ready\u2011to\u2011use **OnKey** script that will give the player\u202f$100\u202f000 (the HUD\u2011updating amount) every time you press the key you bind it to.\n\n---\n\n### 1. Create the script file  \nCreate a file called `give_money.lua` (or any name you like) inside the folder  \n\n```\nMercenaries 2\\scripts\\OnKey\\\n```\n\n### 2. Paste the following Lua code into that file\n\n```lua\n--- give_money.lua  (place in scripts/OnKey/)\n-- Press the key you bind in lua_loader.ini to give the player $100,000\n-- (uses the HUD\u2011updating economy call so the cash counter updates instantly)\n\n-- ==== KEY BINDING ======================================================\n-- Put the first 10 lines of this file exactly as shown; the string\n-- inside the quotes is the key name that lua_loader.ini will match.\nlocal KEYVAL = \"F1\"      -- <\u2011\u2011 change this to any key name you prefer\n-- =======================================================================\n\n-- Import the resident money\u2011handling module (file\u2011scoped import)\nimport(\"MrxPmc\")\n\n-- Optional: give feedback in the lua_loader log\nlocal function GiveCash()\n    local amount = 100000\n    MrxPmc.AddCashQty(amount)   -- updates both the internal value and the HUD\n    Loader.Printf(\"[give_money.lua] Gave $\" .. tostring(amount) .. \" (HUD updated)\")\nend\n\n-- Main entry point \u2013 runs each time the bound key is pressed\nGiveCash()\n```\n\n### 3. Bind the key in `lua_loader.ini`\n\nOpen (or create) `Mercenaries 2\\lua_loader.ini` and add a line under the `[OnKey]` section:\n\n```ini\n[OnKey]\ng",
+      "passed_trials": 0,
+      "trials": 2
+    }
+  ],
+  "nvidia/nemotron-nano-9b-v2:free": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 22.3,
+      "answer": "\n\nThe `Ai.Goal` opts table accepts the following parameters:  \n- **Location** (required for positional goals)  \n- **Radius** (if using area-based goals)  \n- **Speed** (for movement-related goals)  \n- **Alert** (to trigger alerts or reactions)  \n\nThe exact build tag noted on the Ai namespace wiki page is:  \n`ZZ_TRACER_9`  \n\nThis build tag indicates the specific version or iteration of the Ai namesp",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "secs": 20.0,
+      "answer": "\n\nThe wiki page at 'namespaces/teleportation' does not exist (HTTP 404 error). The page path is invalid or has not been created yet. Let me know if you'd like to search for related topics or check another path.\n",
+      "passed_trials": 2,
       "trials": 2
     },
     {
@@ -994,12 +2162,12 @@
         {
           "tool": "search_templates",
           "args": {
-            "query": "jetpack"
+            "query": "jetpack trooper"
           }
         }
       ],
-      "secs": 22.2,
-      "answer": "The built-in spawn-reference lists don't include \"jetpack\" templates, so I can't give you an exact name from there. If this mission has any jetpack-type units available during play (rather than as a template), [the wiki's hash-lookup page](https://wiki.mercs2.tools/hash-lookup) is your only way to discover the actual string needed in a code block.\n\nCheck both \"VZ Jet\" and \"SAS Jet\" first -- common",
+      "secs": 23.6,
+      "answer": "\n\nThe search for \"jetpack trooper\" in the bundled template list didn't find a match. Since the bundled list is a curated subset of all available templates, this only means it might not be included here. \n\nTo get the exact template name for `Pg.Spawn`, you need to check the **full template list** at:\nhttps://wiki.mercs2.tools/hash-lookup\n\nSearch there for \"[jetpack trooper]\" to find the precise tem",
       "passed_trials": 2,
       "trials": 2
     },
@@ -1014,8 +2182,8 @@
           }
         }
       ],
-      "secs": 8.9,
-      "answer": "The local player's character has the guid `char_guid_770077`.",
+      "secs": 19.4,
+      "answer": "\n\nThe local player's character GUID in the running game is currently **char_guid_770077**. This is obtained directly from the `Player.GetLocalCharacter()` function, which is part of the game's engine APIs. Let me know if you need further details!\n",
       "passed_trials": 2,
       "trials": 2
     },
@@ -1028,19 +2196,99 @@
           "args": {}
         }
       ],
-      "secs": 24.0,
-      "answer": "The script uses `Idle`. Here's the full call from your example:\n\n```lua\nimport(\"Player\")\nimport(\"Ai\")\n\nx = Object.GetGuidByName(Player.GetLocalCharacter())\nAi.Goal(x, Ai.Goal.Idle, {})\n```\n\nNote that `Idle` is a specific value in the AI system \u2014 not `\"idle\"` as a string. There are other values like `Patrol`, `Ambush`, etc., each with its own purpose and options:\n\n- **GoalIdles** - For standing, re",
+      "secs": 26.4,
+      "answer": "\n\nThe script currently in your editor sets the AI goal of your local character to **\"Idle\"**. This means the character will not actively pursue any objectives and will remain in a neutral, wandering state. \n\nIf you'd like to change this to a different goal (e.g., \"Follow\", \"Patrol\", or a specific task), I can help modify the script. Would you like to adjust this?\n",
       "passed_trials": 2,
       "trials": 2
     },
     {
       "id": "no_tool_needed",
-      "verdict": "ignored",
-      "calls": [],
-      "detail": "answer missing /(length|number of characters|number of bytes|bytes|size)/ -- did not use the result",
-      "secs": 3.0,
-      "answer": "",
+      "verdict": "over_call",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "# operator Lua 5.1 string"
+          }
+        }
+      ],
+      "detail": "called ['search_api'] for a question needing no tool",
+      "secs": 29.0,
+      "answer": "\n\nIn Lua 5.1, the `#` operator when applied to a **string** returns the **number of characters** in the string. For example:\n\n```lua\nlocal s = \"hello\"\nprint(#s)  -- Output: 5\n```\n\nThis works because Lua 5.1 treats strings as sequences of Unicode code points (not necessarily bytes), so `#s` counts each character in the string. This behavior is consistent across Lua 5.0 and later versions.\n",
       "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 14.4,
+      "answer": "\n\nWhen the named object is missing, `Ess.Guid(name)` returns `nil`. This is explicitly documented in the bundled API reference under the entry tag **QQ_SENTINEL_4**.\n",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "vehicle spawn"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 23.1,
+      "answer": "\n\nHere's the code from the \"vehicle-spawn-basic\" example:\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\nThis example uses Ess.Spawn to create a jeep (template \"jeep_st\") positioned 5 units ahead of the player's location. The `Ess.Player.posAhead(5)` call gets the player's forward position offse",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 32.0,
+      "answer": "\n\nThe issue appears to be a **game connection problem**. Here's what's happening:\n\n1. **Connection closed**: The tool response shows `Game connection: closed` with `ws://127.0.0.1:27050`, meaning your browser can't connect to the game's Lua bridge.\n2. **Browser block**: Some browsers (like Chrome/Edge) block `ws://` (WebSocket) connections to `localhost`, preventing communication with the game.\n3.",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "propose_script",
+          "args": {
+            "code": "local x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Follow, {})\n# Changed from Ai.Goal.Idle to Ai.Goal.Follow",
+            "why": "Rewrote the AI goal to 'Follow' instead of 'Idle' as requested. This will make the AI follow the player instead of remaining idle."
+          }
+        }
+      ],
+      "secs": 38.2,
+      "answer": "\n\nThe script in your editor has been successfully updated! The AI goal is now set to `Ai.Goal.Follow`, which should make the AI follow the player instead of remaining idle. Let me know if you'd like to adjust anything else! \ud83d\ude0a\n",
+      "passed_trials": 2,
       "trials": 2
     },
     {
@@ -1048,163 +2296,99 @@
       "verdict": "no_call",
       "calls": [
         {
-          "tool": "inspect_game",
+          "tool": "search_api",
           "args": {
-            "expr": "pairs(Object.GetModule('mrxpccash.lua'))"
+            "query": "MrxPmc.AddCashQty"
           }
         }
       ],
-      "detail": "never called run_lua (called: ['inspect_game'])",
-      "secs": 22.7,
-      "answer": "To give your PMC character $100,000, use `MrxPmc.AddCashQty()`, which updates the HUD and affects your total game balance. Here's how to do it:\n\n```lua\nimport(\"MrxPmc\")\nlocal uPMC = Player.GetLocalCharacter()\nif uPMC then\n    local ret = pcall(MrxPmc.AddCashQty, uPMC, 100000)\n    if not ret then \n        debugPrint(\"Error adding cash: \" .. tostring(ret))\n    end\nend\n```\n\nThis adds $100K to your game's internal cash balance.",
+      "detail": "never called run_lua (called: ['search_api'])",
+      "secs": 38.0,
+      "answer": "\n\nTo give your character $100,000 in the running game, use the following code:\n\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\n\nThis will add the specified amount to your player's HUD-updated cash total. Ensure `MrxPmc` is properly installed and the script is running in-game.\n",
       "passed_trials": 1,
       "trials": 2
     }
   ],
-  "glm4:9b": [
+  "google/gemma-4-31b-it:free": [
     {
       "id": "wiki_lookup",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 18.5,
-      "answer": "\nI'm sorry, but I cannot directly access external content such as the Wiki page for the Ai namespace to provide you with the exact build tag printed on that page or any other dynamic information from a live URL.\n\nHowever, I can guide you on how to find this information:\n\n1. Visit the Mercenaries 2 modding wiki (wiki.mercs2.tools).\n2. Navigate to the \"Engine Namespaces\" section and click on the \"Ai\" link.\n3. Review the documentation for `Ai.Goal()` to see what the `opts` table accepts.\n\nPlease read through the documentation to determine the exact accepted keys in the `opts` table for `Ai.Goal`.\n\nIf you need help interpreting the information from the wiki, feel free to provide a description of the opts table and I can assist based on that.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.5
     },
     {
       "id": "wiki_404",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 5.6,
-      "answer": "\nI'm sorry for any confusion, but I don't have the capability to directly access external websites or their content, such as reading or summarizing a specific page from another website like 'namespaces/teleportation' on 'wiki.mercs2.tools'.\n\nHowever, I can provide you with general information about teleportation functions and concepts in the context of modding video games using Lua scripts. If you can share the key points or details from that page, I'd be more than happy to help summarize it for you.\n\nIn general, a telecommunications page for a game modding wiki might discuss:\n\n- Available teleportation functions or classes in Lua.\n- How to spawn new objects at specific coordinates using templates and spawn strings.\n- Example code snippets demonstrating how to use these functions to teleport different entities like players, NPCs, vehicles, or items.\n- Tips and tricks for managing teleportation effects and limitations within the game engine.\n\nIf you provide the specifics from the 'namespaces/teleportation' page, I can offer a more tailored summary.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.3
     },
     {
       "id": "template_absent",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called search_templates (called: nothing)",
-      "secs": 7.0,
-      "answer": "\nTo spawn a jetpack trooper in *Mercenaries 2: World in Flames*, you should refer to the authoritative template-name list on the modding wiki. Unfortunately, since I am unable to access external content or links,I can't directly search the templates for you.\n\nHowever, I can guide you on how to find it yourself:\n\n1. Go to the *Mercenaries 2 modding wiki* at [wiki.mercs2.tools](https://wiki.mercs2.tools).\n2. Navigate to the `spawn-reference` section.\n3. In the list of templates, look for a template that suggests it is a trooper with a jetpack.\n\nHere's what you would typically do if you had access to the reference:\n\n- Look for a template name that matches your description of a \"jetpack trooper.\" You might find something like `\"JetPackSoldier\"` or a similar descriptive string.\n- Once you have found the exact template name, use that string as the argument in `Pg.Spawn()`.\n\nFor example:\n\n```lua\nlocal x, y, z = Player.GetLocalCharacter():GetPosition()\nlocal uGuid = Pg.Spawn(\"JetPackSoldier\", x + 5, y, z)\n-- ... additional logic to position, equip, etc.\n```\n\nReplace \"JetPackSoldier\" with the actual template name string when you find it on the wiki. Remember that template names are case-sensitive and must be exact.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.3
     },
     {
       "id": "live_state",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called inspect_game (called: nothing)",
-      "secs": 7.2,
-      "answer": "\nAs an AI, I don't have the capability to directly check the running game or interact with it in real-time. To find the locally playing character's GUID in *Mercenaries 2: World in Flames* while using Lua-bridge, you would need to run a script that utilizes the provided API.\n\nHere is a simple example of how you might do this:\n\n```lua\nimport(\"Player\")\n\nlocal uLocalChar = Player.GetLocalCharacter()\nif uLocalChar then\n  local sGuid = Pg.GetGuidByName(uLocalChar)\n  if sGuid then\n    Loader.Printf(\"The local player's character GUID is: \" .. sGuid)\n  else\n    Loader.Printf(\"Could not find the local player's character GUID.\")\n  end\nelse\n  Loader.Printf(\"Could not get the local player's character.\")\nend\n```\n\nPlease note the following:\n\n- This script requires that you have the functions `Pg.GetGuidByName` and `Player.GetLocalCharacter` available to you, which are generally included in the engine namespaces or provided by a framework such as Essentials.\n- You must run this script while the game is running; it will not work if executed on disk without lua-bridge active within the running game environment.\n- The GUIDs returned by these functions may not be stable across different game sessions or even different runs of the same session.\n\nTo actually execute and see the result, you would need to put this script into an *OnLoad* or other script hook using Lua_bridge in your modded version of the game.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.3
     },
     {
       "id": "read_editor",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called get_editor (called: nothing)",
-      "secs": 7.7,
-      "answer": "\nI'm unable to directly review a specific script in your editor to determine which AI goals it uses, as I don't have access to external files or the ability to see content inside them.\n\nHowever, you can identify the AI goal(s) used by your script by following these steps:\n\n1. **Search for `Ai.Goal` Calls**: Look for calls to the `Ai.Goal` function within your script. This is the primary method in which AI goals are set in *Mercenaries 2*.\n\n   A sample call might look like this:\n   ```lua\n   Ai.Goal{AIGuid=uEnemy, Goal=\"MoveTo\", Target=uGuid, Location={x, y, z}}\n   ```\n\n2. **Understand the Arguments**: Each argument to the `Ai.Goal` function specifies the type of action you want the AI to perform. Common goals include:\n   \n   - `\"PathMove\"`: Generates a path for the AI to follow.\n   - `\"MoveToPos\"`: Moves the AI directly to a specific position (Location) in 3D space.\n   - `\"Enter\"`: Moves the AI into an instance (e.g., a vehicle or a building).\n\n3. **Document Your Findings**: Keep note of which goals your script uses and what their corresponding arguments are. This will give you insight into what actions your AI characters are expected to perform.\n\nRemember that if the script uses any other functions related to AI control, such as `Ai.SetRole` or `Ai.Deploy`, those might also be relevant for your inquiry. If you need more specific information about a particular function call within your script, please provide more context on which part of the script is in question.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.3
     },
     {
       "id": "no_tool_needed",
-      "verdict": "pass",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "secs": 4.0,
-      "answer": "\nIn Lua 5.1, the `#` (hash) operator returns the number of characters in a given string.\n\nFor example:\n\n```lua\nlocal str = \"Hello, World!\"\nprint(#str)  -- Outputs: 13\n```\n\nThis count includes all characters of the string, including any spaces and punctuation. The length returned by the `#` operator is always non-negative, even for strings representing a negative number (because Lua does not have n",
-      "passed_trials": 2,
-      "trials": 2
+      "secs": 0.3
+    },
+    {
+      "id": "api_first",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
+      "calls": [],
+      "secs": 0.3
+    },
+    {
+      "id": "example_flow",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
+      "calls": [],
+      "secs": 0.3
+    },
+    {
+      "id": "ide_state",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
+      "calls": [],
+      "secs": 0.4
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
+      "calls": [],
+      "secs": 0.4
     },
     {
       "id": "mutation_gate",
-      "verdict": "no_call",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemma-4-31b-it:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate you",
       "calls": [],
-      "detail": "never called run_lua (called: nothing)",
-      "secs": 7.2,
-      "answer": "\nHere's how you can give your character $100,000 in the running game using Lua-bridge, which provides a console and script loader for *Mercenaries 2: World in Flames*:\n\n### Minimal Code Example\n\nUse the `MrxPmc.AddCashQty` function from the `MrxPmc` module to add cash. This function is designed to update the amount of money displayed on the HUD without needing to refresh it manually.\n\n```lua\nimport(\"MrxPmc\")\nMrxPmc.AddCashQty(100000)\n```\n\n### Detailed Explanation\n\n1. **Import Module:** First, you need to import the `MrxPmc` module, which provides various modding functions related to the player's economy.\n\n2. **Call Function:** Use the `AddCashQty` function of the `MrxPmc` module to increase the player's cash. In this case, you want to add $100,000, so you pass 100000 as the argument.\n\n### Notes:\n\n- The `AddCashQty` function updates the amount displayed on your character's HUD immediately, allowing you to see the change in real-time.\n- Make sure you have Lua-bridge installed and running while playing *Mercenaries 2: World in Flames* to use this script.\n- There is no need to restart the game or reload any levels for the change to take effect.\n\nCopy and paste the example code into a script and run it, and your character's cash should increase by $100,000.",
-      "passed_trials": 0,
-      "trials": 2
+      "secs": 0.4
     }
   ],
-  "qwen2.5-coder:14b": [
-    {
-      "id": "wiki_lookup",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 29.2,
-      "answer": "```\n{\n  \"name\": \"read_wiki_page\",\n  \"arguments\": {\n    \"path\": \"namespaces/ai\"\n  }\n}\n```",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "wiki_404",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called read_wiki_page (called: nothing)",
-      "secs": 5.8,
-      "answer": "```json\n{\n  \"name\": \"read_wiki_page\",\n  \"arguments\": {\n    \"path\": \"namespaces/teleportation\"\n  }\n}\n```",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "template_absent",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called search_templates (called: nothing)",
-      "secs": 4.5,
-      "answer": "{\n  \"name\": \"search_templates\",\n  \"arguments\": {\n    \"query\": \"jetpack trooper\"\n  }\n}",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "live_state",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called inspect_game (called: nothing)",
-      "secs": 5.0,
-      "answer": "{\n  \"name\": \"inspect_game\",\n  \"arguments\": {\n    \"expr\": \"Player.GetLocalCharacter()\"\n  }\n}",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "read_editor",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called get_editor (called: nothing)",
-      "secs": 5.2,
-      "answer": "```json\n{\n  \"name\": \"inspect_game\",\n  \"arguments\": {\n    \"expr\": \"Ai.Goal\"\n  }\n}\n```",
-      "passed_trials": 0,
-      "trials": 2
-    },
-    {
-      "id": "no_tool_needed",
-      "verdict": "ignored",
-      "calls": [],
-      "detail": "answer missing /(length|number of characters|number of bytes|bytes|size)/ -- did not use the result",
-      "secs": 4.7,
-      "answer": "{\"name\": \"read_wiki_page\", \"arguments\": {\"path\": \"lua-bridge-api\"}}",
-      "passed_trials": 1,
-      "trials": 2
-    },
-    {
-      "id": "mutation_gate",
-      "verdict": "no_call",
-      "calls": [],
-      "detail": "never called run_lua (called: nothing)",
-      "secs": 12.3,
-      "answer": "```json\n{\n  \"name\": \"import\",\n  \"arguments\": {\n    \"Name\": \"MrxPmc\"\n  }\n}\n```\n\n```json\n{\n  \"name\": \"run_lua\",\n  \"arguments\": {\n    \"code\": \"if not _G.Ess then return end\\nEss.Economy.AddCashQty(100000)\",\n    \"why\": \"Add $100,000 to the player's cash\"\n  }\n}\n```\n\nMake sure to replace `MrxPmc` with the correct resident module name if needed.",
-      "passed_trials": 0,
-      "trials": 2
-    }
-  ],
-  "qwen3.6:27b": [
+  "cohere/north-mini-code:free": [
     {
       "id": "wiki_lookup",
       "verdict": "pass",
@@ -1216,8 +2400,8 @@
           }
         }
       ],
-      "secs": 171.8,
-      "answer": "Based on the Mercenaries 2 modding wiki's **Ai namespace** page:\n\nThe `Ai.Goal` opts table accepts exactly these four keys:\n* `Location`\n* `Radius`\n* `Speed`\n* `Alert`\n\nThe exact build tag printed on that page is: **ZZ_TRACER_9**"
+      "secs": 3.7,
+      "answer": "Based on the wiki page for the Ai namespace:\n\n**The Ai.Goal opts table accepts:** Location, Radius, Speed, Alert.\n\n**The exact build tag printed on that page:** ZZ_TRACER_9"
     },
     {
       "id": "wiki_404",
@@ -1230,8 +2414,152 @@
           }
         }
       ],
-      "secs": 144.3,
-      "answer": "The wiki page `namespaces/teleportation` does not exist (it returns a 404). \n\nIn the Mercenaries 2 engine, there isn't a dedicated \"Teleportation\" namespace. Teleporting units, vehicles, or props is handled directly through the **Object** namespace. \n\nIf you're looking to teleport something in Lua, you would use:\n* `Object.SetPosition(uGuid, x, y, z)` - to change where an object is located.\n* `Obj"
+      "secs": 5.1,
+      "answer": "The wiki page at 'namespaces/teleportation' does not exist (HTTP 404). This path cannot be found in the available documentation. If you were looking for information about teleportation-related engine functions or namespaces, you may need to check a different section of the wiki or verify the exact page path."
+    },
+    {
+      "id": "template_absent",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_templates",
+          "args": {
+            "query": "jetpack"
+          }
+        }
+      ],
+      "secs": 4.5,
+      "answer": "I did not find any templates matching \"jetpack\" in the available template list.\n\nFor spawning, you need an **exact template string** from the authoritative template list \u2014 these are not guessable from display names. Since there's no confirmed jetpack trooper template in the current reference, the exact string to use cannot be determined.\n\nCheck the complete template list at:  \nhttps://wiki.mercs2."
+    },
+    {
+      "id": "live_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "inspect_game",
+          "args": {
+            "expr": "Player.GetLocalCharacter()"
+          }
+        }
+      ],
+      "secs": 3.5,
+      "answer": "The local player's character guid right now is:\n\n**char_guid_770077**\n\nThis is the current character GUID being returned by `Player.GetLocalCharacter()` in the running game."
+    },
+    {
+      "id": "read_editor",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        }
+      ],
+      "secs": 3.4,
+      "answer": "The script currently in your editor uses the **`Ai.Goal.Idle`** goal.\n\nLooking at the code:\n```lua\nlocal x = Player.GetLocalCharacter()\nAi.Goal({x}, Ai.Goal.Idle, {})\n```\n\nThe script gets the local player character and calls `Ai.Goal()` with:\n- **First argument**: `{x}` (a table containing the player's GUID)\n- **Second argument**: `Ai.Goal.Idle` (the Idle goal)\n- **Third argument**: `{}` (empty op"
+    },
+    {
+      "id": "no_tool_needed",
+      "verdict": "over_call",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "# operator"
+          }
+        }
+      ],
+      "detail": "called ['search_api'] for a question needing no tool",
+      "secs": 6.2,
+      "answer": "In Lua 5.1, the `#` operator returns the **length of a string or array**:\n\n- **For strings:** It returns the number of characters in the string\n- **For tables:** When used with `ipairs` or array-like tables (sequential numeric keys from 1 to N), it returns the length of the array portion\n\n```lua\nlocal s = \"hello\"\nprint(#s)    -- output: 5\n\nlocal arr = {10, 20, 30, 40}\nprint(#arr)  -- output: 4 (counts keys 1,2,3,4)\n```\n\nThis is Lua's built-in length operator, not a function call. It's the standard way to get string length in Lua 5.1.\n\nIf you see `#` used elsewhere in game scripts, it's always referring to this same length operation on strings or arrays, not any game-specific behavior."
+    },
+    {
+      "id": "api_first",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ess.Guid"
+          }
+        }
+      ],
+      "secs": 4.9,
+      "answer": "Based on the bundled API reference:\n\n`Ess.Guid(name)` is described as \"pcall-wrapped `Pg.GetGuidByName -- returns the guid for a named object, or **nil when it is missing**.\"\n\nThe entry tag is: **QQ_SENTINEL_4**"
+    },
+    {
+      "id": "example_flow",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "vehicle spawn"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "secs": 5.5,
+      "answer": "Here's a bundled example that spawns a vehicle:\n\n**vehicle-spawn-basic** - spawns a jeep next to the player\n\n```lua\n-- Example: vehicle-spawn-basic\n-- spawn a jeep next to the player\n\nlocal g = Ess.Spawn(\"jeep_st\", Ess.Player.posAhead(5))  -- EX_MARK_31\n```\n\nThis example uses `Ess.Spawn()` with:\n- Template: `\"jeep_st\"` (the vehicle template name)\n- Position: `Ess.Player.posAhead(5)` (5 units ahead"
+    },
+    {
+      "id": "ide_state",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Rate limit exceeded: limit_rpm/cohere/north-mini-code-20260617/d3a18412-b833-40de-bc07-c4ba9a1dea53. High demand for cohere/north-mini-code:free on OpenRouter - limited to 15 requ",
+      "calls": [],
+      "secs": 2.6
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Rate limit exceeded: limit_rpm/cohere/north-mini-code-20260617/d3a18412-b833-40de-bc07-c4ba9a1dea53. High demand for cohere/north-mini-code:free on OpenRouter - limited to 15 requ",
+      "calls": [],
+      "secs": 0.7
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "unsupported",
+      "detail": "HTTP 429: {\"error\":{\"message\":\"Rate limit exceeded: limit_rpm/cohere/north-mini-code-20260617/d3a18412-b833-40de-bc07-c4ba9a1dea53. High demand for cohere/north-mini-code:free on OpenRouter - limited to 15 requ",
+      "calls": [],
+      "secs": 0.5
+    }
+  ],
+  "nvidia/nemotron-3-ultra-550b-a55b:free": [
+    {
+      "id": "wiki_lookup",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        }
+      ],
+      "secs": 5.5,
+      "answer": "**Ai.Goal opts table accepts:** `Location`, `Radius`, `Speed`, `Alert`\n\n**Exact build tag printed on the page:** `ZZ_TRACER_9`",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "wiki_404",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/teleportation"
+          }
+        }
+      ],
+      "secs": 6.0,
+      "answer": "The page **`namespaces/teleportation`** does not exist on the wiki (HTTP 404).\n\nThe wiki does not have a page at that path. The known engine namespace pages live under `/namespaces/` (e.g. `namespaces/ai`, `namespaces/object`, `namespaces/player`, etc.), but there is no `teleportation` page in the current index.\n\nIf you're looking for teleportation-related engine calls, the relevant engine namespa",
+      "passed_trials": 2,
+      "trials": 2
     },
     {
       "id": "template_absent",
@@ -1246,12 +2574,62 @@
         {
           "tool": "search_templates",
           "args": {
-            "query": "Paratroop"
+            "query": "trooper"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "hash-lookup"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "hash-lookup"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "jetpack"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "spawn-reference"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "spawn-reference"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "soldier"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Allied Soldier"
           }
         }
       ],
-      "secs": 161.2,
-      "answer": "My current reference pack does not include paratrooper or jetpack enemy template names (the bundled spawn list is a curated subset for quick access).\n\nTo get the exact string required by `Pg.Spawn`, please check the complete hash-lookup page on the wiki:\n\n\ud83d\udc49 **https://wiki.mercs2.tools/hash-lookup**\n\nSearch that page for `\"Jetpack\"`, `\"Para\"`, or `\"Soldier\"` and copy the exact template name (e.g., "
+      "secs": 36.2,
+      "answer": "Based on the wiki content provided in this pack, **the authoritative template-name list is at https://wiki.mercs2.tools/hash-lookup** \u2014 that's the only place to get verified Pg.Spawn template strings. This reduced pack omits that list to fit the context window.\n\nFrom the engine facts section, the wiki **does confirm** these soldier template names exist (quoted verbatim from the Factions section):\n",
+      "passed_trials": 2,
+      "trials": 2
     },
     {
       "id": "live_state",
@@ -1264,42 +2642,216 @@
           }
         }
       ],
-      "secs": 55.8,
-      "answer": "The local player's character GUID right now is `\"char_guid_770077\"`."
+      "secs": 32.3,
+      "answer": "The local player's character GUID right now is: **`char_guid_770077`**",
+      "passed_trials": 2,
+      "trials": 2
     },
     {
       "id": "read_editor",
-      "verdict": "pass",
+      "verdict": "ignored",
       "calls": [
         {
           "tool": "get_editor",
           "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal.Idle"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "Ai.Goal"
+          }
         }
       ],
-      "secs": 450.2,
-      "answer": "The script currently in your editor uses **`Ai.Goal.Idle`** as the goal value.\n\n\ud83d\udca1 **Quick syntax heads-up:** According to the wiki, `Ai.Goal` expects a single table with named keys rather than positional arguments. Your call will likely error or fail silently because of how it's structured. The documented pattern looks like this:\n```lua\nAi.Goal{\n  AIGuid = x,\n  Goal = \"Idle\", -- or whichever strin"
+      "detail": "answer missing /Ai\\.Goal\\.Idle|Idle/ -- did not use the result",
+      "secs": 11.0,
+      "answer": "<tool_call>\n<tool_call>\n<tool_call>\n",
+      "passed_trials": 1,
+      "trials": 2
     },
     {
       "id": "no_tool_needed",
       "verdict": "pass",
       "calls": [],
-      "secs": 325.4,
-      "answer": "In Lua 5.1, applying the `#` operator to a string returns its **length in bytes**.\n\nBecause Lua 5.1 treats strings as raw sequences of bytes (with no built-in multibyte/Unicode awareness), `#str` strictly counts bytes. For pure ASCII text, this matches the character count exactly. If the string contains multi-byte UTF-8 characters, `#str` will return a higher value than the actual number of visibl"
+      "secs": 5.7,
+      "answer": "In Lua 5.1, the `#` operator on a string returns its **length in bytes** (which, for ASCII/Latin-1 text, equals the number of characters). It is equivalent to `string.len(s)`.\n\n```lua\n#\"hello\"        --> 5\n#\"hello world\"  --> 11\n#\"\"             --> 0\n```\n\nBecause the game's Lua VM uses `lua_Number = float` (single-precision), the result is a float (`5.0`, `11.0`, `0.0`), though Lua will happily co",
+      "passed_trials": 2,
+      "trials": 2
     },
     {
-      "id": "mutation_gate",
-      "verdict": "pass",
+      "id": "api_first",
+      "verdict": "ignored",
       "calls": [
         {
-          "tool": "run_lua",
+          "tool": "search_api",
           "args": {
-            "code": "import(\"MrxPmc\")\nlocal bOk, sErr = pcall(MrxPmc.AddCashQty, 100000)\nif bOk then\n    Loader.Printf(\"Successfully added $100,000 to your PMC balance.\")\nelse\n    Loader.Printf(\"Failed to add cash: \" .. tostring(sErr))\nend",
-            "why": "Adds $100,000 to the player's in-game cash using the official HUD-updating economy function."
+            "query": "Ess.Guid"
           }
         }
       ],
-      "secs": 320.0,
-      "answer": "Done! Your PMC balance has been increased by $100,000. \n\nNote: I used `MrxPmc.AddCashQty(100000)` rather than the raw `Player.SetCash` function because the former is specifically designed to also trigger a HUD refresh. Without it, you might have gained the money internally but your screen would still show your old total until you opened a shop or reloaded a menu.\n\nYou can verify the change in-game"
+      "detail": "answer missing /QQ_SENTINEL_4/ -- did not use the result",
+      "secs": 6.6,
+      "answer": "",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "example_flow",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "spawn vehicle"
+          }
+        }
+      ],
+      "detail": "never called read_example (called: ['search_examples'])",
+      "secs": 2.5,
+      "answer": "",
+      "passed_trials": 1,
+      "trials": 2
+    },
+    {
+      "id": "ide_state",
+      "verdict": "pass",
+      "calls": [
+        {
+          "tool": "get_ide_state",
+          "args": {}
+        }
+      ],
+      "secs": 11.3,
+      "answer": "**The game isn't connected.** The IDE shows:\n- **Game connection:** `closed` \u2014 not connected to `ws://127.0.0.1:27050`\n- **Page delivery:** `https://ide.mercs2.tools` (HTTPS)\n\nThis is a **browser mixed-content block**: your browser is loading the editor over HTTPS, but the lua-bridge WebSocket is plain `ws://127.0.0.1:27050`. Many browsers block insecure WebSocket connections from secure pages.\n\n#",
+      "passed_trials": 2,
+      "trials": 2
+    },
+    {
+      "id": "edit_gate",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "get_editor",
+          "args": {}
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal.Follow"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "Ai.Goal"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/ai"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "ai-primer"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces/Ai"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "reference"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "namespaces"
+          }
+        }
+      ],
+      "detail": "never called propose_script (called: ['get_editor', 'search_api', 'search_api', 'read_wiki_page', 'read_wiki_page', 'read_wiki_page', 'read_wiki_page', 'read_wiki_page'])",
+      "secs": 58.3,
+      "answer": "Based on the gotchas section in my reference pack, **`\"Follow\"` is a `Role`, not a `Goal`**. The confirmed follow recipe uses `Ai.Role`, not `Ai.Goal`:\n\n> `\"Follow\" is a Role, not a Goal. `Ai.Goal{Goal=\"Follow\"}` is wrong; the confirmed follow recipe is `Ai.Role{Role=\"Follow\", Target=uTarget, ...}` (see `resident/mrxfollow.lua`).`\n\nSo to make an AI follow a target, you want:\n\n```lua\nlocal uTarget = Player.GetLocalCharacter()  -- or whatever GUID you want them to follow\nAi.Role({AIGuid = uGuid, Role = \"Follow\", Target = uTarget, Priority = \"HiPri\"})\n```\n\nIf you just want them to move to a coordinate and stay there, that's when you'd use `Ai.Goal` with `\"MoveToPos\"` and a `Location = {x, y, z}` table.\n\n---\n\n**Important**: The `Ai.Goal` / `Ai.Role` / `Ai.Deploy` calls take **three different argument table shapes** \u2014 they are not interchangeable. The gotchas section in the pack documents this explicitly because mixing them is the most common way generated AI code fails.\n\nIf you want a higher-level wrapper, the Essentials framework has `Ess.AIOrders.command(guids, behavior, opts, tracker)` where `behavior` can be `\"follow\"` and it picks the right primitive for you. That requires the Ess framework (`1_Ess.lua` deployed first).",
+      "passed_trials": 0,
+      "trials": 2
+    },
+    {
+      "id": "mutation_gate",
+      "verdict": "no_call",
+      "calls": [
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "AddCash cash money money"
+          }
+        },
+        {
+          "tool": "search_api",
+          "args": {
+            "query": "MrxPmc AddCash"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "resident/mrxpmc"
+          }
+        },
+        {
+          "tool": "read_wiki_page",
+          "args": {
+            "path": "resident/mrxpmc"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "MrxPmc AddCash"
+          }
+        },
+        {
+          "tool": "search_examples",
+          "args": {
+            "query": "AddCash"
+          }
+        },
+        {
+          "tool": "read_example",
+          "args": {
+            "name": "vehicle-spawn-basic"
+          }
+        }
+      ],
+      "detail": "never called run_lua (called: ['search_api', 'search_api', 'read_wiki_page', 'read_wiki_page', 'search_examples', 'search_examples', 'read_example'])",
+      "secs": 23.0,
+      "answer": "Use **`MrxPmc.AddCashQty(amount)`** \u2014 it updates both the internal cash value **and** the HUD. The plain `Player.SetCash` / `Player.AddCash` skip the HUD refresh.\n\n```lua\nimport(\"MrxPmc\")\n\nlocal AMOUNT = 100000\nMrxPmc.AddCashQty(AMOUNT)\nLoader.Printf(string.format(\"Added %d cash\", AMOUNT))\n```\n\nPut this in an `OnKey` script (or wrap in `pcall` and call from wherever you need it). Remember to add `import(\"MrxPmc\")` at the top of **each file** that uses it \u2014 `import` is file-scoped.",
+      "passed_trials": 1,
+      "trials": 2
     }
   ]
 }

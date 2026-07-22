@@ -15,3 +15,8 @@ tools/vendor/package-lock.json
 # python bytecode from tools/
 __pycache__/
 *.pyc
+
+# per-endpoint benchmark splits (merged into bench-tools-results.json)
+bench-local.json
+bench-deepseek.json
+bench-openrouter.json

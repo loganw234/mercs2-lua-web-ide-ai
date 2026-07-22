@@ -72,7 +72,11 @@ def main():
     out = [START, ""]
     out.append("### Tool-use pass rate")
     out.append("")
-    out.append("Seven cases with machine-checked criteria. Higher is better.")
+    ncases = max((r["total"] for r in rows), default=0)
+    out.append("%d cases with machine-checked criteria. Higher is better. "
+               "`unsupported` = the endpoint errored (rate limit / HTTP 5xx), "
+               "not a model failure — those rows are not real scores."
+               % ncases)
     out.append("")
     out.append("```")
     for r in rows:
