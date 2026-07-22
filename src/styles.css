@@ -644,3 +644,24 @@ a.btn{text-decoration:none;display:inline-block}
 .ai-budget-key .k.pack { background: #4a86c7; }
 .ai-budget-key .k.ide  { background: #c78f4a; }
 .ai-budget-key .k.free { background: #2f8f5b; }
+
+/* --- assistant file attachment --------------------------------------------- */
+.ai-attach {
+  flex: 0 0 auto; background: none; border: none; cursor: pointer;
+  font-size: 16px; padding: 4px 6px; color: #8b9199; align-self: flex-end;
+  border-radius: 6px; line-height: 1;
+}
+.ai-attach:hover { color: #cdd2d8; background: rgba(255,255,255,.06); }
+.ai-chip.ai-chip-file {
+  background: rgba(120,160,210,.16); border-color: #4a6f9c; color: #b9d0ea;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ai-chip.ai-chip-file:hover { background: rgba(180,90,70,.22); border-color: #9c5a3f; color: #e8bcb0; }
+.ai-composer.dragover { outline: 2px dashed #4a86c7; outline-offset: 2px; border-radius: 8px; }
+.ai-composer.dragover::after {
+  content: "Drop files to attach"; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(30,40,55,.82); color: #cfe0f2; font-size: 13px;
+  border-radius: 8px; pointer-events: none; z-index: 5;
+}
+.ai-composer { position: relative; }

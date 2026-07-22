@@ -136,6 +136,8 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
         <div class="ai-composer">
           <div class="ai-chips" id="aiChips"></div>
           <div class="ai-box">
+            <button id="aiAttach" class="ai-attach" title="Attach files as reference (scripts, docs — any number)">📎</button>
+            <input id="aiFile" type="file" multiple hidden>
             <textarea id="aiInput" rows="1" placeholder="Ask about your script, the API, an error…" spellcheck="false"></textarea>
             <button id="aiSend" class="ai-send" title="Send (Enter) — Shift+Enter for a new line">➤</button>
           </div>

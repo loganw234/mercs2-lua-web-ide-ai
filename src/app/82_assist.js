@@ -16,8 +16,10 @@
   var LOG_SEND = 40;           /* how many we actually attach */
   var EDITOR_MAX = 60000;      /* chars of the buffer we will attach */
   var SEL_MAX = 20000;         /* chars of the selection we will attach */
+  var FILE_MAX = 120000;       /* per attached file; source docs are usually tiny */
 
   var logRing = [];
+  var pendingFiles = [];       /* [{name, text}] attached to the NEXT question, any count */
   var busy = false, abortCtl = null, packText = null;
   var sendSel = true;          /* the Selection chip: per-question, defaults on */
   var stick = true;            /* auto-scroll is pinned to the bottom */
@@ -67,7 +69,35 @@
       var tail = logRing.slice(-LOG_SEND).join("\n");
       parts.push("--- recent game log (newest last) ---\n```\n" + tail + "\n```\n--- end log ---");
     }
+    for (var f = 0; f < pendingFiles.length; f++) {
+      var pf = pendingFiles[f];
+      var txt = pf.text.length > FILE_MAX ? pf.text.slice(0, FILE_MAX) + "\n[truncated]" : pf.text;
+      var fence = /```/.test(txt) ? "````" : "```";   /* avoid closing the fence early */
+      parts.push("--- attached file: " + pf.name + " ---\n" + fence + "\n" + txt +
+        "\n" + fence + "\n--- end file ---");
+    }
     return parts.join("\n\n");
+  }
+
+  /* Read dropped/picked files as text and queue them for the next question.
+     No count limit -- reference docs are usually small and users may have many;
+     the context-budget bar shows the cost. Binary files are skipped. */
+  function addFiles(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    files.forEach(function (file) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var text = String(reader.result || "");
+        if (/�/.test(text.slice(0, 4000))) {   /* replacement char => binary */
+          setStatus("Skipped " + file.name + " — looks binary, not text.", true);
+          return;
+        }
+        pendingFiles.push({ name: file.name, text: text });
+        refreshChips();
+      };
+      reader.onerror = function () { setStatus("Could not read " + file.name + ".", true); };
+      reader.readAsText(file);
+    });
   }
 
   /* ---- pack -------------------------------------------------------------- */
@@ -239,16 +269,32 @@
     return out;
   }
 
-  /* Some models (qwen and friends) put reasoning inline as a <think> block at
-     the start of the content instead of a separate reasoning field. Tolerate
-     leading whitespace -- several emit "\n<think>" and an exact position-0
-     check silently shows the raw tags to the user. */
+  /* Pull a model's inline reasoning out of the answer text. Reasoning that
+     arrives as a separate `reasoning`/`reasoning_content` field is handled in
+     the provider; this is for models (the Qwen family especially) that put it
+     inline. Two inline shapes occur, and only handling the first was why a Qwen
+     on LM Studio showed no thought panel:
+
+       1. <think> ... </think> rest      -- explicit open + close.
+       2. ... reasoning ... </think> rest -- CLOSE ONLY. Qwen chat templates
+          inject the opening <think> into the prompt, so the model streams the
+          reasoning text and just the closing tag; there is no opening tag in
+          the output at all. */
   function splitThink(raw) {
-    if (!/^\s*<think>/.test(raw)) return { think: "", rest: raw };
-    var s = raw.indexOf("<think>") + 7;
-    var e = raw.indexOf("</think>");
-    if (e === -1) return { think: raw.slice(s), rest: "" };
-    return { think: raw.slice(s, e), rest: raw.slice(e + 8).replace(/^\s+/, "") };
+    var open = raw.indexOf("<think>");
+    var close = raw.indexOf("</think>");
+    /* Shape 1: an opening tag with only whitespace before it. */
+    if (open !== -1 && /^\s*$/.test(raw.slice(0, open))) {
+      var s = open + 7;
+      if (close === -1) return { think: raw.slice(s), rest: "" };
+      return { think: raw.slice(s, close), rest: raw.slice(close + 8).replace(/^\s+/, "") };
+    }
+    /* Shape 2: a closing tag with no opening tag before it -> the open was in
+       the prompt; everything up to the close is the thought. */
+    if (close !== -1 && (open === -1 || open > close)) {
+      return { think: raw.slice(0, close), rest: raw.slice(close + 8).replace(/^\s+/, "") };
+    }
+    return { think: "", rest: raw };
   }
 
   /* ---- DOM --------------------------------------------------------------- */
@@ -477,6 +523,17 @@
       "Attach the last " + LOG_SEND + " game-log lines"));
     box.appendChild(chipEl("agent", "⚒ Agent", !!c.agentMode,
       "Let the assistant search the docs and examples, inspect the live game, and propose script edits or Lua to run (changes always ask first)"));
+    pendingFiles.forEach(function (pf, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "ai-chip on ai-chip-file";
+      b.setAttribute("data-kind", "file");
+      b.setAttribute("data-idx", String(i));
+      b.title = "Attached: " + pf.name + " (" + Math.round(pf.text.length / 1024 * 10) / 10 +
+        " KB) — click to remove";
+      b.textContent = "📎 " + pf.name + " ✕";
+      box.appendChild(b);
+    });
   }
 
   /* ---- send -------------------------------------------------------------- */
@@ -505,7 +562,14 @@
       var q = (opts.text != null ? opts.text : (input.value || "")).trim();
       if (!q) return;
       var ctx = buildContext();
-      IDE.chats.append({ role: "user", content: ctx ? (q + "\n\n" + ctx) : q, display: q });
+      /* Note attached files in the DISPLAYED message so the user can see what
+         went along, then clear the queue -- attachments are per-question. */
+      var fileNote = pendingFiles.length
+        ? "\n\n📎 " + pendingFiles.map(function (f) { return f.name; }).join(", ")
+        : "";
+      IDE.chats.append({ role: "user", content: ctx ? (q + "\n\n" + ctx) : q, display: q + fileNote });
+      pendingFiles = [];
+      refreshChips();
       if (opts.text == null) { input.value = ""; autoGrow(); }
       renderAll();
     }
@@ -1084,8 +1148,27 @@
       else if (k === "log") IDE.provider.set({ sendLog: !c.sendLog });
       else if (k === "agent") IDE.provider.set({ agentMode: !c.agentMode });
       else if (k === "sel") sendSel = !sendSel;
+      else if (k === "file") { pendingFiles.splice(parseInt(b.getAttribute("data-idx"), 10), 1); }
       refreshChips();
     });
+
+    /* File attachment: the button opens a picker; the composer also takes drops. */
+    if ($("aiAttach")) $("aiAttach").onclick = function () { $("aiFile").click(); };
+    if ($("aiFile")) $("aiFile").addEventListener("change", function (e) {
+      addFiles(e.target.files);
+      e.target.value = "";   /* allow re-picking the same file */
+    });
+    var comp = document.querySelector(".ai-composer");
+    if (comp) {
+      comp.addEventListener("dragover", function (e) { e.preventDefault(); comp.classList.add("dragover"); });
+      comp.addEventListener("dragleave", function (e) {
+        if (e.target === comp || !comp.contains(e.relatedTarget)) comp.classList.remove("dragover");
+      });
+      comp.addEventListener("drop", function (e) {
+        e.preventDefault(); comp.classList.remove("dragover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+      });
+    }
 
     $("aiSugg").addEventListener("click", function (e) {
       var b = e.target.closest("button");
