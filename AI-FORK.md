@@ -1,8 +1,9 @@
-# AI assistant fork — private test build
+# AI assistant fork
 
-A local fork of `mercs2-lua-web-ide` with a provider-agnostic AI assistant panel.
-**Not a git repo, no remote, not published.** Merge back by copying the files
-listed under "What changed" once it's proven.
+A fork of `mercs2-lua-web-ide` with a provider-agnostic AI assistant panel.
+**Public at https://github.com/loganw234/mercs2-lua-web-ide-ai** (`origin`);
+`upstream` is the local base IDE it forked from. The plan is to merge this back
+into the base IDE once testing is through — until then it lives as its own repo.
 
 Serve it with `python -m http.server 8614 --directory dist`, or just open
 `dist/index.html`.
@@ -347,6 +348,11 @@ next.
 Run against the expanded 11-tool agent, 11 cases, 2 trials, four ecosystems in
 parallel (local Ollama, DeepSeek direct, OpenRouter free + frontier). The
 headline: **a 9 GB local model ties the best paid frontier models on tool use.**
+
+> The DeepSeek and OpenRouter keys used for this one-time run were temporary and
+> have since been **revoked** — the numbers below stand, but re-running the
+> hosted rows needs your own keys (`--key-file`, kept out of the repo; see
+> TESTING-PLAN.md). The local rows re-run with just Ollama, no keys.
 
 - **Top tier, 10/11:** `qwen3:14b` (local), `deepseek-v4-pro`, `claude-sonnet-5`.
   A model that runs free on one consumer GPU matched a $2/Mtok and a $0.44/Mtok
