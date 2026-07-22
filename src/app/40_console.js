@@ -97,6 +97,24 @@
     ins.onclick = function () { IDE.inspector.inspect(outcome.text); };
     row.insertBefore(ins, r);
   }
+  /* an "ask AI" button on every failed row -- the moment someone would give up
+     and go ask a human is exactly when one click should hand the error, the
+     code and the log to the assistant instead. Occupies the slot the inspect
+     button uses on ok rows, so they never collide. IDE.assist is checked at
+     CLICK time, not render time: restored history renders before 82_assist.js
+     has loaded. */
+  function renderAskBtn(row, outcome) {
+    var old = row.querySelector(".askai"); if (old) old.remove();
+    if (!outcome || outcome.cls !== "err") return;
+    var b = document.createElement("button"); b.className = "askai"; b.textContent = "✨"; b.title = "Ask the AI assistant about this error";
+    b.onclick = function () {
+      if (!IDE.assist) return;
+      IDE.assist.ask("This run failed.\n\nCode:\n```lua\n" + (row.dataset.code || "") +
+        "\n```\nError: " + outcome.text +
+        "\n\nExplain what went wrong and give me a corrected version.");
+    };
+    row.insertBefore(b, row.querySelector(".res"));
+  }
   function makeRow(codeText, outcome) {
     var row = document.createElement("div"); row.className = "row";
     row.dataset.code = codeText;
@@ -108,7 +126,7 @@
     if (outcome) { r.className = "res " + outcome.cls; r.textContent = outcome.text; }
     else { r.className = "res dim"; r.textContent = "running…"; }
     row.appendChild(c); row.appendChild(rr); row.appendChild(r);
-    if (outcome) { renderInspectBtn(row, r, outcome); renderExplain(row, outcome.explain); }
+    if (outcome) { renderInspectBtn(row, r, outcome); renderAskBtn(row, outcome); renderExplain(row, outcome.explain); }
     return row;
   }
   function trimResultsDom() { while (results.childElementCount > 200) results.removeChild(results.firstChild); }
@@ -126,6 +144,7 @@
     var outcome = classify(o);
     r.className = "res " + outcome.cls; r.textContent = outcome.text;
     renderInspectBtn(r.parentElement, r, outcome);
+    renderAskBtn(r.parentElement, outcome);
     renderExplain(r.parentElement, outcome.explain);
     hist.push({ code: pendingCode, cls: outcome.cls, text: outcome.text, explain: outcome.explain, t: Date.now() });
     persistHist();

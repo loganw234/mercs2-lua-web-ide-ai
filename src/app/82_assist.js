@@ -1,8 +1,9 @@
 /* 82_assist.js -- the AI assistant panel.
  *
  * Talks to whatever IDE.provider is configured (see 80_provider.js). The value
- * over the wiki's chat page is context: this one can see the editor buffer and
- * the live game log, so "why is this failing?" needs no copy-paste.
+ * over the wiki's chat page is context: this one can see the editor buffer, the
+ * current selection and the live game log, so "why is this failing?" needs no
+ * copy-paste. Conversations persist across reloads via IDE.chats (81_chats.js).
  *
  * The reference pack is prepended as the system message. It is a stable prefix,
  * which matters for cost on providers that cache prefixes -- so it must be sent
@@ -14,11 +15,12 @@
   var LOG_KEEP = 120;          /* log lines retained for context */
   var LOG_SEND = 40;           /* how many we actually attach */
   var EDITOR_MAX = 60000;      /* chars of the buffer we will attach */
-  var STORE = "m2ide.ai.chat";
+  var SEL_MAX = 20000;         /* chars of the selection we will attach */
 
   var logRing = [];
-  var history = [];            /* {role, content, display?, think?} */
   var busy = false, abortCtl = null, packText = null;
+  var sendSel = true;          /* the Selection chip: per-question, defaults on */
+  var stick = true;            /* auto-scroll is pinned to the bottom */
 
   /* ---- context capture --------------------------------------------------- */
 
@@ -33,6 +35,16 @@
     catch (e) { return ""; }
   }
 
+  function selectionText() {
+    try { return (IDE.editor && IDE.editor.selection) ? IDE.editor.selection() : ""; }
+    catch (e) { return ""; }
+  }
+
+  function scriptName() {
+    try { var s = IDE.store && IDE.store.active(); return s ? s.name : ""; }
+    catch (e) { return ""; }
+  }
+
   function buildContext() {
     var c = IDE.provider.get();
     var parts = [];
@@ -40,8 +52,16 @@
       var src = editorText();
       if (src.trim()) {
         if (src.length > EDITOR_MAX) src = src.slice(0, EDITOR_MAX) + "\n-- [truncated]";
-        parts.push("--- current editor buffer ---\n```lua\n" + src + "\n```\n--- end buffer ---");
+        var name = scriptName();
+        parts.push("--- current script" + (name ? ": " + name : "") +
+          " ---\n```lua\n" + src + "\n```\n--- end script ---");
       }
+    }
+    var sel = sendSel ? selectionText() : "";
+    if (sel.trim()) {
+      if (sel.length > SEL_MAX) sel = sel.slice(0, SEL_MAX) + "\n-- [truncated]";
+      parts.push("--- selected code (the question is about this part) ---\n```lua\n" +
+        sel + "\n```\n--- end selection ---");
     }
     if (c.sendLog && logRing.length) {
       var tail = logRing.slice(-LOG_SEND).join("\n");
@@ -113,11 +133,7 @@
     return Promise.resolve(packText);
   }
 
-  /* Forget the cached pack so the next question reloads the chosen tier. Called
-     when the tier/URL changes -- otherwise a switch wouldn't take until reload. */
-  function resetPack() { packText = null; }
-
-  /* ---- rendering (ported from the wiki assistant) ------------------------- */
+  /* ---- rendering --------------------------------------------------------- */
 
   function esc(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -180,6 +196,28 @@
     return html;
   }
 
+  /* Tiny Lua highlighter for code blocks, on the same design tokens the editor
+     uses. Tokenises the RAW code (so string/comment contents never match the
+     keyword branch) and escapes per token. */
+  var LUA_KW = /^(and|break|do|else|elseif|end|false|for|function|goto|if|in|local|nil|not|or|repeat|return|then|true|until|while)$/;
+  var LUA_GLOBAL = /^(Ess|Pg|Sys|Player|Ai|Vz|Easy|Game|World|Cam|Ui|Debug|Net)$/;
+  function hlLua(src) {
+    var re = /--\[(=*)\[[\s\S]*?\]\1\]|--[^\n]*|\[(=*)\[[\s\S]*?\]\2\]|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|\b0[xX][0-9a-fA-F]+\b|\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b|\b[A-Za-z_]\w*\b/g;
+    var out = "", last = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      var t = m[0], cls = "";
+      if (t.lastIndexOf("--", 0) === 0) cls = "hl-c";
+      else if (t[0] === '"' || t[0] === "'" || t[0] === "[") cls = "hl-s";
+      else if (/^\d|^0[xX]/.test(t)) cls = "hl-n";
+      else if (LUA_KW.test(t)) cls = "hl-k";
+      else if (LUA_GLOBAL.test(t)) cls = "hl-g";
+      out += cls ? '<span class="' + cls + '">' + esc(t) + "</span>" : esc(t);
+      last = m.index + t.length;
+    }
+    return out + esc(src.slice(last));
+  }
+
   function render(text) {
     var out = "", parts = text.split("```");
     for (var i = 0; i < parts.length; i++) {
@@ -187,12 +225,13 @@
         var m = parts[i].match(/^([a-zA-Z0-9_-]*)\n([\s\S]*)$/);
         var lang = m ? (m[1] || "code") : "code";
         var code = (m ? m[2] : parts[i]).replace(/\n$/, "");
+        var isLua = /^lua$/i.test(lang);
         out += '<div class="ai-code"><div class="ai-codehead"><span>' + esc(lang) +
           '</span><span class="ai-codeacts">' +
-          '<button type="button" class="ai-mini ai-copy">Copy</button>' +
-          (/^lua$/i.test(lang) ? '<button type="button" class="ai-mini ai-insert">Insert</button>' +
-            '<button type="button" class="ai-mini ai-replace">Replace</button>' : "") +
-          '</span></div><pre><code>' + esc(code) + "</code></pre></div>";
+          '<button type="button" class="ai-act ai-copy" title="Copy code">Copy</button>' +
+          (isLua ? '<button type="button" class="ai-act ai-insert" title="Insert at the cursor">Insert</button>' +
+            '<button type="button" class="ai-act ai-replace" title="Replace the whole script">Replace</button>' : "") +
+          '</span></div><pre><code>' + (isLua ? hlLua(code) : esc(code)) + "</code></pre></div>";
       } else {
         out += prose(parts[i]);
       }
@@ -200,26 +239,135 @@
     return out;
   }
 
+  /* Some models (qwen and friends) put reasoning inline as a <think> block at
+     the start of the content instead of a separate reasoning field. Tolerate
+     leading whitespace -- several emit "\n<think>" and an exact position-0
+     check silently shows the raw tags to the user. */
   function splitThink(raw) {
-    if (raw.lastIndexOf("<think>", 0) !== 0) return { think: "", rest: raw };
+    if (!/^\s*<think>/.test(raw)) return { think: "", rest: raw };
+    var s = raw.indexOf("<think>") + 7;
     var e = raw.indexOf("</think>");
-    if (e === -1) return { think: raw.slice(7), rest: "" };
-    return { think: raw.slice(7, e), rest: raw.slice(e + 8) };
+    if (e === -1) return { think: raw.slice(s), rest: "" };
+    return { think: raw.slice(s, e), rest: raw.slice(e + 8).replace(/^\s+/, "") };
   }
 
   /* ---- DOM --------------------------------------------------------------- */
 
   function logEl() { return $("aiLog"); }
+  function scrollEl() { return $("aiScroll"); }
 
-  function addRow(who, label) {
+  function nearBottom() {
+    var sc = scrollEl();
+    return sc.scrollHeight - sc.scrollTop - sc.clientHeight < 48;
+  }
+
+  function scrollBottom(force) {
+    var sc = scrollEl();
+    if (force || stick) sc.scrollTop = sc.scrollHeight;
+    updateJump();
+  }
+
+  function updateJump() {
+    var j = $("aiJump");
+    if (j) j.classList.toggle("hidden", nearBottom());
+  }
+
+  /* A tool call as an expandable chip: the summary says what was called, the
+     body holds what came back. The result matters most for run_lua -- the user
+     just approved code to run in THEIR game, so what happened must be visible
+     in the chat, not only fed back to the model. */
+  var TOOL_OUT_MAX = 2000;
+  function toolChip(t) {
+    var d = document.createElement("details");
+    d.className = "ai-tool" + (t.bad ? " bad" : "") + (t.pending ? " pending" : "");
+    var s = document.createElement("summary");
+    s.textContent = "▸ " + t.name + (t.detail ? "  " + t.detail : "");
+    d.appendChild(s);
+    if (t.result) {
+      var o = document.createElement("div");
+      o.className = "ai-toolout";
+      o.textContent = t.result;
+      d.appendChild(o);
+    }
+    return d;
+  }
+
+  function warnEl(w) {
+    var d = document.createElement("div");
+    d.className = "ai-ungrounded";
+    if (w.unverified) {
+      d.innerHTML = "<strong>Unverified:</strong> " + esc(w.unverified.join(", ")) +
+        " — not in the reference pack, and the wiki index could not be reached " +
+        "to check further.";
+    } else {
+      d.innerHTML = "<strong>Not documented:</strong> " + esc((w.absent || []).join(", ")) +
+        " — " + ((w.absent || []).length === 1 ? "this name does" : "these names do") +
+        " not appear anywhere in the wiki. Treat as invented until you confirm " +
+        "it yourself." +
+        (w.elsewhere && w.elsewhere.length
+          ? "<br><span class=\"ai-ok\">" + esc(w.elsewhere.join(", ")) +
+            " checked out — documented, just not in the loaded pack.</span>"
+          : "");
+    }
+    return d;
+  }
+
+  function actsHtml(kinds) {
+    var map = {
+      copy: '<button type="button" class="ai-act ai-copymsg" title="Copy message">Copy</button>',
+      edit: '<button type="button" class="ai-act ai-editmsg" title="Edit and resend">Edit</button>',
+      regen: '<button type="button" class="ai-act ai-regen" title="Regenerate this answer">↻ Retry</button>'
+    };
+    return '<div class="ai-acts">' + kinds.map(function (k) { return map[k]; }).join("") + "</div>";
+  }
+
+  /* One message row, built from persisted state -- a restored chat renders
+     identically to how it looked live (tool chips and warnings included). */
+  function msgRow(m, i, msgs) {
     var el = document.createElement("div");
-    el.className = "ai-row ai-" + who;
-    el.innerHTML = '<div class="ai-who">' + label + "</div>" +
-      '<details class="ai-think" hidden><summary>Thinking...</summary><div class="ai-thinkbody"></div></details>' +
-      '<div class="ai-body"></div>';
-    logEl().appendChild(el);
-    logEl().scrollTop = logEl().scrollHeight;
+    var isUser = m.role === "user";
+    el.className = "ai-msg " + (isUser ? "ai-user" : "ai-bot");
+    el.setAttribute("data-i", String(i));
+    if (isUser) {
+      el.innerHTML = '<div class="ai-bubble"></div>' + actsHtml(["copy", "edit"]);
+      el.querySelector(".ai-bubble").innerHTML =
+        "<p>" + esc(m.display || m.content).replace(/\n/g, "<br>") + "</p>";
+    } else {
+      var last = i === msgs.length - 1;
+      el.innerHTML =
+        (m.think ? '<details class="ai-think"><summary>Thought process</summary><div class="ai-thinkbody"></div></details>' : "") +
+        (m.tools && m.tools.length ? '<div class="ai-tools"></div>' : "") +
+        '<div class="ai-body"></div>' +
+        actsHtml(last ? ["copy", "regen"] : ["copy"]);
+      if (m.think) el.querySelector(".ai-thinkbody").textContent = m.think;
+      if (m.tools && m.tools.length) {
+        var box = el.querySelector(".ai-tools");
+        m.tools.forEach(function (t) { box.appendChild(toolChip(t)); });
+      }
+      el.querySelector(".ai-body").innerHTML = render(m.content || "");
+      if (m.warn) el.querySelector(".ai-body").appendChild(warnEl(m.warn));
+    }
     return el;
+  }
+
+  function renderAll() {
+    var log = logEl();
+    log.innerHTML = "";
+    var msgs = IDE.chats.current().msgs;
+    for (var i = 0; i < msgs.length; i++) log.appendChild(msgRow(msgs[i], i, msgs));
+    updateEmpty();
+    stick = true;
+    scrollBottom(true);
+  }
+
+  function updateEmpty() {
+    var empty = $("aiEmpty");
+    if (!empty) return;
+    var has = IDE.chats.current().msgs.length > 0;
+    empty.classList.toggle("hidden", has);
+    var conf = IDE.provider.configured();
+    $("aiSugg").classList.toggle("hidden", !conf);
+    $("aiSetup").classList.toggle("hidden", conf);
   }
 
   function setStatus(msg, err) {
@@ -232,39 +380,153 @@
   function setBusy(b) {
     busy = b;
     var send = $("aiSend");
-    if (send) { send.textContent = b ? "Stop" : "Ask"; send.classList.toggle("stopping", b); }
+    if (send) {
+      send.textContent = b ? "◼" : "➤";
+      send.title = b ? "Stop generating (Esc)" : "Send (Enter) — Shift+Enter for a new line";
+      send.classList.toggle("stop", b);
+    }
+  }
+
+  /* ---- header: model chip + chat history ---------------------------------- */
+
+  function refreshModel() {
+    var el = $("aiModelChip");
+    if (!el) return;
+    var c = IDE.provider.get();
+    var ok = IDE.provider.configured();
+    el.textContent = ok ? (c.model || c.preset) : "choose a model…";
+    el.classList.toggle("unset", !ok);
+    var p = IDE.provider.preset(c.preset);
+    el.title = (ok ? "Model: " + c.model + (p ? "  (" + p.label + ")" : "")
+                   : "No provider configured") + " — click to change";
+  }
+
+  function ago(ts) {
+    var s = Math.round((Date.now() - ts) / 1000);
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.round(s / 60) + "m ago";
+    if (s < 86400) return Math.round(s / 3600) + "h ago";
+    if (s < 86400 * 7) return Math.round(s / 86400) + "d ago";
+    return new Date(ts).toLocaleDateString();
+  }
+
+  function histShown() { return !$("aiHist").classList.contains("hidden"); }
+  function hideHist() { $("aiHist").classList.add("hidden"); }
+
+  function renderHist() {
+    var box = $("aiHist");
+    box.innerHTML = "";
+    var cur = IDE.chats.current().id;
+    var list = IDE.chats.list().filter(function (s) { return s.msgs.length || s.id === cur; });
+    if (!list.length) {
+      box.innerHTML = '<div class="ai-histempty">No chats yet</div>';
+      return;
+    }
+    list.forEach(function (s) {
+      var r = document.createElement("div");
+      r.className = "ai-histrow" + (s.id === cur ? " on" : "");
+      r.innerHTML = '<span class="ai-histmain"><span class="ai-histtitle"></span>' +
+        '<span class="ai-histwhen"></span></span>' +
+        '<button type="button" class="ai-act ai-histdel" title="Delete this chat">✕</button>';
+      r.querySelector(".ai-histtitle").textContent = s.title || "New chat";
+      r.querySelector(".ai-histwhen").textContent =
+        ago(s.ts) + " · " + Math.ceil(s.msgs.length / 2) + (s.msgs.length > 2 ? " turns" : " turn");
+      r.addEventListener("click", function (e) {
+        if (e.target.closest(".ai-histdel")) {
+          IDE.chats.remove(s.id);
+          renderHist();
+          renderAll();
+          return;
+        }
+        if (busy && abortCtl) abortCtl.abort();
+        IDE.chats.select(s.id);
+        hideHist();
+        renderAll();
+      });
+      box.appendChild(r);
+    });
+  }
+
+  /* ---- composer chips ----------------------------------------------------- */
+
+  function chipEl(kind, label, on, title) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "ai-chip" + (on ? " on" : "");
+    b.setAttribute("data-kind", kind);
+    b.title = title + (on ? " — attached, click to drop" : " — off, click to attach");
+    b.textContent = label;
+    return b;
+  }
+
+  function refreshChips() {
+    var box = $("aiChips");
+    if (!box) return;
+    var c = IDE.provider.get();
+    box.innerHTML = "";
+    var name = scriptName();
+    box.appendChild(chipEl("script", "⌘ " + (name || "Script"), !!c.sendEditor,
+      "Attach the current script to each question"));
+    var sel = selectionText();
+    if (sel.trim()) {
+      var lines = sel.split("\n").length;
+      box.appendChild(chipEl("sel", "⌥ Selection · " + lines + (lines === 1 ? " line" : " lines"),
+        sendSel, "Attach the selected code to this question"));
+    }
+    box.appendChild(chipEl("log", "≡ Game log", !!c.sendLog,
+      "Attach the last " + LOG_SEND + " game-log lines"));
+    box.appendChild(chipEl("agent", "⚒ Agent", !!c.agentMode,
+      "Let the assistant search the docs and examples, inspect the live game, and propose script edits or Lua to run (changes always ask first)"));
   }
 
   /* ---- send -------------------------------------------------------------- */
 
-  function ask() {
+  function send(opts) {
+    opts = opts || {};
     if (busy) { if (abortCtl) abortCtl.abort(); return; }
-    var input = $("aiInput");
-    var q = (input.value || "").trim();
-    if (!q) return;
 
     if (!IDE.provider.configured()) {
-      setStatus("Configure a provider first (gear icon).", true);
+      setStatus("Configure a provider first.", true);
       openSettings();
       return;
     }
 
-    var ctx = buildContext();
-    var content = ctx ? (q + "\n\n" + ctx) : q;
-    history.push({ role: "user", content: content, display: q });
-    var urow = addRow("user", "You");
-    urow.querySelector(".ai-body").innerHTML = "<p>" + esc(q).replace(/\n/g, "<br>") + "</p>";
-    input.value = "";
-    autoGrow();
+    var sess = IDE.chats.current();
+    var sessId = sess.id;
+    var input = $("aiInput");
+
+    if (opts.regen) {
+      /* drop the last assistant turn and re-ask with the same user message */
+      while (sess.msgs.length && sess.msgs[sess.msgs.length - 1].role === "assistant") sess.msgs.pop();
+      if (!sess.msgs.length || sess.msgs[sess.msgs.length - 1].role !== "user") return;
+      IDE.chats.save();
+      renderAll();
+    } else {
+      var q = (opts.text != null ? opts.text : (input.value || "")).trim();
+      if (!q) return;
+      var ctx = buildContext();
+      IDE.chats.append({ role: "user", content: ctx ? (q + "\n\n" + ctx) : q, display: q });
+      if (opts.text == null) { input.value = ""; autoGrow(); }
+      renderAll();
+    }
     setStatus("");
 
-    var row = addRow("bot", "Assistant");
+    /* live assistant row -- replaced by the persisted render on finish */
+    var row = document.createElement("div");
+    row.className = "ai-msg ai-bot";
+    row.innerHTML =
+      '<details class="ai-think live" hidden><summary>Thinking…</summary><div class="ai-thinkbody"></div></details>' +
+      '<div class="ai-tools" hidden></div>' +
+      '<div class="ai-body"><span class="ai-cursor">▍</span></div>';
+    logEl().appendChild(row);
     var body = row.querySelector(".ai-body");
     var think = row.querySelector(".ai-think");
     var tbody = row.querySelector(".ai-thinkbody");
-    body.innerHTML = '<span class="ai-cursor">|</span>';
+    var toolsEl = row.querySelector(".ai-tools");
+    stick = true;
+    scrollBottom(true);
 
-    var reasoning = "", answer = "", toolText = "";
+    var reasoning = "", answer = "", toolText = "", toolSteps = [];
     abortCtl = new AbortController();
     setBusy(true);
 
@@ -283,15 +545,15 @@
     function tickStatus() {
       if (firstToken) return;
       var s = waited();
-      var msg = "Waiting for the model... " + s + "s";
+      var msg = "Waiting for the model… " + s + "s";
       if (s >= 300) {
-        msg += " -- past Ollama's default 5-minute load timeout; if this is a " +
+        msg += " — past Ollama's default 5-minute load timeout; if this is a " +
                "first run, raise OLLAMA_LOAD_TIMEOUT and retry.";
       } else if (s >= 120) {
-        msg += " -- still going. A large model loading from disk into RAM can " +
+        msg += " — still going. A large model loading from disk into RAM can " +
                "take this long the first time.";
       } else if (s >= 25) {
-        msg += " -- normal for a large local model, especially on CPU/RAM.";
+        msg += " — normal for a large local model, especially on CPU/RAM.";
       }
       setStatus(msg);
     }
@@ -309,17 +571,18 @@
       }
       if (st.rest) {
         if (think.open) think.open = false;
-        body.innerHTML = render(st.rest) + '<span class="ai-cursor">|</span>';
+        body.innerHTML = render(st.rest) + '<span class="ai-cursor">▍</span>';
       }
-      logEl().scrollTop = logEl().scrollHeight;
+      scrollBottom();
     }
 
     loadPack().then(function (pack) {
       checkContext();
       var msgs = [];
       if (pack) msgs.push({ role: "system", content: pack });
-      for (var i = 0; i < history.length; i++) {
-        msgs.push({ role: history[i].role, content: history[i].content });
+      var h = IDE.chats.current().msgs;
+      for (var i = 0; i < h.length; i++) {
+        msgs.push({ role: h[i].role, content: h[i].content });
       }
 
       /* Agent mode runs a non-streaming tool loop, so nothing would appear for
@@ -327,32 +590,45 @@
          the only way the user can see WHAT the model looked at, which is the
          point of having tools at all. */
       if (IDE.provider.get().agentMode && IDE.agent) {
-        var toolsEl = document.createElement("div");
-        toolsEl.className = "ai-tools";
-        body.parentNode.insertBefore(toolsEl, body);
+        toolsEl.hidden = false;
         return IDE.agent.run(msgs, {
           onStep: function (name, args) {
             firstToken = firstToken || Date.now();
             stopTick();
-            var d = document.createElement("div");
-            d.className = "ai-tool pending";
-            var detail = args.path || args.query || args.expr || args.why || "";
-            d.textContent = "> " + name + (detail ? "  " + detail : "");
-            toolsEl.appendChild(d);
-            logEl().scrollTop = logEl().scrollHeight;
+            var detail = args.path || args.query || args.expr || args.name || args.why || "";
+            var t = { name: name, detail: detail, pending: true };
+            toolSteps.push(t);
+            toolsEl.appendChild(toolChip(t));
+            scrollBottom();
           },
           onResult: function (name, out) {
             toolText += "\n" + out;
-            var last = toolsEl.querySelector(".ai-tool.pending:last-child") ||
-                       toolsEl.lastChild;
-            if (last) {
-              last.classList.remove("pending");
-              last.classList.toggle("bad", /^(Refused|Could not|Error|Failed|That page does not exist|Not connected)/.test(out));
+            var bad = /^(Refused|Could not|Error|Failed|That page does not exist|Not connected)/.test(out);
+            var t = null;
+            for (var i = toolSteps.length - 1; i >= 0; i--) {
+              if (toolSteps[i].pending) { t = toolSteps[i]; break; }
             }
+            if (t) {
+              t.pending = false;
+              if (bad) t.bad = true;
+              t.result = String(out).slice(0, TOOL_OUT_MAX);
+              var el = toolsEl.querySelector(".ai-tool.pending");
+              if (el) {
+                var fresh = toolChip(t);
+                /* Game-touching calls (and failures) open by default: the user
+                   approved run_lua and deserves to SEE the outcome, not click
+                   for it. Wiki lookups stay collapsed -- they are plumbing. */
+                if (t.name === "run_lua" || t.name === "inspect_game" || t.bad) fresh.open = true;
+                el.replaceWith(fresh);
+              }
+            }
+            scrollBottom();
           },
-          confirm: function (why, code) { return askConfirm(why, code); }
+          confirm: function (why, code) { return askConfirm(why, code); },
+          proposeEdit: function (why, code) { return askEdit(why, code); }
         }, { signal: abortCtl.signal }).then(function (r) {
           answer = r.content || "";
+          if (r.reasoning) reasoning += r.reasoning;
           return null;
         });
       }
@@ -387,62 +663,23 @@
       setStatus("");
       var st = splitThink(answer);
       var all = (reasoning + st.think).trim();
-      if (st.rest || all) {
-        history.push({ role: "assistant", content: st.rest || "(no answer)", think: all || undefined });
-        body.innerHTML = render(st.rest || "");
-
-        /* Flag API names the model was never shown.
-         *
-         * This runs on EVERY answer, not just agent mode, because it needs
-         * nothing from the model: no tool support, no instruction-following,
-         * no particular provider. That matters because the local model with
-         * the best domain knowledge here (qwen2.5-coder) cannot call tools at
-         * all -- so self-correction is unavailable to exactly the users most
-         * likely to get an invented answer. Telling the user directly is the
-         * only guarantee that does not depend on the model cooperating. */
-        var g = IDE.ground.check(st.rest || "", [packText || "", toolText]);
-        if (g.ungrounded.length) {
-          var w = document.createElement("div");
-          w.className = "ai-ungrounded";
-          w.textContent = "Checking " + g.ungrounded.length +
-            " identifier(s) against the wiki…";
-          body.appendChild(w);
-
-          /* Second opinion against the FULL wiki index.
-             The pack is only a slice of the wiki -- measured, 4 of 14 known-real
-             functions are missing from the small tier -- so "absent from the
-             pack" would fire on roughly a third of correct answers, and a
-             warning that cries wolf gets ignored, which is worse than no
-             warning. The index covers every page, so a name missing from it is
-             a claim worth making. */
-          IDE.ground.verify(g.ungrounded).then(function (v) {
-            if (!v.absent.length) {
-              /* All real, just outside the pack. Say nothing -- a warning here
-                 would be pure noise. */
-              w.remove();
-              return;
-            }
-            w.className = "ai-ungrounded";
-            w.innerHTML = "<strong>Not documented:</strong> " +
-              esc(v.absent.join(", ")) +
-              " — " + (v.absent.length === 1 ? "this name does" : "these names do") +
-              " not appear anywhere in the wiki. Treat as invented until you " +
-              "confirm it yourself." +
-              (v.elsewhere.length
-                ? "<br><span class=\"ai-ok\">" + esc(v.elsewhere.join(", ")) +
-                  " checked out — documented, just not in the loaded pack.</span>"
-                : "");
-          }).catch(function () {
-            /* Offline or the index would not load: fall back to the weaker
-               claim rather than dropping the warning entirely. */
-            w.innerHTML = "<strong>Unverified:</strong> " +
-              esc(g.ungrounded.join(", ")) +
-              " — not in the reference pack, and the wiki index could not be " +
-              "reached to check further.";
-          });
+      if (st.rest || all || toolSteps.length) {
+        toolSteps.forEach(function (t) { delete t.pending; });
+        var m = {
+          role: "assistant",
+          content: st.rest || "(no answer)",
+          think: all || undefined,
+          tools: toolSteps.length ? toolSteps : undefined
+        };
+        /* Append to the chat that ASKED -- the user may have switched since. */
+        IDE.chats.appendTo(sessId, m);
+        if (IDE.chats.current().id === sessId) {
+          renderAll();
+          var lastRow = logEl().lastElementChild;
+          if (lastRow) attachWarn(lastRow, m, toolText);
+        } else {
+          row.remove();
         }
-        if (all) { think.hidden = false; think.open = false; think.querySelector("summary").textContent = "Thought process"; }
-        persist();
       } else {
         row.remove();
         if (!stopped) setStatus("No answer came back.", true);
@@ -452,16 +689,150 @@
     }
   }
 
-  function persist() {
-    try { sessionStorage.setItem(STORE, JSON.stringify({ h: history })); } catch (e) {}
+  /* Flag API names the model was never shown.
+   *
+   * This runs on EVERY answer, not just agent mode, because it needs nothing
+   * from the model: no tool support, no instruction-following, no particular
+   * provider. That matters because the local model with the best domain
+   * knowledge here (qwen2.5-coder) cannot call tools at all -- so
+   * self-correction is unavailable to exactly the users most likely to get an
+   * invented answer. Telling the user directly is the only guarantee that does
+   * not depend on the model cooperating.
+   *
+   * The verdict is persisted onto the message (m.warn) so a restored chat
+   * keeps its warnings without re-hitting the wiki index. */
+  function attachWarn(rowEl, m, toolText) {
+    var g = IDE.ground.check(m.content || "", [packText || "", toolText || ""]);
+    if (!g.ungrounded.length) return;
+    var body = rowEl.querySelector(".ai-body");
+    if (!body) return;
+    var w = document.createElement("div");
+    w.className = "ai-ungrounded";
+    w.textContent = "Checking " + g.ungrounded.length + " identifier(s) against the wiki…";
+    body.appendChild(w);
+
+    /* Second opinion against the FULL wiki index.
+       The pack is only a slice of the wiki -- measured, 4 of 14 known-real
+       functions are missing from the small tier -- so "absent from the pack"
+       would fire on roughly a third of correct answers, and a warning that
+       cries wolf gets ignored, which is worse than no warning. The index
+       covers every page, so a name missing from it is a claim worth making. */
+    IDE.ground.verify(g.ungrounded).then(function (v) {
+      if (!v.absent.length) {
+        /* All real, just outside the pack. Say nothing -- a warning here
+           would be pure noise. */
+        w.remove();
+        return;
+      }
+      m.warn = { absent: v.absent, elsewhere: v.elsewhere };
+      IDE.chats.save();
+      w.replaceWith(warnEl(m.warn));
+    }).catch(function () {
+      /* Offline or the index would not load: fall back to the weaker claim
+         rather than dropping the warning entirely. */
+      m.warn = { unverified: g.ungrounded };
+      IDE.chats.save();
+      w.replaceWith(warnEl(m.warn));
+    });
   }
 
   function newChat() {
     if (busy && abortCtl) abortCtl.abort();
-    history = [];
-    logEl().innerHTML = "";
+    IDE.chats.create();
+    renderAll();
     setStatus("");
-    try { sessionStorage.removeItem(STORE); } catch (e) {}
+    hideHist();
+    var i = $("aiInput");
+    if (i) i.focus();
+  }
+
+  /* Line diff (plain LCS) for the propose_script gate. Returns
+     [{t:" "|"-"|"+", s:line}], or null when the inputs are too big to diff
+     responsibly -- the caller falls back to showing the new code whole. */
+  function lineDiff(oldText, newText) {
+    var A = oldText.split("\n"), B = newText.split("\n");
+    if (A.length * B.length > 250000) return null;
+    var n = A.length, m = B.length, i, j;
+    var L = new Array(n + 1);
+    for (i = n; i >= 0; i--) {
+      L[i] = new Array(m + 1);
+      for (j = m; j >= 0; j--) {
+        if (i === n || j === m) L[i][j] = 0;
+        else if (A[i] === B[j]) L[i][j] = L[i + 1][j + 1] + 1;
+        else L[i][j] = Math.max(L[i + 1][j], L[i][j + 1]);
+      }
+    }
+    var ops = [];
+    i = 0; j = 0;
+    while (i < n && j < m) {
+      if (A[i] === B[j]) { ops.push({ t: " ", s: A[i] }); i++; j++; }
+      else if (L[i + 1][j] >= L[i][j + 1]) { ops.push({ t: "-", s: A[i] }); i++; }
+      else { ops.push({ t: "+", s: B[j] }); j++; }
+    }
+    while (i < n) ops.push({ t: "-", s: A[i++] });
+    while (j < m) ops.push({ t: "+", s: B[j++] });
+    return ops;
+  }
+
+  /* Confirmation gate for propose_script: show WHAT would change (a real
+     diff, long unchanged runs collapsed), apply only on a click. Same safety
+     stance as run_lua -- the model proposes, the user disposes. */
+  function askEdit(why, code) {
+    return new Promise(function (resolve) {
+      var wrap = document.createElement("div");
+      wrap.className = "ai-confirm";
+      wrap.innerHTML =
+        '<div class="ai-confirm-why"></div>' +
+        '<div class="ai-diff"></div>' +
+        '<div class="ai-confirm-acts">' +
+        '<button type="button" class="ai-btn ai-yes">Apply to editor</button>' +
+        '<button type="button" class="ai-mini ai-no">Keep mine</button></div>';
+      var box = wrap.querySelector(".ai-diff");
+      var ops = lineDiff(editorText(), code);
+      var adds = 0, dels = 0;
+      if (!ops) {
+        var pre = document.createElement("pre");
+        pre.className = "ai-confirm-code";
+        pre.innerHTML = hlLua(code);
+        box.replaceWith(pre);
+      } else {
+        ops.forEach(function (o) { if (o.t === "+") adds++; else if (o.t === "-") dels++; });
+        function addLine(t, s) {
+          var d = document.createElement("div");
+          d.className = "dline" + (t === "+" ? " add" : t === "-" ? " del" : "");
+          d.textContent = (t === " " ? "  " : t + " ") + s;
+          box.appendChild(d);
+        }
+        function addSkip(count) {
+          var d = document.createElement("div");
+          d.className = "dline skip";
+          d.textContent = "⋯ " + count + " unchanged lines";
+          box.appendChild(d);
+        }
+        var i = 0;
+        while (i < ops.length) {
+          if (ops[i].t !== " ") { addLine(ops[i].t, ops[i].s); i++; continue; }
+          var s = i;
+          while (i < ops.length && ops[i].t === " ") i++;
+          var run = ops.slice(s, i);
+          var lead = s === 0 ? 0 : 3, tail = i >= ops.length ? 0 : 3;
+          if (run.length <= lead + tail + 2) {
+            run.forEach(function (o) { addLine(" ", o.s); });
+          } else {
+            run.slice(0, lead).forEach(function (o) { addLine(" ", o.s); });
+            addSkip(run.length - lead - tail);
+            run.slice(run.length - tail).forEach(function (o) { addLine(" ", o.s); });
+          }
+        }
+      }
+      wrap.querySelector(".ai-confirm-why").textContent =
+        "Proposed edit: " + why + (ops ? "  (+" + adds + " −" + dels + ")" : "");
+      logEl().appendChild(wrap);
+      scrollBottom(true);
+      function done(v) { wrap.remove(); resolve(v); }
+      wrap.querySelector(".ai-yes").onclick = function () { done(true); };
+      wrap.querySelector(".ai-no").onclick = function () { done(false); };
+    });
   }
 
   /* Confirmation gate for run_lua. Model-written Lua executing in someone's
@@ -478,9 +849,9 @@
         '<button type="button" class="ai-btn ai-yes">Run it</button>' +
         '<button type="button" class="ai-mini ai-no">Don\'t run</button></div>';
       wrap.querySelector(".ai-confirm-why").textContent = why;
-      wrap.querySelector(".ai-confirm-code").textContent = code;
+      wrap.querySelector(".ai-confirm-code").innerHTML = hlLua(code);
       logEl().appendChild(wrap);
-      logEl().scrollTop = logEl().scrollHeight;
+      scrollBottom(true);
       function done(v) { wrap.remove(); resolve(v); }
       wrap.querySelector(".ai-yes").onclick = function () { done(true); };
       wrap.querySelector(".ai-no").onclick = function () { done(false); };
@@ -500,6 +871,23 @@
   function closeSettings() { $("settingsModal").classList.add("hidden"); }
   /* let anything (e.g. the activity-bar gear) open Settings */
   IDE.settings = { open: openSettings, close: closeSettings };
+
+  /* Entry point for the rest of the IDE -- e.g. the "ask AI" button on a
+     failed Results row. Fronts the panel and sends; if a reply is already
+     streaming, the question lands in the composer instead so nothing is
+     silently dropped. */
+  IDE.assist = {
+    ask: function (q) {
+      if (IDE.dock && IDE.dock.show) IDE.dock.show("assist");
+      if (busy) {
+        var i = $("aiInput");
+        if (i) { i.value = q; autoGrow(); i.focus(); }
+        return;
+      }
+      send({ text: q });
+    },
+    open: function () { if (IDE.dock && IDE.dock.show) IDE.dock.show("assist"); }
+  };
 
   function fillSettings() {
     var c = IDE.provider.get();
@@ -592,9 +980,20 @@
   function init() {
     if (!$("aiLog")) return;
 
-    $("aiSend").onclick = ask;
+    $("aiSend").onclick = function () { send(); };
     $("aiNew").onclick = newChat;
     $("aiGear").onclick = openSettings;
+    $("aiModelChip").onclick = openSettings;
+    $("aiSetupBtn").onclick = openSettings;
+    $("aiHistBtn").onclick = function () {
+      if (histShown()) { hideHist(); return; }
+      renderHist();
+      $("aiHist").classList.remove("hidden");
+    };
+    document.addEventListener("mousedown", function (e) {
+      if (histShown() && !e.target.closest("#aiHist") && !e.target.closest("#aiHistBtn")) hideHist();
+    });
+
     $("aiSettingsClose").onclick = closeSettings;
     $("aiSettingsCancel").onclick = closeSettings;
     $("aiSettingsSave").onclick = saveSettings;
@@ -610,47 +1009,111 @@
       if (e.key === "Escape" && !$("settingsModal").classList.contains("hidden")) closeSettings();
     });
 
-    $("aiInput").addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); }
+    var input = $("aiInput");
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+      if (e.key === "Escape" && busy && abortCtl) abortCtl.abort();
     });
-    $("aiInput").addEventListener("input", autoGrow);
+    input.addEventListener("input", autoGrow);
+    /* the Selection chip reflects the editor's live selection -- refresh it
+       whenever the pointer or focus comes back to the composer */
+    input.addEventListener("focus", refreshChips);
+    document.querySelector(".ai-composer").addEventListener("mouseenter", refreshChips);
 
+    $("aiChips").addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".ai-chip") : null;
+      if (!b) return;
+      var c = IDE.provider.get();
+      var k = b.getAttribute("data-kind");
+      if (k === "script") IDE.provider.set({ sendEditor: !c.sendEditor });
+      else if (k === "log") IDE.provider.set({ sendLog: !c.sendLog });
+      else if (k === "agent") IDE.provider.set({ agentMode: !c.agentMode });
+      else if (k === "sel") sendSel = !sendSel;
+      refreshChips();
+    });
+
+    $("aiSugg").addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) return;
+      if (b.getAttribute("data-send")) send({ text: b.getAttribute("data-send") });
+      else if (b.getAttribute("data-fill")) {
+        input.value = b.getAttribute("data-fill");
+        autoGrow();
+        input.focus();
+        input.selectionStart = input.selectionEnd = input.value.length;
+      }
+    });
+
+    scrollEl().addEventListener("scroll", function () {
+      stick = nearBottom();
+      updateJump();
+    });
+    $("aiJump").onclick = function () { stick = true; scrollBottom(true); };
+
+    /* message + code-block actions, delegated on the log */
     logEl().addEventListener("click", function (e) {
       var b = e.target.closest ? e.target.closest("button") : null;
       if (!b) return;
+
       var block = b.closest(".ai-code");
-      var code = block ? block.querySelector("code").textContent : "";
-      if (b.classList.contains("ai-copy")) {
-        if (navigator.clipboard) navigator.clipboard.writeText(code);
-        b.textContent = "Copied"; setTimeout(function () { b.textContent = "Copy"; }, 1200);
-      } else if (b.classList.contains("ai-insert")) {
-        if (IDE.editor && IDE.editor.insertSnippet) IDE.editor.insertSnippet(code);
-        else if (IDE.editor) IDE.editor.set(editorText() + "\n" + code);
-      } else if (b.classList.contains("ai-replace")) {
-        if (IDE.editor && IDE.editor.set) IDE.editor.set(code);
+      if (block && (b.classList.contains("ai-copy") || b.classList.contains("ai-insert") ||
+                    b.classList.contains("ai-replace"))) {
+        var code = block.querySelector("code").textContent;
+        if (b.classList.contains("ai-copy")) {
+          if (navigator.clipboard) navigator.clipboard.writeText(code);
+          flash(b, "Copied");
+        } else if (b.classList.contains("ai-insert")) {
+          if (IDE.editor && IDE.editor.insertSnippet) IDE.editor.insertSnippet(code);
+          else if (IDE.editor) IDE.editor.set(editorText() + "\n" + code);
+          flash(b, "Done");
+        } else {
+          if (IDE.editor && IDE.editor.set) IDE.editor.set(code);
+          flash(b, "Done");
+        }
+        return;
+      }
+
+      var rowEl = b.closest(".ai-msg");
+      if (!rowEl) return;
+      var i = parseInt(rowEl.getAttribute("data-i"), 10);
+      var msgs = IDE.chats.current().msgs;
+      var m = msgs[i];
+      if (!m) return;
+
+      if (b.classList.contains("ai-copymsg")) {
+        var txt = m.role === "user" ? (m.display || m.content) : m.content;
+        if (navigator.clipboard) navigator.clipboard.writeText(txt);
+        flash(b, "Copied");
+      } else if (b.classList.contains("ai-editmsg")) {
+        if (busy) return;
+        input.value = m.display || m.content;
+        msgs.splice(i);            /* drop this turn and everything after */
+        IDE.chats.save();
+        renderAll();
+        autoGrow();
+        input.focus();
+      } else if (b.classList.contains("ai-regen")) {
+        send({ regen: true });
       }
     });
 
-    /* restore this tab's conversation */
-    try {
-      var raw = sessionStorage.getItem(STORE);
-      if (raw) {
-        var d = JSON.parse(raw);
-        (d.h || []).forEach(function (m) {
-          var r = addRow(m.role === "user" ? "user" : "bot", m.role === "user" ? "You" : "Assistant");
-          r.querySelector(".ai-body").innerHTML = m.role === "user"
-            ? "<p>" + esc(m.display || m.content) + "</p>" : render(m.content || "");
-          if (m.think) {
-            var t = r.querySelector(".ai-think");
-            t.hidden = false; t.querySelector("summary").textContent = "Thought process";
-            r.querySelector(".ai-thinkbody").textContent = m.think;
-          }
-        });
-        history = d.h || [];
-      }
-    } catch (e) {}
+    IDE.bus.on("ai:config", function () {
+      refreshModel();
+      refreshChips();
+      updateEmpty();
+    });
+    IDE.bus.on("script", refreshChips);
 
+    renderAll();
+    refreshModel();
+    refreshChips();
     autoGrow();
+  }
+
+  function flash(btn, txt) {
+    var was = btn.textContent;
+    btn.textContent = txt;
+    setTimeout(function () { btn.textContent = was; }, 1200);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

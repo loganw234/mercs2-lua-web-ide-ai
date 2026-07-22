@@ -6,24 +6,38 @@
  * material the model could not see. A pack can only ever hold a slice of the
  * wiki; a tool can reach all of it.
  *
- * Tools:
+ * Tools -- bundled data first (instant, offline, exactly grounded), network
+ * and game after:
+ *   search_api(query)        the bundled Ess reference + engine natives
+ *   search_examples(query)   the bundled smoke-tested example scripts
+ *   read_example(name)       one example's full source
  *   read_wiki_page(path)     the real page, straight from wiki.mercs2.tools
+ *   search_wiki(query)       the wiki's full-text index
  *   search_templates(query)  the bundled spawnable-template list
+ *   get_ide_state()          live IDE facts: connection, delivery, scripts
  *   inspect_game(expr)       READ-ONLY Lua in the running game (auto-runs)
  *   run_lua(code)            arbitrary Lua -- ALWAYS asks the user first
+ *   propose_script(code)     replace the editor script -- diff + Apply gate
  *   get_editor()             the current buffer
  *
  * Safety: `inspect_game` is allowlisted to read-shaped calls so the model can
  * look around freely. Anything that could change the game goes through
- * `run_lua`, which never executes without an explicit click. The split exists
- * so that "let the model explore" does not have to mean "let the model act".
+ * `run_lua`, and anything that would change the user's CODE goes through
+ * `propose_script` -- both show exactly what will happen and execute nothing
+ * without an explicit click. The split exists so that "let the model explore"
+ * does not have to mean "let the model act".
  */
 (function () {
   var IDE = window.IDE;
 
   var WIKI = "https://wiki.mercs2.tools";
   var MAX_PAGE_CHARS = 14000;
-  var MAX_STEPS = 6;          /* tool round trips before we stop and answer */
+  var MAX_STEPS = 10;         /* tool round trips before we stop and answer.
+                                 Raised from 6 with the bundled-data tools: a
+                                 search -> read -> inspect -> propose chain is
+                                 a legitimate 6+ calls, and every call is now
+                                 visible in the chat, so a longer leash costs
+                                 nothing in opacity. */
 
   /* Calls that only read. Anything not matching is refused by inspect_game and
      must go through run_lua (which asks). Deliberately conservative: a missing
@@ -117,7 +131,112 @@
     return t;
   }
 
+  /* ---- bundled-data indexes ----------------------------------------------
+     The build inlines the full API reference (window.ESS_API + MERCS_NATIVES)
+     and the smoke-tested examples (window.ESS_EXAMPLES). These are the BEST
+     sources the agent has: instant, offline, and exactly what the grounding
+     check trusts -- so the tools over them are listed first and their
+     descriptions steer the model here before the network. */
+  var apiCache = null, exCache = null;
+
+  function apiEntries() {
+    if (apiCache) return apiCache;
+    apiCache = [];
+    var data = window.ESS_API || { namespaces: [] };
+    (data.namespaces || []).forEach(function (ns) {
+      (ns.calls || []).forEach(function (c) {
+        apiCache.push({ path: c.path, sig: c.sig || c.path, doc: c.doc || "",
+                        ns: ns.name, nsdoc: ns.doc || "" });
+      });
+    });
+    var nat = (window.MERCS_NATIVES && window.MERCS_NATIVES.natives) || {};
+    Object.keys(nat).forEach(function (nsName) {
+      var members = nat[nsName];
+      Object.keys(members).forEach(function (fn) {
+        var e = members[fn];
+        apiCache.push({ path: nsName + "." + fn,
+                        sig: e.example || nsName + "." + fn + "(...)",
+                        doc: (e.doc || "") +
+                             (e.example ? " Real call from the game: " + e.example : ""),
+                        ns: nsName, nsdoc: "the engine's own functions", native: true });
+      });
+    });
+    return apiCache;
+  }
+
+  function apiCard(e) {
+    return e.sig + "\n  " + (e.doc || "(no per-call doc)") +
+      "\n  [" + (e.native ? "engine native" : "Ess") + "] namespace " + e.ns +
+      (e.nsdoc ? " -- " + e.nsdoc : "");
+  }
+
+  function exampleList() {
+    if (exCache) return exCache;
+    exCache = [];
+    var d = window.ESS_EXAMPLES || { categories: [] };
+    (d.categories || []).forEach(function (c) {
+      (c.items || []).forEach(function (it) {
+        exCache.push({ name: it.name || "", desc: it.desc || "",
+                       code: it.code || "", cat: c.name || "" });
+      });
+    });
+    return exCache;
+  }
+
   var TOOLS = [
+    {
+      type: "function",
+      function: {
+        name: "search_api",
+        description:
+          "Search the BUNDLED API reference: every documented Ess.* call plus " +
+          "the engine's own native functions with real call sites from the " +
+          "base game. Instant and offline. Use this FIRST for 'is there a " +
+          "function that...', exact signatures, and argument lists. Pass a " +
+          "full dotted name to get the complete entry for that call.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Keywords or a dotted call name." }
+          },
+          required: ["query"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "search_examples",
+        description:
+          "Search the bundled, smoke-tested example scripts by keyword. The " +
+          "best answer to 'how do I ...' is usually a WORKING example adapted " +
+          "to the user's need, not code written from memory. Returns names and " +
+          "descriptions; read the code with read_example.",
+        parameters: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Keywords, e.g. 'spawn vehicle', 'loop', 'faction'." }
+          },
+          required: ["query"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "read_example",
+        description:
+          "Read the full Lua source of one bundled example script, by the " +
+          "exact name search_examples returned.",
+        parameters: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "An example name from search_examples." }
+          },
+          required: ["name"]
+        }
+      }
+    },
     {
       type: "function",
       function: {
@@ -229,6 +348,38 @@
     {
       type: "function",
       function: {
+        name: "propose_script",
+        description:
+          "Propose a complete replacement for the script open in the editor. " +
+          "The user is shown a diff and must click Apply -- nothing changes " +
+          "without their approval. Use this when asked to fix, extend or " +
+          "rewrite their script. Always send the WHOLE script (the full file " +
+          "after your change), never a fragment.",
+        parameters: {
+          type: "object",
+          properties: {
+            code: { type: "string", description: "The complete new script." },
+            why: { type: "string", description: "One line the user will see, summarising the change." }
+          },
+          required: ["code", "why"]
+        }
+      }
+    },
+    {
+      type: "function",
+      function: {
+        name: "get_ide_state",
+        description:
+          "Report the IDE's live state: whether the game is connected (and " +
+          "the likely reason if not), how this page is being served, and the " +
+          "user's scripts. Call this FIRST for connection problems, 'nothing " +
+          "happens when I run', or any question about the editor itself.",
+        parameters: { type: "object", properties: {} }
+      }
+    },
+    {
+      type: "function",
+      function: {
         name: "get_editor",
         description: "Return the Lua currently open in the editor.",
         parameters: { type: "object", properties: {} }
@@ -252,6 +403,163 @@
 
   function execute(name, args, ui) {
     try {
+      if (name === "search_api") {
+        var aq = String(args.query || "").trim();
+        if (!aq) return Promise.resolve("Empty query.");
+        var entries = apiEntries();
+        var alc = aq.toLowerCase();
+        /* a dotted-name query that matches a path exactly (or as a suffix,
+           so "Player.pose" finds "Ess.Player.pose") gets the full card */
+        var full = entries.filter(function (e) {
+          var p = e.path.toLowerCase();
+          return p === alc || p.slice(-(alc.length + 1)) === "." + alc;
+        });
+        if (full.length) {
+          return Promise.resolve(full.slice(0, 5).map(apiCard).join("\n\n"));
+        }
+        var aterms = contentTerms(alc);
+        if (!aterms.length) return Promise.resolve("Query too short.");
+        var ascored = [];
+        entries.forEach(function (e) {
+          var hay = (e.path + " " + e.sig + " " + e.doc).toLowerCase();
+          var s = 0, matched = 0;
+          aterms.forEach(function (t) {
+            var n = hay.split(t).length - 1;
+            if (e.path.toLowerCase().indexOf(t) !== -1) s += 8;
+            if (n) { s += Math.min(n, 3); matched++; }
+          });
+          if (matched === aterms.length && aterms.length > 1) s += 6;
+          if (matched) ascored.push({ s: s, m: matched, e: e });
+        });
+        ascored = ascored.filter(function (r) {
+          return r.m >= (aterms.length === 1 ? 1 : Math.ceil(aterms.length / 2));
+        });
+        if (!ascored.length) {
+          return Promise.resolve(
+            "Nothing in the bundled API reference matches '" + aq + "'. It " +
+            "covers every documented Ess call and the natives the base game " +
+            "itself uses, so this is strong evidence no such call exists " +
+            "under that name. Try different words, or search_wiki for " +
+            "concept/guide pages -- and do NOT invent a name.");
+        }
+        ascored.sort(function (a, b) { return b.s - a.s; });
+        var alines = ascored.slice(0, 20).map(function (r) {
+          var doc = r.e.doc.replace(/\s+/g, " ").slice(0, 110);
+          return r.e.path + " -- " + r.e.sig + (doc ? "\n    " + doc : "");
+        });
+        return Promise.resolve(
+          "Matching calls (pass a full dotted name to search_api for the " +
+          "complete entry):\n\n" + alines.join("\n"));
+      }
+
+      if (name === "search_examples") {
+        var xq = String(args.query || "").toLowerCase().trim();
+        if (!xq) return Promise.resolve("Empty query.");
+        var xterms = contentTerms(xq);
+        if (!xterms.length) return Promise.resolve("Query too short.");
+        var xhits = exampleList().map(function (x) {
+          var hay = (x.name + " " + x.desc + " " + x.cat + " " + x.code).toLowerCase();
+          var matched = 0;
+          xterms.forEach(function (t) { if (hay.indexOf(t) !== -1) matched++; });
+          return { m: matched, x: x };
+        }).filter(function (h) {
+          return h.m >= (xterms.length === 1 ? 1 : Math.ceil(xterms.length / 2));
+        });
+        if (!xhits.length) {
+          return Promise.resolve(
+            "No bundled example matches '" + xq + "' (there are " +
+            exampleList().length + "). Try broader words, or build from " +
+            "search_api results instead -- and never present guessed code as " +
+            "a tested example.");
+        }
+        xhits.sort(function (a, b) { return b.m - a.m; });
+        return Promise.resolve(
+          "Matching examples (read one with read_example):\n\n" +
+          xhits.slice(0, 12).map(function (h) {
+            return h.x.name + " -- " + h.x.desc;
+          }).join("\n"));
+      }
+
+      if (name === "read_example") {
+        var want = String(args.name || "").toLowerCase().trim();
+        if (!want) return Promise.resolve("Empty name.");
+        var all = exampleList(), hit = null;
+        for (var xi = 0; xi < all.length; xi++) {
+          if (all[xi].name.toLowerCase() === want) { hit = all[xi]; break; }
+        }
+        if (!hit) {
+          var near = all.filter(function (x) {
+            return x.name.toLowerCase().indexOf(want) !== -1;
+          });
+          if (near.length === 1) hit = near[0];
+          else if (near.length) {
+            return Promise.resolve("No exact match. Did you mean:\n" +
+              near.slice(0, 8).map(function (x) { return x.name; }).join("\n"));
+          } else {
+            return Promise.resolve(
+              "No bundled example named '" + args.name + "'. Use " +
+              "search_examples first and pass a name from its results.");
+          }
+        }
+        return Promise.resolve(
+          "-- Example: " + hit.name + "\n-- " + hit.desc + "\n\n" + hit.code);
+      }
+
+      if (name === "get_ide_state") {
+        var lines = [];
+        var connected = IDE.bridge && IDE.bridge.connected();
+        var wsEl = IDE.$ && IDE.$("url");
+        var wsUrl = (wsEl && wsEl.value) || "ws://127.0.0.1:27050";
+        lines.push("Game connection: " + (connected
+          ? "CONNECTED (" + wsUrl + ")"
+          : (IDE.bridge ? IDE.bridge.state() : "unknown") + " -- NOT connected (" + wsUrl + ")"));
+        if (location.protocol === "file:") {
+          lines.push("Page delivery: opened from disk (file://) -- no browser " +
+            "restriction on reaching 127.0.0.1.");
+        } else {
+          lines.push("Page delivery: " + location.origin +
+            (location.protocol === "https:"
+              ? " (hosted https -- some browsers BLOCK connections from here " +
+                "to 127.0.0.1; downloading the editor or letting the " +
+                "lua-bridge serve it fixes that)"
+              : ""));
+        }
+        try {
+          var act = IDE.store.active();
+          lines.push("Active script: \"" + act.name + "\" (" + act.code.length +
+            " chars). Library: " + IDE.store.list().length + " scripts, " +
+            IDE.store.openTabs().length + " open as tabs.");
+        } catch (e) {}
+        if (!connected) {
+          lines.push("Until the user connects (game running with the " +
+            "lua-bridge mod, then the Connect button, top right), nothing " +
+            "can run in the game: inspect_game, run_lua and the Run button " +
+            "will all report not connected.");
+        }
+        return Promise.resolve(lines.join("\n"));
+      }
+
+      if (name === "propose_script") {
+        var newCode = String(args.code || "");
+        if (!newCode.trim()) return Promise.resolve("No code given.");
+        if (!ui || !ui.proposeEdit) {
+          return Promise.resolve("The editor-edit gate is unavailable here.");
+        }
+        return ui.proposeEdit(args.why || "Apply this version of the script?", newCode)
+          .then(function (okd) {
+            if (!okd) {
+              return "The user declined the edit -- the script is unchanged. " +
+                "Ask what they want different rather than re-proposing the same code.";
+            }
+            if (IDE.editor && IDE.editor.set) {
+              IDE.editor.set(newCode);
+              return "Applied. The editor now contains the proposed script " +
+                "(the user can undo with Ctrl+Z).";
+            }
+            return "Could not reach the editor.";
+          });
+      }
+
       if (name === "read_wiki_page") {
         /* Accept what search_wiki hands back verbatim (".html", anchors, a
            leading slash) as well as a bare path -- the model should not have to
@@ -443,10 +751,10 @@
               "Tool budget exhausted. Answer with what you have, and say which " +
               "lookup you did not get to rather than assuming its result." });
             return IDE.provider.complete(convo, null, opts).then(function (f) {
-              return { content: f.content, steps: steps };
+              return { content: f.content, reasoning: f.reasoning, steps: steps };
             });
           }
-          return { content: res.content, steps: steps };
+          return { content: res.content, reasoning: res.reasoning, steps: steps };
         }
 
         convo.push(res.raw);

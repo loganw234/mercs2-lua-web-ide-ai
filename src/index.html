@@ -99,18 +99,46 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       </div>
     </div>
   <div class="spanel" id="panelAssist">
-        <div class="sidehead">
-          <span>Assistant</span>
+        <div class="ai-head">
+          <button id="aiModelChip" class="ai-model" title="Active model — click to change"></button>
           <span class="aihead-acts">
-            <button id="aiNew" class="ai-mini" title="New conversation">New</button>
-            <button id="aiGear" class="ai-mini" title="Provider settings">Settings</button>
+            <button id="aiNew" class="ai-icon" title="New chat">＋</button>
+            <button id="aiHistBtn" class="ai-icon" title="Chat history">🗨</button>
+            <button id="aiGear" class="ai-icon" title="Assistant settings">⚙</button>
           </span>
         </div>
-        <div id="aiLog" class="ai-log"></div>
+        <div class="ai-hist hidden" id="aiHist"></div>
+        <div class="ai-scrollwrap">
+          <div class="ai-scroll" id="aiScroll">
+            <div class="ai-empty" id="aiEmpty">
+              <div class="ai-empty-mark">✦</div>
+              <div class="ai-empty-title">Assistant</div>
+              <p class="ai-empty-sub">Ask about your script, the Ess API, or an error. It can read
+                your editor, the game log, and — in agent mode — the wiki and the live game.</p>
+              <div class="ai-sugg" id="aiSugg">
+                <button type="button" data-send="Explain what my current script does, step by step.">Explain my script</button>
+                <button type="button" data-send="Look at the recent game log, find the most recent error, explain what caused it, and suggest a fix.">Diagnose the latest error</button>
+                <button type="button" data-fill="Write a script that ">Write a script that…</button>
+                <button type="button" data-send="What are the most useful things I can do with Ess.Player? Show one-line examples.">What can Ess.Player do?</button>
+              </div>
+              <div class="ai-setup hidden" id="aiSetup">
+                <p>No AI provider is configured yet. <b>OpenRouter's free tier works</b>
+                  (free account + key, pick a “:free” model — no card needed), or run a
+                  local model with Ollama. Keys stay in this browser; nothing is proxied.</p>
+                <button type="button" class="ai-btn" id="aiSetupBtn">Choose a provider…</button>
+              </div>
+            </div>
+            <div id="aiLog" class="ai-log"></div>
+          </div>
+          <button class="ai-jump hidden" id="aiJump" title="Jump to the latest">↓</button>
+        </div>
         <div id="aiStatus" class="ai-status"></div>
         <div class="ai-composer">
-          <textarea id="aiInput" rows="2" placeholder="Ask about your script, the API, an error..."></textarea>
-          <button id="aiSend" class="ai-btn">Ask</button>
+          <div class="ai-chips" id="aiChips"></div>
+          <div class="ai-box">
+            <textarea id="aiInput" rows="1" placeholder="Ask about your script, the API, an error…" spellcheck="false"></textarea>
+            <button id="aiSend" class="ai-send" title="Send (Enter) — Shift+Enter for a new line">➤</button>
+          </div>
         </div>
       </div>
     <div class="spanel" id="panelMap">
@@ -204,7 +232,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <div class="settings-section">Context sent with each question</div>
       <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer</label>
       <label class="ai-check"><input id="aiSendLog" type="checkbox"> Send recent game log</label>
-      <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it read the wiki and inspect the game)</label>
+      <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it search the docs &amp; examples, inspect the game, and propose edits — changes always ask first)</label>
 
       <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
       <div class="modal-acts">

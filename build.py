@@ -59,23 +59,33 @@ def main():
          "note": "Adds the full namespace + game reference. Needs a 64k model "
                  "(~19k headroom for your script and the conversation)."},
         {"key": "medium", "label": "Medium", "file": "pack-medium.txt",
-         "tokens": 98322, "min_ctx": 131072, "good_ctx": 200000,
+         "tokens": 98526, "min_ctx": 131072, "good_ctx": 200000,
          "note": "Adds Ess and the resident modules -- most questions answerable "
                  "without a wiki lookup. Needs 128k (~30k headroom)."},
         {"key": "large", "label": "Large", "file": "pack-large.txt",
-         "tokens": 157480, "min_ctx": 200000, "good_ctx": 262144,
+         "tokens": 157684, "min_ctx": 200000, "good_ctx": 262144,
          "note": "Adds spawn templates + the contract framework. The ONLY tier "
                  "that carries the template list, so the only one that fully stops "
                  "invented spawn names. Needs 200k (~43k headroom)."},
         {"key": "full", "label": "Full", "file": "pack-full.txt",
-         "tokens": 240032, "min_ctx": 262144, "good_ctx": 1000000,
+         "tokens": 240446, "min_ctx": 262144, "good_ctx": 1000000,
          "note": "Everything, no omissions. ~16k headroom at 256k, so practical "
                  "only on long-context hosted models (DeepSeek V4, Gemini). Local "
                  "models generally cannot hold this."},
     ]
+    # The IDE's own how-to (src/data/ide-help.txt), appended to EVERY tier.
+    # Users ask the assistant about the editor at least as often as about the
+    # API, and the wiki-sourced packs know nothing about it. Appended at the
+    # END on purpose: a too-small context truncates from the front, and this
+    # must be eaten before the anti-invention rules are. Token counts are
+    # adjusted here so the settings chooser stays honest.
+    ide_help = (SRC / "data" / "ide-help.txt").read_text(encoding="utf-8").strip()
+    help_tokens = len(ide_help) // 4
     packs = {}
     for t in PACK_TIERS:
-        packs[t["key"]] = (SRC / "data" / "packs" / t["file"]).read_text(encoding="utf-8")
+        base = (SRC / "data" / "packs" / t["file"]).read_text(encoding="utf-8").rstrip()
+        packs[t["key"]] = base + "\n\n" + ide_help + "\n"
+        t["tokens"] += help_tokens
     pack_info = [{k: t[k] for k in ("key", "label", "tokens", "min_ctx", "good_ctx", "note")}
                  for t in PACK_TIERS]
     # Map tab data, baked by tools/gen_map.py from the webmap tensor.

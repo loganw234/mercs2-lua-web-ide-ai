@@ -33,10 +33,13 @@
       baseUrl: "https://api.openai.com/v1", model: "gpt-5.6-terra",
       needsKey: true, local: false, tested: false },
 
-    { id: "openrouter", label: "OpenRouter", api: "openai",
-      baseUrl: "https://openrouter.ai/api/v1", model: "deepseek/deepseek-v4-pro",
+    { id: "openrouter", label: "OpenRouter (free tier works)", api: "openai",
+      baseUrl: "https://openrouter.ai/api/v1", model: "deepseek/deepseek-v4-pro:free",
       needsKey: true, local: false, tested: false,
-      note: "Designed for browser calls; good fallback if another host blocks CORS." },
+      note: "The FREE tier works here: make a free account, create a key, and " +
+            "pick a model whose name ends in ':free' (rate-limited, no card " +
+            "needed). Drop the ':free' suffix to use the paid tier. Designed " +
+            "for browser calls; also a good fallback if another host blocks CORS." },
 
     { id: "anthropic", label: "Anthropic", api: "anthropic",
       baseUrl: "https://api.anthropic.com/v1", model: "claude-sonnet-5",
@@ -161,8 +164,12 @@
       return readSSE(res, function (o) {
         var d = o.choices && o.choices[0] && o.choices[0].delta;
         if (!d) return;
-        /* DeepSeek and some others stream chain-of-thought separately */
-        if (d.reasoning_content && opts.onReasoning) opts.onReasoning(d.reasoning_content);
+        /* Chain-of-thought streams under different names per provider:
+           DeepSeek says reasoning_content, Ollama/OpenRouter say reasoning.
+           Missing this looks like "streaming is broken" on a thinking model --
+           every token until the final answer is silently dropped. */
+        var r = d.reasoning_content || d.reasoning;
+        if (r && opts.onReasoning) opts.onReasoning(r);
         if (d.content && opts.onDelta) opts.onDelta(d.content);
       });
     });
@@ -224,23 +231,99 @@
       return res.json();
     }).then(function (j) {
       var m = (j.choices && j.choices[0] && j.choices[0].message) || {};
-      return { content: m.content || "", toolCalls: m.tool_calls || [], raw: m };
+      return { content: m.content || "", toolCalls: m.tool_calls || [],
+               reasoning: m.reasoning_content || m.reasoning || "", raw: m };
+    });
+  }
+
+  /* The agent loop (86_agent.js) speaks the OpenAI shape throughout -- its
+     conversation carries OpenAI-style assistant tool_calls and {role:"tool"}
+     results. This converts that conversation on every request rather than
+     making the loop provider-aware: system messages lift to the top-level
+     field, tool results fold into user-role tool_result blocks (consecutive
+     ones merged -- Anthropic wants them in ONE user turn), and assistant
+     tool_calls become tool_use blocks. */
+  function toAnthropic(messages) {
+    var system = "", out = [];
+    for (var i = 0; i < messages.length; i++) {
+      var m = messages[i];
+      if (m.role === "system") { system += (system ? "\n\n" : "") + m.content; continue; }
+      if (m.role === "tool") {
+        var block = { type: "tool_result", tool_use_id: m.tool_call_id || "",
+                      content: String(m.content || "") };
+        var prev = out[out.length - 1];
+        if (prev && prev.role === "user" && Array.isArray(prev.content)) prev.content.push(block);
+        else out.push({ role: "user", content: [block] });
+        continue;
+      }
+      if (m.role === "assistant" && m.tool_calls && m.tool_calls.length) {
+        var content = [];
+        if (m.content) content.push({ type: "text", text: String(m.content) });
+        for (var t = 0; t < m.tool_calls.length; t++) {
+          var tc = m.tool_calls[t], input = {};
+          try { input = JSON.parse((tc.function && tc.function.arguments) || "{}"); }
+          catch (e) { input = {}; }
+          content.push({ type: "tool_use", id: tc.id,
+                         name: tc.function && tc.function.name, input: input });
+        }
+        out.push({ role: "assistant", content: content });
+        continue;
+      }
+      out.push({ role: m.role, content: m.content });
+    }
+    return { system: system, messages: out };
+  }
+
+  function completeAnthropic(c, messages, tools, opts) {
+    var conv = toAnthropic(messages);
+    var body = { model: c.model, system: conv.system, messages: conv.messages,
+                 max_tokens: c.maxTokens, stream: false };
+    if (tools && tools.length) {
+      body.tools = tools.map(function (t) {
+        return { name: t.function.name, description: t.function.description,
+                 input_schema: t.function.parameters };
+      });
+    }
+    return fetch(c.baseUrl.replace(/\/+$/, "") + "/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": c.key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify(body), signal: opts.signal
+    }).then(function (res) {
+      if (!res.ok) return httpError(res);
+      return res.json();
+    }).then(function (j) {
+      var text = "", reasoning = "", toolCalls = [];
+      (j.content || []).forEach(function (b) {
+        if (b.type === "text") text += b.text || "";
+        else if (b.type === "thinking") reasoning += b.thinking || "";
+        else if (b.type === "tool_use") {
+          /* back to the OpenAI shape the loop executes against */
+          toolCalls.push({ id: b.id, type: "function",
+            function: { name: b.name, arguments: JSON.stringify(b.input || {}) } });
+        }
+      });
+      /* raw is what the loop pushes back into the conversation, so it must be
+         OpenAI-shaped too -- toAnthropic re-converts it on the next round. */
+      var raw = { role: "assistant", content: text };
+      if (toolCalls.length) raw.tool_calls = toolCalls;
+      return { content: text, toolCalls: toolCalls, reasoning: reasoning, raw: raw };
     });
   }
 
   IDE.provider = {
     presets: function () { return PRESETS.slice(); },
-    /* Used by the agent loop. Anthropic's tool shape differs enough that it is
-       not wired yet -- the local models this targets are all OpenAI-shaped. */
+    /* Used by the agent loop. Both adapters return the same OpenAI-shaped
+       {content, toolCalls, reasoning, raw} so the loop stays provider-blind. */
     complete: function (messages, tools, opts) {
       var c = load();
       opts = opts || {};
-      if (c.api === "anthropic") {
-        return Promise.reject(new Error(
-          "Tool use is not wired for the Anthropic adapter yet -- use an " +
-          "OpenAI-compatible provider for agent mode."));
-      }
-      return completeOpenAI(c, messages, tools, opts);
+      var fn = c.api === "anthropic" ? completeAnthropic : completeOpenAI;
+      return fn(c, messages, tools, opts);
     },
     preset: function (id) {
       for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];

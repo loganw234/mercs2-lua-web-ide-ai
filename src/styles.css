@@ -5,7 +5,7 @@
   --efont: ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   --eline: 20px; --epad: 10px 12px; --efs: 13px;
   --bg:#0b1017; --bar:#111826; --panel:#0f1626; --edge:#20293b; --edge2:#2a3550;
-  --ink:#dbe3ef; --dim:#8290a6; --accent:#5cc8ff; --go:#4ec9a0;
+  --ink:#dbe3ef; --dim:#8290a6; --accent:#5cc8ff; --accent-ink:#06121e; --go:#4ec9a0;
   --k:#c586e0; --s:#9ece6a; --c:#5c6a82; --num:#e6b455; --b:#5cc8ff;
   --ok:#4ec9a0; --err:#ff6b6b; --warn:#e6b455;
   --hov:#141d2e; --selrow:#1c2740; --inbg:#0a0f18; --selbg:rgba(92,200,255,.28);
@@ -14,11 +14,11 @@
    user's explicit choice. The toggle (35_theme.js) stamps data-theme on <html>; "auto" removes it. */
 @media (prefers-color-scheme: light){
   :root:not([data-theme="dark"]){ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
-    --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
+    --dim:#5b6980; --accent:#0284c7; --accent-ink:#fff; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
     --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 }
 :root[data-theme="light"]{ --bg:#f5f7fb; --bar:#fff; --panel:#fff; --edge:#dde3ee; --edge2:#c6cfe0; --ink:#16202f;
-  --dim:#5b6980; --accent:#0284c7; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
+  --dim:#5b6980; --accent:#0284c7; --accent-ink:#fff; --go:#0a9d78; --k:#8a3fb0; --s:#3f8c2f; --c:#94a1b8; --num:#b5730f; --b:#0284c7;
   --hov:#eef2f9; --selrow:#dbeafe; --inbg:#fff; --selbg:rgba(2,132,199,.22); }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -133,6 +133,8 @@ select.btn{padding:6px 8px}
 .settings-section:first-child{margin-top:0}
 .modal-acts{display:flex;gap:8px;align-items:center;margin-top:16px;
   padding-top:12px;border-top:1px solid var(--edge)}
+.ai-note{color:var(--dim);font-size:11px;margin:0 0 10px}
+.ai-warn{color:var(--dim);font-size:10.5px;line-height:1.4;margin-top:12px}
 
 /* ---- drop zones (shown while dragging a tab) ---- */
 .dropzone{position:absolute;inset:0;pointer-events:none;z-index:5}
@@ -329,6 +331,9 @@ select.btn{padding:6px 8px}
 .inspect{position:absolute;right:24px;top:5px;font:11px/1 var(--efont);background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 5px;cursor:pointer;opacity:0}
 .row:hover .inspect{opacity:1}
 .inspect:hover{border-color:var(--edge2)}
+.askai{position:absolute;right:24px;top:5px;font:11px/1 var(--efont);background:transparent;border:1px solid transparent;border-radius:5px;padding:3px 5px;cursor:pointer;opacity:0}
+.row:hover .askai{opacity:1}
+.askai:hover{border-color:var(--edge2)}
 .latest{position:absolute;right:12px;bottom:8px;z-index:5;font:11px/1 var(--efont);color:var(--ink);background:var(--bar);border:1px solid var(--edge2);border-radius:20px;padding:6px 11px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .latest:hover{border-color:var(--accent)}
 .latest.hidden{display:none}
@@ -397,83 +402,174 @@ a.btn{text-decoration:none;display:inline-block}
 .btn.ghost{background:transparent;color:var(--dim)}
 
 /* ===== AI assistant panel ===================================================
-   Theme-agnostic: the IDE ships light and dark, so everything here is a
-   translucent grey over whatever the theme provides, plus one accent. */
-#panelAssist { display: flex; flex-direction: column; min-height: 0; }
-.aihead-acts { margin-left: auto; display: flex; gap: 4px; }
+   Restyled on the shared design tokens so light and dark both come from the
+   theme -- no hardcoded panel colors in here. */
+#panelAssist { display: flex; flex-direction: column; min-height: 0; position: relative; }
+.aihead-acts { margin-left: auto; display: flex; gap: 2px; }
 
+/* small legacy buttons -- still used by the map panel and the settings modal */
 .ai-mini { font: inherit; font-size: 11px; padding: 2px 7px; border-radius: 4px;
-  cursor: pointer; color: inherit; background: rgba(128,128,128,.14);
-  border: 1px solid rgba(128,128,128,.35); }
-.ai-mini:hover { background: rgba(128,128,128,.26); }
-.ai-btn { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 5px;
-  cursor: pointer; color: #fff; background: #2b6cb0; border: 1px solid #2b6cb0; }
-.ai-btn:hover { background: #245a94; }
-.ai-btn.stopping { background: #b04343; border-color: #b04343; }
+  cursor: pointer; color: var(--ink); background: var(--hov);
+  border: 1px solid var(--edge2); }
+.ai-mini:hover { border-color: var(--accent); }
+.ai-btn { font: inherit; font-size: 12px; padding: 5px 12px; border-radius: 6px;
+  cursor: pointer; color: var(--accent-ink); background: var(--accent);
+  border: 1px solid var(--accent); font-weight: 600; }
+.ai-btn:hover { filter: brightness(1.1); }
 
-.ai-log { flex: 1; overflow-y: auto; min-height: 120px; padding: 4px 0; }
-.ai-row { padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.18); }
-.ai-row.ai-user { background: rgba(128,128,128,.08); }
-.ai-who { font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
-  opacity: .55; margin-bottom: 3px; }
-.ai-body { font-size: 12.5px; line-height: 1.5; word-wrap: break-word; }
+/* -- header: model chip + chat actions -- */
+.ai-head { flex: none; display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px; border-bottom: 1px solid var(--edge); background: var(--bar); }
+.ai-model { min-width: 0; max-width: 55%; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font: 11px/1 var(--efont); color: var(--dim);
+  background: var(--hov); border: 1px solid var(--edge2); border-radius: 20px;
+  padding: 4px 10px; cursor: pointer; }
+.ai-model:hover { color: var(--ink); border-color: var(--accent); }
+.ai-model.unset { color: var(--warn); border-color: var(--warn); border-style: dashed; }
+.ai-icon { width: 26px; height: 26px; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 13px; line-height: 1; color: var(--dim);
+  background: transparent; border: 0; border-radius: 6px; cursor: pointer; }
+.ai-icon:hover { color: var(--ink); background: var(--hov); }
+
+/* -- chat history popover -- */
+.ai-hist { position: absolute; top: 36px; left: 8px; right: 8px; z-index: 8;
+  max-height: 55%; overflow-y: auto; padding: 4px; background: var(--bar);
+  border: 1px solid var(--edge2); border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.ai-hist.hidden { display: none; }
+.ai-histrow { display: flex; align-items: center; gap: 6px; padding: 6px 8px;
+  border-radius: 7px; cursor: pointer; }
+.ai-histrow:hover { background: var(--hov); }
+.ai-histrow.on { background: var(--selrow); }
+.ai-histmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ai-histtitle { font-size: 12px; color: var(--ink); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.ai-histrow.on .ai-histtitle { color: var(--accent); }
+.ai-histwhen { font-size: 10px; color: var(--dim); }
+.ai-histdel { opacity: 0; }
+.ai-histrow:hover .ai-histdel { opacity: 1; }
+.ai-histempty { padding: 10px; color: var(--dim); font-size: 11.5px; text-align: center; }
+
+/* -- the conversation -- */
+.ai-scrollwrap { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.ai-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.ai-log { display: flex; flex-direction: column; gap: 14px; padding: 12px 10px; }
+.ai-log:empty { display: none; }
+.ai-msg { position: relative; min-width: 0; }
+.ai-user { display: flex; flex-direction: column; align-items: flex-end; }
+.ai-bubble { max-width: 94%; background: var(--selrow); border: 1px solid var(--edge);
+  border-radius: 12px 12px 3px 12px; padding: 7px 11px; font-size: 12.5px;
+  line-height: 1.5; word-wrap: break-word; }
+.ai-bubble p { margin: 0; }
+.ai-body { font-size: 12.5px; line-height: 1.55; word-wrap: break-word; }
 .ai-body p { margin: 0 0 6px; }
 .ai-body p:last-child { margin-bottom: 0; }
 .ai-body ul, .ai-body ol { margin: 2px 0 6px; padding-left: 18px; }
+.ai-body a { color: var(--accent); }
 .ai-h { font-weight: 700; margin: 8px 0 3px; }
-.ai-body code { background: rgba(128,128,128,.18); padding: 1px 4px; border-radius: 3px; }
-.ai-cursor { opacity: .45; }
+.ai-body code, .ai-bubble code { background: var(--hov); border: 1px solid var(--edge);
+  padding: 0 4px; border-radius: 4px; font: 11.5px/1.4 var(--efont); }
+.ai-cursor { display: inline-block; color: var(--accent);
+  animation: aiblink 1s steps(2, start) infinite; }
+@keyframes aiblink { 50% { opacity: 0; } }
 
-.ai-code { margin: 6px 0; border: 1px solid rgba(128,128,128,.3); border-radius: 5px; overflow: hidden; }
+/* hover actions under each message */
+.ai-acts { display: flex; gap: 2px; margin-top: 3px; opacity: 0; transition: opacity .12s; }
+.ai-msg:hover .ai-acts, .ai-msg:focus-within .ai-acts { opacity: 1; }
+.ai-act { font: 11px/1 var(--efont); color: var(--dim); background: transparent;
+  border: 1px solid transparent; border-radius: 5px; padding: 3px 7px; cursor: pointer; }
+.ai-act:hover { color: var(--ink); background: var(--hov); border-color: var(--edge2); }
+
+/* code blocks, with Lua highlighting on the editor's syntax tokens */
+.ai-code { margin: 8px 0; border: 1px solid var(--edge); border-radius: 8px;
+  overflow: hidden; background: var(--inbg); }
 .ai-codehead { display: flex; align-items: center; justify-content: space-between;
-  padding: 2px 3px 2px 8px; background: rgba(128,128,128,.16); font-size: 10.5px; }
-.ai-codeacts { display: flex; gap: 3px; }
-.ai-code pre { margin: 0; padding: 7px 9px; overflow-x: auto;
-  background: rgba(128,128,128,.09); font-size: 11.5px; line-height: 1.45; }
-.ai-code pre code { background: none; padding: 0; }
+  padding: 3px 3px 3px 9px; background: var(--hov); border-bottom: 1px solid var(--edge);
+  font: 10.5px/1 var(--efont); color: var(--dim); }
+.ai-codeacts { display: flex; gap: 2px; }
+.ai-code pre { margin: 0; padding: 8px 10px; overflow-x: auto;
+  font: 11.5px/1.5 var(--efont); color: var(--ink); }
+.ai-code pre code { background: none; border: 0; padding: 0; font: inherit; }
+.hl-k { color: var(--k); } .hl-s { color: var(--s); } .hl-n { color: var(--num); }
+.hl-c { color: var(--c); font-style: italic; } .hl-g { color: var(--b); }
 
 .ai-tw { overflow-x: auto; margin: 6px 0; }
 .ai-tw table { border-collapse: collapse; font-size: 11.5px; }
-.ai-tw th, .ai-tw td { border: 1px solid rgba(128,128,128,.3); padding: 3px 7px; text-align: left; }
-.ai-tw th { background: rgba(128,128,128,.14); }
+.ai-tw th, .ai-tw td { border: 1px solid var(--edge2); padding: 3px 7px; text-align: left; }
+.ai-tw th { background: var(--hov); }
 
-.ai-think { border: 1px dashed rgba(128,128,128,.45); border-radius: 5px; margin-bottom: 6px; font-size: 11.5px; }
-.ai-think summary { cursor: pointer; padding: 3px 7px; opacity: .7; }
-.ai-thinkbody { padding: 4px 8px 6px; white-space: pre-wrap; opacity: .65;
+.ai-think { border: 1px dashed var(--edge2); border-radius: 7px; margin-bottom: 8px;
+  font-size: 11.5px; }
+.ai-think summary { cursor: pointer; padding: 4px 8px; color: var(--dim); user-select: none; }
+.ai-think.live[open] summary { color: var(--accent); }
+.ai-thinkbody { padding: 4px 9px 7px; white-space: pre-wrap; color: var(--dim);
   font-size: 11px; max-height: 180px; overflow-y: auto; }
 
-.ai-status { font-size: 11.5px; padding: 3px 10px; opacity: .8; min-height: 1em; }
+.ai-status { flex: none; font-size: 11.5px; padding: 4px 10px; color: var(--dim); }
 .ai-status:empty { display: none; }
-.ai-err { color: #d06565; opacity: 1; }
+.ai-err { color: var(--err); }
 
-.ai-composer { display: flex; gap: 6px; padding: 6px 8px; align-items: flex-end;
-  border-top: 1px solid rgba(128,128,128,.25); }
-.ai-composer textarea { flex: 1; font: inherit; font-size: 12.5px; resize: none;
-  padding: 5px 7px; border-radius: 5px; color: inherit; min-height: 34px; max-height: 160px;
-  background: rgba(128,128,128,.08); border: 1px solid rgba(128,128,128,.35); }
+/* jump-to-latest, shown once the user scrolls up */
+.ai-jump { position: absolute; right: 12px; bottom: 10px; z-index: 5; width: 28px;
+  height: 28px; border-radius: 50%; font: 13px/1 var(--efont); color: var(--ink);
+  background: var(--bar); border: 1px solid var(--edge2); cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.ai-jump:hover { border-color: var(--accent); }
+.ai-jump.hidden { display: none; }
 
-.ai-settings { padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.25);
-  display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; }
-.ai-settings label { display: flex; flex-direction: column; gap: 2px; }
-.ai-settings input, .ai-settings select { font: inherit; font-size: 11.5px; padding: 3px 5px;
-  border-radius: 4px; color: inherit; background: rgba(128,128,128,.1);
-  border: 1px solid rgba(128,128,128,.35); }
-.ai-settings .ai-check { flex-direction: row; align-items: center; gap: 6px; }
-.ai-settings-acts { display: flex; gap: 6px; margin-top: 2px; }
-.ai-note { opacity: .65; font-size: 11px; }
-.ai-warn { opacity: .6; font-size: 10.5px; line-height: 1.4; }
+/* -- welcome / empty state -- */
+.ai-empty { padding: 26px 16px 16px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 5px; }
+.ai-empty.hidden { display: none; }
+.ai-empty-mark { font-size: 22px; color: var(--accent); }
+.ai-empty-title { font-weight: 700; font-size: 14px; color: var(--ink); }
+.ai-empty-sub { margin: 0 0 6px; color: var(--dim); font-size: 11.5px; line-height: 1.55;
+  max-width: 300px; }
+.ai-sugg { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 280px; }
+.ai-sugg.hidden { display: none; }
+.ai-sugg button { font: inherit; font-size: 12px; line-height: 1.4; text-align: left;
+  padding: 8px 11px; border: 1px solid var(--edge2); border-radius: 9px;
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+.ai-sugg button:hover { border-color: var(--accent); background: var(--hov); }
+.ai-setup { max-width: 290px; }
+.ai-setup.hidden { display: none; }
+.ai-setup p { color: var(--dim); font-size: 11.5px; line-height: 1.55; margin: 0 0 10px; }
+
+/* -- composer -- */
+.ai-composer { flex: none; display: flex; flex-direction: column; gap: 6px;
+  padding: 8px; border-top: 1px solid var(--edge); background: var(--bar); }
+.ai-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.ai-chips:empty { display: none; }
+.ai-chip { font: inherit; font-size: 10.5px; line-height: 1; padding: 4px 9px;
+  border-radius: 20px; border: 1px solid var(--edge2); color: var(--dim);
+  background: transparent; cursor: pointer; white-space: nowrap; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; }
+.ai-chip:hover { color: var(--ink); border-color: var(--accent); }
+.ai-chip.on { color: var(--accent); border-color: var(--accent); background: var(--selbg); }
+.ai-box { display: flex; align-items: flex-end; gap: 6px; padding: 6px;
+  background: var(--inbg); border: 1px solid var(--edge2); border-radius: 10px; }
+.ai-box:focus-within { border-color: var(--accent); }
+.ai-box textarea { flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+  resize: none; color: var(--ink); font: inherit; font-size: 12.5px; line-height: 1.5;
+  min-height: 20px; max-height: 160px; padding: 2px 2px 2px 4px; }
+.ai-box textarea::placeholder { color: var(--c); }
+.ai-send { flex: none; width: 28px; height: 28px; border-radius: 8px; border: 0;
+  font-size: 12px; line-height: 1; cursor: pointer; color: var(--accent-ink);
+  background: var(--accent); }
+.ai-send:hover { filter: brightness(1.1); }
+.ai-send.stop { background: var(--err); color: #fff; }
 
 /* ===== map tab ============================================================ */
 #panelMap { display: flex; flex-direction: column; min-height: 0; }
 .maphead-acts { margin-left: auto; display: flex; gap: 4px; }
-.maphead-acts .ai-mini.on { background: #2b6cb0; border-color: #2b6cb0; color: #fff; }
+.maphead-acts .ai-mini.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .map-canvas { flex: 1; min-height: 180px; width: 100%; display: block;
   background: #101014; cursor: crosshair; }
 .map-readout { font-size: 11px; padding: 4px 8px; opacity: .75;
   font-family: ui-monospace, Consolas, monospace;
-  border-top: 1px solid rgba(128,128,128,.2); }
+  border-top: 1px solid var(--edge); }
 .map-pinrow { padding: 0 8px 4px; min-height: 18px; }
-.map-pin { font-size: 11.5px; color: #d7a53a; font-family: ui-monospace, Consolas, monospace; }
+.map-pin { font-size: 11.5px; color: var(--num); font-family: ui-monospace, Consolas, monospace; }
 .map-acts { display: flex; gap: 4px; padding: 0 8px 8px; }
 
 /* --- agent mode: tool activity + the run_lua gate --------------------------
@@ -481,33 +577,39 @@ a.btn{text-decoration:none;display:inline-block}
    Agent mode is non-streaming, so without it the panel looks frozen for the
    whole loop -- and seeing WHAT was consulted is the point of having tools. */
 .ai-tools { margin: 0 0 8px 0; }
-.ai-tool {
-  font: 11px/1.5 ui-monospace, Menlo, Consolas, monospace;
-  color: #8fb7d9; background: rgba(255,255,255,.04);
-  border-left: 2px solid #3f6f9c; padding: 3px 8px; margin: 2px 0;
-  border-radius: 0 3px 3px 0; white-space: pre-wrap; word-break: break-word;
-}
+.ai-tool { font: 11px/1.5 var(--efont); color: var(--accent); background: var(--hov);
+  border-left: 2px solid var(--accent); padding: 3px 8px; margin: 2px 0;
+  border-radius: 0 4px 4px 0; white-space: pre-wrap; word-break: break-word; }
+.ai-tool summary { cursor: pointer; list-style: none; user-select: none; }
+.ai-tool summary::-webkit-details-marker { display: none; }
+.ai-tool[open] summary { margin-bottom: 3px; }
+.ai-toolout { padding: 5px 7px; background: var(--inbg); border: 1px solid var(--edge);
+  border-radius: 5px; color: var(--ink); font-size: 10.5px; line-height: 1.5;
+  max-height: 160px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
 .ai-tool.pending { opacity: .6; font-style: italic; }
-.ai-tool.bad { color: #d9a08f; border-left-color: #9c5a3f; }
+.ai-tool.pending summary::after { content: "…"; }
+.ai-tool.bad { color: var(--err); border-left-color: var(--err); }
 
-.ai-confirm {
-  border: 1px solid #9c7a3f; background: rgba(255, 200, 80, .07);
-  border-radius: 6px; padding: 10px; margin: 8px 0;
-}
-.ai-confirm-why { font-size: 12px; margin-bottom: 6px; color: #e0c88f; }
-.ai-confirm-code {
-  font: 11px/1.45 ui-monospace, Menlo, Consolas, monospace;
-  background: rgba(0,0,0,.35); padding: 8px; border-radius: 4px;
-  max-height: 220px; overflow: auto; margin: 0 0 8px 0; white-space: pre-wrap;
-}
+.ai-confirm { border: 1px solid var(--warn); background: rgba(230,180,85,.08);
+  border-radius: 8px; padding: 10px; margin: 8px 0; }
+.ai-confirm-why { font-size: 12px; margin-bottom: 6px; color: var(--warn); }
+.ai-confirm-code { font: 11px/1.45 var(--efont); color: var(--ink);
+  background: var(--inbg); border: 1px solid var(--edge); padding: 8px; border-radius: 6px;
+  max-height: 220px; overflow: auto; margin: 0 0 8px 0; white-space: pre-wrap; }
 .ai-confirm-acts { display: flex; gap: 8px; align-items: center; }
+
+/* the propose_script diff (collapsed context, colored +/- lines) */
+.ai-diff { font: 11px/1.5 var(--efont); background: var(--inbg); border: 1px solid var(--edge);
+  border-radius: 6px; max-height: 260px; overflow: auto; margin: 0 0 8px; padding: 5px 0; }
+.dline { padding: 0 9px; white-space: pre-wrap; word-break: break-word; color: var(--dim); }
+.dline.add { color: var(--ok); background: rgba(78,201,160,.09); }
+.dline.del { color: var(--err); background: rgba(255,107,107,.08); }
+.dline.skip { color: var(--c); font-style: italic; padding: 2px 9px; }
 
 /* Ungrounded-identifier warning. Deliberately loud: it is the only signal the
    user gets when a model states an API name it was never shown. */
-.ai-ungrounded {
-  margin-top: 10px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
-  border-left: 3px solid #c8913f; background: rgba(255, 180, 60, .10);
-  border-radius: 0 4px 4px 0; color: #e8c489;
-}
-.ai-ungrounded strong { color: #ffcf87; }
-.ai-ungrounded .ai-ok { color: #9ccf9c; font-size: 11px; display: inline-block; margin-top: 5px; }
+.ai-ungrounded { margin-top: 10px; padding: 8px 10px; font-size: 12px; line-height: 1.5;
+  border-left: 3px solid var(--warn); background: rgba(230,180,85,.10);
+  border-radius: 0 6px 6px 0; color: var(--warn); }
+.ai-ungrounded strong { color: var(--warn); }
+.ai-ungrounded .ai-ok { color: var(--ok); font-size: 11px; display: inline-block; margin-top: 5px; }

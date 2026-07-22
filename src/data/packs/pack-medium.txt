@@ -1503,6 +1503,7 @@ This page covers the bottom of the Ess stack: the pieces every other namespace i
   `Ess.Math.dist3D(x1, y1, z1, x2, y2, z2) -> n`  -- Includes the Y term.
   `Ess.Math.angleTo(fromX, fromZ, toX, toZ) -> yawDegrees`  -- The yaw that faces from `(fromX,fromZ)` toward `(toX,toZ)`, in the engine's own convention. Returns 0 if the two points coincide.
   `Ess.Math.pointAhead(x, z, yawDeg, dist) -> x2, z2`  -- The point `dist` units in front of `(x, z)` when facing `yawDeg` — exactly `Ess.Object.spawnAhead`'s projection, exposed for reuse (place something ahead of an NPC, aim a dolly, offset a marker). Y is unchanged; the...
+  `Ess.Math.rotateOffset(x, z, yawDeg, localX, localZ) -> x2, z2`  -- Places a *local* offset (`localX` = right+, `localZ` = forward+) into world space around `(x, z)` for something facing `yawDeg` — "5 right and 10 ahead of me." `pointAhead` is this function's `localX = 0` special case....
   `Ess.Math.normDeg(deg) -> n in [-180, 180)`  -- Normalizes an angle so a difference of two yaws reads as the shortest turn (350 and 10 differ by 20, not 340). Handy for "am I roughly facing this" checks and smooth turn easing.
   `Ess.Math.clamp01(v) -> n`  -- Clamps to the unit range `[0, 1]` — the common case for a lerp/ease parameter.
   `Ess.Math.remap(v, inLo, inHi, outLo, outHi) -> n`  -- Linear rescale of `v` from `[inLo, inHi]` onto `[outLo, outHi]` — "a 0..maxHealth into a 0..1 bar," "a distance into an alpha." A degenerate input range (`inLo == inHi`) returns `outLo` instead of dividing by zero. Does...
@@ -1581,6 +1582,7 @@ This page covers the bottom of the Ess stack: the pieces every other namespace i
   dist3D -- `Ess.Math.dist3D(x1, y1, z1, x2, y2, z2) -> n`
   angleTo -- `Ess.Math.angleTo(fromX, fromZ, toX, toZ) -> yawDegrees`
   pointAhead -- `Ess.Math.pointAhead(x, z, yawDeg, dist) -> x2, z2`
+  rotateOffset -- `Ess.Math.rotateOffset(x, z, yawDeg, localX, localZ) -> x2, z2`
   normDeg -- `Ess.Math.normDeg(deg) -> n in [-180, 180)`
   clamp01 -- `Ess.Math.clamp01(v) -> n`
   remap -- `Ess.Math.remap(v, inLo, inHi, outLo, outHi) -> n`
@@ -1606,7 +1608,7 @@ This page covers the bottom of the Ess stack: the pieces every other namespace i
   :pickN -- `gen:pickN(list, n) -> {...}`
 
 ### Debug & Dev Tools
-Two mod-author-facing tools from the same Unreleased batch, both pure composition of already-confirmed `Ess` pieces — no new engine calls introduced by either: a live on-screen dev overlay (`Ess.Easy.Debug`, from `src/97_easy_debug.lua`) and an interactive in-game function runner (`Ess.Easy.Console.play`, the new half of `src/96_console.lua`). Per the CHANGELOG's Unreleased banner, this whole batch is **not yet in-game smoke-run** — built from confirmed calls and, where pure, offline-verified; each section below states exactly how far that verification goes for that specific piece.
+Two mod-author-facing tools from the same 0.3.0 batch, both pure composition of already-confirmed `Ess` pieces — no new engine calls introduced by either: a live on-screen dev overlay (`Ess.Easy.Debug`, from `src/97_easy_debug.lua`) and an interactive in-game function runner (`Ess.Easy.Console.play`, the new half of `src/96_console.lua`). Per the CHANGELOG's dated 0.3.0 verification entry, both are now **confirmed live** in-game — built from confirmed calls, offline-verified first, and since run and observed in the actual game; each section below states exactly what was checked and how.
   `pos: (120.4, 5.0, -88.2) yaw 45`  -- `Ess.Player.pose(i)`
   `aim: Veyron VZ d=12.3` (or `aim: (nothing)`)  -- `Ess.Player.targetUnderReticle(i)` + `Ess.Name` + `Ess.Probe.getFaction` + `Ess.Object.distance`
   `on foot health: 85 / 100` (or `vehicle: `)  -- `Ess.Player.inVehicle(i)` + `Ess.Object.health` (plus a direct `Object.GetMaxHealth` read)
@@ -1649,7 +1651,7 @@ Two mod-author-facing tools from the same Unreleased batch, both pure compositio
   A jet flyby plus 4 artillery shells (10-unit scatter radius) on a world point — the one-tap barrage.
   Same barrage, centered on whatever player `i` (default 0) currently has under their reticle. No-ops if nothing's targeted.
   Same barrage, centered on player `i`'s own position — the "call it in on yourself" gag.
-  The "I want a ``" one-liner: spawns `sTemplate` a short distance in front of you (`opts.dist`, default 18) at height (`opts.height`, default 10 — midair by default so an aircraft hovers the instant you're in it, a ground vehicle just settles) via `Ess.Object.spawnAhead`, then puts you in the best available seat (driver-first) via `Ess.Vehicle.enterBestSeat`. Returns the vehicle guid, or `nil` if the template name was wrong (spawn logs which).
+  The "I want a ``" one-liner: spawns `sTemplate` a short distance in front of you (`opts.dist`, default 18) at height (`opts.height`, default 10 — midair by default so an aircraft hovers the instant you're in it, a ground vehicle just settles) via `Ess.Object.spawnAhead`, then puts you in the best available seat (driver-first) via `Ess.Vehicle.enterBestSeat`. Returns the vehicle guid, or `nil` if the template name was wrong (spawn logs which). `opts.useView = true` places it along your view yaw instead of your body yaw — see Core Primitives for why those two differ.
   Gives a character a weapon by template name (e.g. `"Grenade Launcher"`) with no spawning step. Resolves the template to a guid via `Pg.GetGuidByName` and equips it with `Ess.Human.equipWeapon`. Live-confirmed to genuinely add a new weapon (an exact before/after `GetAllWeapons` count change, 2→3), not just re-equip something already held. `Pg.GetGuidByName` on a bad name just returns `nil` — no blank-template crash guard needed here the way `Pg.Spawn` needs one.
   A forward speed boost — the *Spy Hunter* effect this whole namespace is modeled on. Defaults to the vehicle you're driving if `uGuid` is omitted. `strength` defaults to 8 (the confirmed real recipe used 6–8).
   Pops something straight up — a hop, or a big launch. `strength` defaults to 12.
@@ -1825,6 +1827,7 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
   `Ess.Player.teleport(x, y, z, yaw, onDone)`  -- Warps all connected heroes to one spot (co-op safe) via the confirmed `MrxUtil.TeleportHeroesToLocations` idiom — deliberately *not* raw `Object.SetPosition`, which is unreliable on characters. `onDone` fires once the...
   `Ess.Player.inVehicle(i) -> uVehicleGuid \  -- nil`
   `Ess.Player.onFoot(i) -> bool`  -- The complement: `true` exactly when `inVehicle(i)` returns `nil`. Same confirmation status as `inVehicle`.
+  `Ess.Player.viewYaw(i) -> yaw, bFromReticle`  -- The yaw the player is *looking* along, distinct from `pose`'s 4th return (the chest/body yaw) — stand still and swing the mouse and these two genuinely diverge (measured live up to 111° apart; running forward re-aligns...
   `Ess.Object.pos(uGuid) -> x, y, z \  -- nil`
   `Ess.Object.setPos(uGuid, x, y, z)`  -- Teleports an *object*. Confirmed unreliable on freshly-spawned/AI humans (streaming/physics can snap them back) — for the player use `Ess.Player.teleport`, for a dynamic ghost-follow use `Ess.Vehicle.followGhost`. Solid...
   `Ess.Object.yaw(uGuid) -> n \  -- nil` / `Ess.Object.setYaw(uGuid, n)`
@@ -1846,7 +1849,7 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
   `Ess.Object.enablePhysics(uGuid)` / `Ess.Object.disablePhysics(uGuid)`
   `Ess.Object.impulse(uGuid, x, y, z, bLocal)`  -- `Object.ApplyImpulse` — the confirmed launch/knock-around primitive; real call sites scale the impulse by the object's mass (e.g. `Object.ApplyImpulse(u, 0, 10000, 6 * mass, true)`), so heavier things need a bigger...
   `Ess.Object.spawn(sTemplate, x, y, z, yaw) -> uGuid \  -- nil`
-  `Ess.Object.spawnAhead(sTemplate, nDist, nHeight, i) -> uGuid \  -- nil`
+  `Ess.Object.spawnAhead(sTemplate, nDist, nHeight, i, opts) -> uGuid \  -- nil`
   `Ess.Object.vehicleOf(uChar) -> uVehicleGuid \  -- nil`
   `Ess.Object.pollVehicleChange(uChar, onChange, interval) -> stop()`  -- Watches `uChar` for entering/exiting a vehicle by polling `Vehicle.GetFromRider` on a heartbeat (default interval 0.5s, built on the shared `Ess.Loop`) and firing `onChange(uVehicleOrNil, uPrevVehicleOrNil)` on the...
   `Ess.Vehicle.driver(uVeh) -> uCharGuid \  -- nil`
@@ -1901,6 +1904,7 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
   teleport -- `Ess.Player.teleport(x, y, z, yaw, onDone)`
   inVehicle -- `Ess.Player.inVehicle(i) -> uVehicleGuid \
   onFoot -- `Ess.Player.onFoot(i) -> bool`
+  viewYaw -- `Ess.Player.viewYaw(i) -> yaw, bFromReticle`
   pos -- `Ess.Object.pos(uGuid) -> x, y, z \
   setPos -- `Ess.Object.setPos(uGuid, x, y, z)`
   yaw -- `Ess.Object.yaw(uGuid) -> n \
@@ -1922,7 +1926,7 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
   enablePhysics -- `Ess.Object.enablePhysics(uGuid)` / `Ess.Object.disablePhysics(uGuid)`
   impulse -- `Ess.Object.impulse(uGuid, x, y, z, bLocal)`
   spawn -- `Ess.Object.spawn(sTemplate, x, y, z, yaw) -> uGuid \
-  spawnAhead -- `Ess.Object.spawnAhead(sTemplate, nDist, nHeight, i) -> uGuid \
+  spawnAhead -- `Ess.Object.spawnAhead(sTemplate, nDist, nHeight, i, opts) -> uGuid \
   vehicleOf -- `Ess.Object.vehicleOf(uChar) -> uVehicleGuid \
   pollVehicleChange -- `Ess.Object.pollVehicleChange(uChar, onChange, interval) -> stop()`
   driver -- `Ess.Vehicle.driver(uVeh) -> uCharGuid \
@@ -1962,9 +1966,9 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
 ### Essentials (Ess)
   `Mark` (`Raw`/Core/`Easy`)  -- Radar, PDA, ground ring, and floating icon — independent opts, tiered from four raw primitives up to one-call presets.
   `UI.Menu/List/Panel/Bar/Toast/Confirm/Input/Chat/Board`, `Gfx`, `ScrollLog`  -- The nine-widget kit, native port of UI Kit, on one input/focus/heartbeat engine.
-  `Support`, `Easy.Airstrike`  -- Combat call-ins (shell/artillery/airstrike/bombing run/gunship/reinforce) lifted out of `Ess.Contract` so they're callable anywhere, fire-and-forget. Unreleased — composed from already-confirmed native calls, wrapper...
-  `Objective`, `Quest`, `Easy.Objective`, `Easy.Quest`  -- The middle tier between a bare `Ess.Hud.objective` line and a whole `Ess.Contract` — single goals and multi-step chains with reload-safe `id`-based construction. Unreleased — state machine execute-verified offline, not...
-  `Easy.Debug`, `Easy.Console.play`  -- A live on-screen debug overlay (position, reticle target, health, nearby counts) and an in-game "run any Easy call and cycle its params" playground. Unreleased — construction/dispatch verified offline, on-screen...
+  `Support`, `Easy.Airstrike`  -- Combat call-ins (shell/artillery/airstrike/bombing run/gunship/reinforce) lifted out of `Ess.Contract` so they're callable anywhere, fire-and-forget. Confirmed live in 0.3.0 — all 7 call-ins (including...
+  `Objective`, `Quest`, `Easy.Objective`, `Easy.Quest`  -- The middle tier between a bare `Ess.Hud.objective` line and a whole `Ess.Contract` — single goals and multi-step chains with reload-safe `id`-based construction. Confirmed live — per the CHANGELOG's 0.3.0 verification...
+  `Easy.Debug`, `Easy.Console.play`  -- A live on-screen debug overlay (position, reticle target, health, nearby counts) and an in-game "run any Easy call and cycle its params" playground. Confirmed live — per the CHANGELOG's 0.3.0 verification entry,...
   Every `Ess.Easy.*` namespace  -- The full beginner-tier one-liner surface in one place — spawning, unlocks, world tweaks, fun, and every other namespace's Easy preset.
   `Ess.UI`  -- Same nine widgets, same menu builder and `ctx:` helpers.
   `Ess.Net`  -- Shared tables, named messages, authority model.
@@ -2095,7 +2099,7 @@ This page covers the Ess namespaces you reach for once you know *what* you want 
   Ess.Override.mergeIntoLiveTable(t, key, data) -> ok
 
 ### Reactive Hooks & Hotkeys
-Two namespaces for the other half of scripting a mod — not making something happen, but responding to what the world (or the player's keyboard) does: - **`Ess.On`** — intent-named reactive hooks (`death`, `enterArea`, `healthBelow`, `playerHurt`, …) so a mod can react to the world without wiring a raw `Event.*` call or standing up a whole `Ess.Contract`. Every hook returns a `stop()` function. - **`Ess.Keys`** — lets one script own a whole panel of hotkeys. `lua_loader.ini`'s `[OnKey]` binds exactly one key to one script; `Ess.Keys` is how that single script then dispatches several keys to several actions internally. Both are new in the **Unreleased** batch (`CHANGELOG.md`). Per that section's own heading, the whole batch is **"Not yet in-game smoke-run"** — built from confirmed underlying calls and, for these two namespaces, execute-verified offline (`Ess.On`: "the area/health/hurt...
+Two namespaces for the other half of scripting a mod — not making something happen, but responding to what the world (or the player's keyboard) does: - **`Ess.On`** — intent-named reactive hooks (`death`, `enterArea`, `healthBelow`, `playerHurt`, …) so a mod can react to the world without wiring a raw `Event.*` call or standing up a whole `Ess.Contract`. Every hook returns a `stop()` function. - **`Ess.Keys`** — lets one script own a whole panel of hotkeys. `lua_loader.ini`'s `[OnKey]` binds exactly one key to one script; `Ess.Keys` is how that single script then dispatches several keys to several actions internally. Both shipped new in 0.3.0's additive batch (`CHANGELOG.md`), and both were carried through that release's live-verification pass. `CHANGELOG.md`'s `[0.3.0]` entry — a dated, versioned first-party record, not a captured log/transcript — reports the results...
   `death(guid, fn) -> stop()`  -- Once
   `enterArea(...) -> stop()`  -- Once
   `exitArea(...) -> stop()`  -- Once
