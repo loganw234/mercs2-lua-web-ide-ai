@@ -22,6 +22,9 @@
   var pendingFiles = [];       /* [{name, text}] attached to the NEXT question, any count */
   var lastEditorSent = {};     /* sessionId -> the editor text last shown to the model, so
                                   after the first full send we attach only a diff (see buildContext) */
+  var lastLogSeq = {};         /* sessionId -> logTotal at last send, so we attach only the log
+                                  lines new since the model last saw them (see buildContext) */
+  var logTotal = 0;            /* monotonic count of all log lines ever seen (survives ring eviction) */
   var busy = false, abortCtl = null, packText = null;
   var sendSel = true;          /* the Selection chip: per-question, defaults on */
   var stick = true;            /* auto-scroll is pinned to the bottom */
@@ -31,6 +34,7 @@
   IDE.bus.on("log", function (d) {
     if (!d || !d.line) return;
     logRing.push(String(d.line));
+    logTotal++;
     if (logRing.length > LOG_KEEP) logRing.shift();
   });
 
@@ -118,6 +122,32 @@
     return part;
   }
 
+  /* The game-log block, sent as a delta: only lines that arrived since the model last saw the
+     log (mirrors the editor diff). First time in a chat sends the recent tail; after that just
+     the new lines, or a one-line marker when nothing new happened. */
+  function logContextPart(commit) {
+    var sid = sessionKey();
+    var seen = lastLogSeq.hasOwnProperty(sid) ? lastLogSeq[sid] : 0;
+    var newCount = logTotal - seen;
+    var part;
+    if (newCount <= 0) {
+      part = "--- game log (no new lines since last shown) ---";
+    } else {
+      var inRing = Math.min(newCount, logRing.length);
+      var lines = logRing.slice(logRing.length - inRing);
+      var elided = 0;
+      if (lines.length > LOG_SEND) { elided = lines.length - LOG_SEND; lines = lines.slice(-LOG_SEND); }
+      var head = (seen === 0)
+        ? "--- recent game log (newest last) ---"
+        : "--- game log — new lines since last shown (newest last) ---";
+      part = head + "\n```\n" +
+        (elided ? "[" + elided + " older new line(s) elided]\n" : "") +
+        lines.join("\n") + "\n```\n--- end log ---";
+    }
+    if (commit) lastLogSeq[sid] = logTotal;
+    return part;
+  }
+
   function buildContext(commit) {
     var c = IDE.provider.get();
     var parts = [];
@@ -132,8 +162,7 @@
         sel + "\n```\n--- end selection ---");
     }
     if (c.sendLog && logRing.length) {
-      var tail = logRing.slice(-LOG_SEND).join("\n");
-      parts.push("--- recent game log (newest last) ---\n```\n" + tail + "\n```\n--- end log ---");
+      parts.push(logContextPart(commit));
     }
     for (var f = 0; f < pendingFiles.length; f++) {
       var pf = pendingFiles[f];
@@ -143,6 +172,81 @@
         "\n" + fence + "\n--- end file ---");
     }
     return parts.join("\n\n");
+  }
+
+  /* ---- budget-aware message assembly -------------------------------------
+     Small local models have a hard context ceiling (qwen3:14b is 40,960
+     native), and the whole chat is re-sent every turn. Rather than let a long
+     conversation silently overflow — the model then drops the SYSTEM rules off
+     the front — we fit the history to the model's window: keep the newest turns
+     verbatim, fold everything older into a one-line breadcrumb summary, and
+     tell the user what was trimmed. Order stays [pack, …turns] so a provider's
+     prefix cache (and the Anthropic cache breakpoint on the pack) keeps paying
+     off. When the window is unknown (modelCtx 0) nothing is trimmed. */
+  function estTokens(s) { return Math.ceil((s || "").length / 4); }
+  function msgTokens(m) { return estTokens(m && m.content) + 4; }
+
+  function replyReserve() {
+    var c = IDE.provider.get();
+    return (c.maxTokens && c.maxTokens > 0 ? c.maxTokens : 1024) + 512;
+  }
+  function toolBudget() {
+    var c = IDE.provider.get();
+    return (c.agentMode && IDE.agent && IDE.agent.tools)
+      ? estTokens(JSON.stringify(IDE.agent.tools())) : 0;
+  }
+
+  /* Deterministic breadcrumb summary of the turns we had to drop — the user's
+     questions, first line each. No model call: instant, and it keeps the thread
+     navigable ("earlier you asked about X") without the tokens. */
+  function summarizeDropped(turns) {
+    var lines = [];
+    for (var i = 0; i < turns.length; i++) {
+      var m = turns[i];
+      if (m.role !== "user") continue;
+      var q = String(m.display || m.content || "").split("\n")[0].replace(/\s+/g, " ").trim().slice(0, 120);
+      if (q) lines.push("- " + q);
+    }
+    return "[Earlier in this chat, " + turns.length + " message(s) were trimmed to fit the " +
+      "context window. Topics so far" + (lines.length ? ":\n" + lines.join("\n") : " (details dropped).") +
+      "\nAsk to revisit any of these and I'll bring the detail back.]\n\n";
+  }
+
+  function assembleMessages(pack, history) {
+    var msgs = [];
+    if (pack) msgs.push({ role: "system", content: pack });
+    var c = IDE.provider.get();
+    var budget = (c.modelCtx && c.modelCtx > 0) ? c.modelCtx : 0;
+    if (!budget) {
+      for (var i = 0; i < history.length; i++) msgs.push({ role: history[i].role, content: history[i].content });
+      return { msgs: msgs, dropped: 0 };
+    }
+    var avail = budget - estTokens(pack) - toolBudget() - replyReserve();
+    var kept = [], j = history.length - 1;
+    for (; j >= 0; j--) {
+      var t = msgTokens(history[j]);
+      if (kept.length && t > avail) break;   /* always keep at least the newest turn */
+      avail -= t;
+      kept.unshift({ role: history[j].role, content: history[j].content });
+    }
+    var dropped = j + 1;
+    if (dropped > 0 && kept.length) {
+      /* Weave the breadcrumb into the oldest KEPT user turn (no extra message, so
+         role alternation and the cache prefix stay clean); if that turn is an
+         assistant, prepend a user breadcrumb instead. */
+      var crumb = summarizeDropped(history.slice(0, dropped));
+      if (kept[0].role === "user") kept[0] = { role: "user", content: crumb + kept[0].content };
+      else kept.unshift({ role: "user", content: crumb.trim() });
+      /* A trimmed turn may have held the full-script/log baseline the later diffs build on.
+         Reset it so the NEXT turn re-sends a fresh full copy instead of a diff that dangles.
+         (In a steady-state-trimmed chat this means the current script rides every turn — the
+         correct minimum when we're at the ceiling; with headroom, diffs resume.) */
+      var sid = sessionKey();
+      delete lastEditorSent[sid];
+      delete lastLogSeq[sid];
+    }
+    for (var k = 0; k < kept.length; k++) msgs.push(kept[k]);
+    return { msgs: msgs, dropped: dropped };
   }
 
   /* Read dropped/picked files as text and queue them for the next question.
@@ -728,11 +832,11 @@
 
     loadPack().then(function (pack) {
       checkContext();
-      var msgs = [];
-      if (pack) msgs.push({ role: "system", content: pack });
-      var h = IDE.chats.current().msgs;
-      for (var i = 0; i < h.length; i++) {
-        msgs.push({ role: h[i].role, content: h[i].content });
+      var built = assembleMessages(pack, IDE.chats.current().msgs);
+      var msgs = built.msgs;
+      if (built.dropped > 0) {
+        setStatus("Trimmed " + built.dropped + " older message(s) to fit the model's " +
+          "context window (summarized instead). Widen it in Assistant settings if you have headroom.");
       }
 
       /* Agent mode streams each step (content + reasoning) live and shows each

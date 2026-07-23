@@ -700,6 +700,29 @@
   /* messages: full conversation incl. system pack.
      ui: { onStep(name, args), onResult(name, text), confirm(why, code) -> Promise<bool> }
      Resolves { content, steps } -- content is the final assistant text. */
+  /* Within a single run the model re-reads `convo` on every step, so a wiki page or
+     example read early on rides along — full text — on every step after. Send a COMPACTED
+     view instead: the last few tool results stay verbatim (the model is likely acting on
+     them now), older ones shrink to a stub that keeps the pairing intact (same role/id) and
+     a hint of what was there, so the model can re-call the tool if it truly needs the rest.
+     The real `convo` (and the grounding set) stays whole. */
+  var KEEP_RAW_RESULTS = 2;
+  var STUB_CHARS = 220;
+  function compactConvo(convo) {
+    var toolIdx = [];
+    for (var i = 0; i < convo.length; i++) if (convo[i] && convo[i].role === "tool") toolIdx.push(i);
+    if (toolIdx.length <= KEEP_RAW_RESULTS) return convo;
+    var stubUntil = toolIdx[toolIdx.length - KEEP_RAW_RESULTS]; /* keep this one + newer raw */
+    return convo.map(function (m, i) {
+      if (!m || m.role !== "tool" || i >= stubUntil) return m;
+      var full = String(m.content || "");
+      if (full.length <= STUB_CHARS) return m;
+      var stub = full.slice(0, STUB_CHARS).replace(/\s+\S*$/, "") +
+        " … [" + (full.length - STUB_CHARS) + " more chars elided to save context; call this tool again if you need the rest]";
+      return { role: "tool", tool_call_id: m.tool_call_id, name: m.name, content: stub };
+    });
+  }
+
   function run(messages, ui, opts) {
     opts = opts || {};
     var convo = messages.slice();
@@ -721,7 +744,7 @@
     }
 
     function step(n) {
-      return IDE.provider.complete(convo, TOOLS, opts).then(function (res) {
+      return IDE.provider.complete(compactConvo(convo), TOOLS, opts).then(function (res) {
         /* About to answer with API names it was never shown. Nudge once, and
            name them -- a vague "are you sure?" invites the model to restate the
            same thing more confidently. If it still cannot ground them, its
@@ -750,7 +773,7 @@
             convo.push({ role: "user", content:
               "Tool budget exhausted. Answer with what you have, and say which " +
               "lookup you did not get to rather than assuming its result." });
-            return IDE.provider.complete(convo, null, opts).then(function (f) {
+            return IDE.provider.complete(compactConvo(convo), null, opts).then(function (f) {
               return { content: f.content, reasoning: f.reasoning, steps: steps };
             });
           }

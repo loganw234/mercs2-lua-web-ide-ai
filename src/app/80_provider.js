@@ -239,7 +239,7 @@
         "anthropic-dangerous-direct-browser-access": "true"
       },
       body: JSON.stringify({
-        model: c.model, system: system, messages: rest,
+        model: c.model, system: anthropicSystem(system), messages: rest,
         max_tokens: c.maxTokens, stream: true
       }),
       signal: opts.signal
@@ -312,6 +312,18 @@
      field, tool results fold into user-role tool_result blocks (consecutive
      ones merged -- Anthropic wants them in ONE user turn), and assistant
      tool_calls become tool_use blocks. */
+  /* Prompt caching. OpenAI/DeepSeek cache a stable prefix automatically (no markup) — we
+     already keep [pack, …turns] ordering so that just works. Anthropic needs an explicit
+     cache_control breakpoint: mark the whole system block (the reference pack, the big stable
+     prefix — 11k–241k tokens) so a warm turn re-reads it from cache instead of re-billing it.
+     Below Anthropic's ~1k-token minimum, caching does nothing, so leave the plain string. */
+  function anthropicSystem(system) {
+    if (system && system.length >= 4096) {
+      return [{ type: "text", text: system, cache_control: { type: "ephemeral" } }];
+    }
+    return system;
+  }
+
   function toAnthropic(messages) {
     var system = "", out = [];
     for (var i = 0; i < messages.length; i++) {
@@ -345,7 +357,7 @@
 
   function completeAnthropic(c, messages, tools, opts) {
     var conv = toAnthropic(messages);
-    var body = { model: c.model, system: conv.system, messages: conv.messages,
+    var body = { model: c.model, system: anthropicSystem(conv.system), messages: conv.messages,
                  max_tokens: c.maxTokens, stream: false };
     if (tools && tools.length) {
       body.tools = tools.map(function (t) {

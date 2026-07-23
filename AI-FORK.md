@@ -53,9 +53,29 @@ chat. Each question can carry:
   is per-chat and per-file (switching scripts, or a diff too large to compute, re-sends the
   whole thing); in agent mode the `get_editor` tool always returns the full live buffer on
   demand.
-- **the last 40 game-log lines**, from a 120-line ring buffer fed off `IDE.bus`
+- **the game log**, from a 120-line ring buffer fed off `IDE.bus` — sent as a **delta**:
+  the recent tail the first time, then only the lines new since the model last saw it.
 
-Both are toggleable in settings. The pack is always sent as the **first** system
+Both are toggleable in settings.
+
+### Fitting a small model's window
+
+Everything above plus the conversation is re-sent every turn, and a small local model has a
+hard ceiling (qwen3:14b is 40,960 native). Four things keep a long chat from overflowing it:
+
+- **Budget-aware trimming** (`assembleMessages`): the history is fitted to the model's window
+  (`modelCtx`) — newest turns kept verbatim, everything older folded into a one-line breadcrumb
+  summary of the questions asked, and the user told how many messages were trimmed. Order stays
+  `[pack, …turns]` so caching keeps paying off; unknown window (`modelCtx 0`) trims nothing.
+  A trim resets the script/log baseline so the next turn re-sends a full copy (no dangling diff).
+- **Tool-result compaction** in an agent run (`compactConvo`): within one run the model re-reads
+  the convo each step, so only the last couple of tool results stay verbatim; older ones shrink
+  to a stub (pairing preserved) that says how much was elided — re-call the tool for the rest.
+- **Prompt caching**: OpenAI/DeepSeek cache the stable `[pack, …]` prefix automatically; the
+  Anthropic path sets a `cache_control` breakpoint on the system pack (`anthropicSystem`), so a
+  warm turn re-reads the 11k–241k-token pack from cache instead of re-billing it.
+- Reasoning is already stripped from stored turns, and tool results are not persisted across
+  turns — so history stays lean to begin with. The pack is always sent as the **first** system
 message and nothing dynamic precedes it, so it stays a stable prefix and keeps
 caching on providers that do prefix caching (DeepSeek's is the reason a 240k
 pack costs a tenth of a cent per warm turn).
