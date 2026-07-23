@@ -92,6 +92,10 @@
      "doc": "Enters cinematic mode and arms the blend time, recording {p, c} per player index in Ess.Camera._cine. Use blend 0 for a per-tick moving camera \u2014 the default 1s blend restarts on every placeCamera and makes the camera rubber-band."
     },
     {
+     "path": "Ess.Camera.blend",
+     "sig": "Ess.Camera.blend(i, dur)"
+    },
+    {
      "path": "Ess.Camera.endCinematic",
      "sig": "Ess.Camera.endCinematic",
      "doc": "Releases camera control back to the player and stops any active watch/orbit loop."
@@ -168,6 +172,10 @@
    "group": "Camera, bones & spatial",
    "doc": "A declarative cutscene timeline \u2014 the runtime the cinematic authoring suite feeds",
    "calls": [
+    {
+     "path": "Ess.Cinematic.active",
+     "sig": "Ess.Cinematic.active()"
+    },
     {
      "path": "Ess.Cinematic.define",
      "sig": "Ess.Cinematic.define(id, steps, opts)",
@@ -246,6 +254,62 @@
      "doc": "Accepts a registered contract by id or def. Its co-op gate checks the native Net.IsMultiplayer()/Net.IsClient() directly rather than Ess.Net's IsCoop/IsClient helpers, because Net.IsClient() can read true even in single-player, which would silently no-op every accept if gated on that alone. Aborts any prior active instance first (only one active contract at a time)."
     },
     {
+     "path": "Ess.Contract.Chase",
+     "sig": "Ess.Contract.Chase"
+    },
+    {
+     "path": "Ess.Contract.Collect",
+     "sig": "Ess.Contract.Collect"
+    },
+    {
+     "path": "Ess.Contract.Defend",
+     "sig": "Ess.Contract.Defend"
+    },
+    {
+     "path": "Ess.Contract.Destroy",
+     "sig": "Ess.Contract.Destroy"
+    },
+    {
+     "path": "Ess.Contract.Enter",
+     "sig": "Ess.Contract.Enter"
+    },
+    {
+     "path": "Ess.Contract.Escort",
+     "sig": "Ess.Contract.Escort"
+    },
+    {
+     "path": "Ess.Contract.Extract",
+     "sig": "Ess.Contract.Extract"
+    },
+    {
+     "path": "Ess.Contract.Group",
+     "sig": "Ess.Contract.Group"
+    },
+    {
+     "path": "Ess.Contract.Hold",
+     "sig": "Ess.Contract.Hold"
+    },
+    {
+     "path": "Ess.Contract.Interact",
+     "sig": "Ess.Contract.Interact"
+    },
+    {
+     "path": "Ess.Contract.List",
+     "sig": "Ess.Contract.List()"
+    },
+    {
+     "path": "Ess.Contract.Protect",
+     "sig": "Ess.Contract.Protect"
+    },
+    {
+     "path": "Ess.Contract.Race",
+     "sig": "Ess.Contract.Race"
+    },
+    {
+     "path": "Ess.Contract.Reach",
+     "sig": "Ess.Contract.Reach"
+    },
+    {
      "path": "Ess.Contract.Register",
      "sig": "Ess.Contract.Register(def)",
      "doc": "Registers a contract definition (id, title, briefing, category, reward, start, objectives, mode, timeLimit, fail, relations, units, waypoints, support, triggers, callbacks, etc.) \u2014 same field set and behavior as the standalone Contract Framework's Register. Contracts built this way are ephemeral runtime objects that never write to the save."
@@ -254,6 +318,18 @@
      "path": "Ess.Contract.Status",
      "sig": "Ess.Contract.Status()",
      "doc": "Returns the active contract's status shape: { finished, progress, timeLeft, objectives = {{done=...}, ...} } \u2014 same shape as the standalone Contract Framework's Status()."
+    },
+    {
+     "path": "Ess.Contract.StayInArea",
+     "sig": "Ess.Contract.StayInArea"
+    },
+    {
+     "path": "Ess.Contract.Survive",
+     "sig": "Ess.Contract.Survive"
+    },
+    {
+     "path": "Ess.Contract.Verify",
+     "sig": "Ess.Contract.Verify"
     }
    ]
   },
@@ -381,6 +457,10 @@
      "path": "Ess.Easy.Console.play",
      "sig": "Ess.Easy.Console.play()",
      "doc": "Interactive playground: opens an Ess.UI.Menu of curated demos (grouped Spawn/World/Player/Support/Goals/Dev/Juice) you can actually run in-game and cycle each demo's parameters on to see their effect live. Each run is wrapped in pcall - success toasts \"Ran: <name>\", failure toasts an error and logs it via Ess.Log. Calling it again while open closes the menu instead of reopening it, the same toggle idiom as Debug.overlay."
+    },
+    {
+     "path": "Ess.Easy.Console.search",
+     "sig": "Ess.Easy.Console.search()"
     }
    ]
   },
@@ -961,6 +1041,10 @@
      "doc": "Discards every buffered key event (Loader.ClearKeyEvents, pcall-guarded). Canonical use: a script activated by a keypress drains the buffer once on activate so its own trigger key doesn't immediately fire an action on the first tick."
     },
     {
+     "path": "Ess.Input.held",
+     "sig": "Ess.Input.held(vk)"
+    },
+    {
      "path": "Ess.Input.hijackController",
      "sig": "Ess.Input.hijackController(onInput)",
      "doc": "Unverified/reasoned-through: hides the PDA widget and installs your handler on the ControllerInput event, the only callback that still ticks during a world-pause. Always call the returned release() when done; while hijacked the PDA underneath still claims arrows/Enter/Esc, so a keyboard UI layered on top must use letter keys."
@@ -1189,6 +1273,10 @@
      "doc": "Linearly rescales v from [inLo, inHi] onto [outLo, outHi]. A degenerate input range (inLo == inHi) returns outLo instead of dividing by zero; does not clamp the output, so an out-of-range v extrapolates past [outLo, outHi]."
     },
     {
+     "path": "Ess.Math.rotateOffset",
+     "sig": "Ess.Math.rotateOffset(x,z,yaw,localX,localZ)"
+    },
+    {
      "path": "Ess.Math.round",
      "sig": "Ess.Math.round",
      "doc": "Rounds v to the nearest value; decimals defaults to 0 (nearest integer)."
@@ -1282,7 +1370,7 @@
     },
     {
      "path": "Ess.Net.Shared",
-     "sig": "Ess.Net.Shared(ns)",
+     "sig": "Ess.Net.Shared",
      "doc": "Returns a table whose fields are wired via __index/__newindex to the internal synced-state store (last-writer-wins) \u2014 reading or writing a field directly reads or writes synced network state, with no explicit send/receive call needed."
     },
     {
@@ -1291,9 +1379,17 @@
      "doc": "Polls getter() once per heartbeat (Ess.Net.HB, default 2s) and broadcasts only when the return value actually changed since the last check. Idempotent: calling it again with the same (ns, key) replaces the getter in place instead of adding a duplicate watcher, so it's safe to call again on a reload."
     },
     {
+     "path": "Ess.Net.getv",
+     "sig": "Ess.Net.getv(ns, key)"
+    },
+    {
      "path": "Ess.Net.hijackCallback",
      "sig": "Ess.Net.hijackCallback(module, name, isMine, onMine)",
      "doc": "Generalized, collision-proof hijack of an always-resident native callback (e.g. MrxFactionManager.NetEventCallback) that's shared with the game's own traffic on the same event id. isMinePredicate(...) is called with the callback's own arguments to check a marker; if true, onMine(...) runs pcall-guarded and the original is NOT called for that packet, otherwise the original passes through untouched. Built on Ess.Override.wrap and never tail-calls the original in either branch."
+    },
+    {
+     "path": "Ess.Net.setv",
+     "sig": "Ess.Net.setv(ns, key, value)"
     }
    ]
   },
@@ -1311,6 +1407,10 @@
      "path": "Ess.Object.alive",
      "sig": "Ess.Object.alive",
      "doc": "Wraps Object.IsAlive, truthy()-coerced so an engine 0/1 return can't fool a naive Lua truthiness check."
+    },
+    {
+     "path": "Ess.Object.damage",
+     "sig": "Ess.Object.damage"
     },
     {
      "path": "Ess.Object.disablePhysics",
@@ -1429,7 +1529,7 @@
     },
     {
      "path": "Ess.Object.spawnAhead",
-     "sig": "Ess.Object.spawnAhead(template, dist, height, i)",
+     "sig": "Ess.Object.spawnAhead(template, dist, height, i, {useView=})",
      "doc": "Spawns sTemplate nDist units (default 18) in front of player i (default local), nHeight units up (default 0 \u2014 raise it for aircraft/a midair drop), facing the same way the player faces. Hides the yaw-to-sin/cos trig via Ess.Math.pointAhead."
     },
     {
@@ -1599,6 +1699,10 @@
      "path": "Ess.Player.teleport",
      "sig": "Ess.Player.teleport(x,y,z, yaw, onDone)",
      "doc": "Warps all connected heroes to one spot (co-op safe) via the confirmed MrxUtil.TeleportHeroesToLocations idiom, deliberately not raw Object.SetPosition (unreliable on characters). onDone fires once the warp completes. Caution: teleporting out of an interior cell unloads it and drops the player onto open-world terrain instead of round-tripping back to the interior coordinate."
+    },
+    {
+     "path": "Ess.Player.viewYaw",
+     "sig": "Ess.Player.viewYaw(i)"
     }
    ]
   },
@@ -1701,7 +1805,7 @@
   {
    "name": "Ess.Raw.Mark",
    "group": "Markers",
-   "doc": ".radar/.pda/.world(guid,tex,rgb,size,dist)/.worldDisc (4 surfaces independently), .pulse/.haltPulse (flash existing), .showPlayerMarkers(on)",
+   "doc": ".radar/.pda/.world(guid,tex,rgb,size,dist)/.worldDisc (4 surfaces independently), .removeRadar/.removePda/.removeWorld(handle) (per-surface removal), .pulse/.haltPulse (flash existing), .showPlayerMarkers(on)",
    "calls": [
     {
      "path": "Ess.Raw.Mark.haltPulse",
@@ -1722,6 +1826,18 @@
      "path": "Ess.Raw.Mark.radar",
      "sig": "Ess.Raw.Mark.radar",
      "doc": "Adds a round-radar objective blip via Hud.Radar:AddObjective. tex defaults to \"objective_action\" and rgb defaults to {255,200,0}; fixed icon size and sort order 5. Returns the blip's name (keyed by name, not a handle) or nil."
+    },
+    {
+     "path": "Ess.Raw.Mark.removePda",
+     "sig": "Ess.Raw.Mark.removePda"
+    },
+    {
+     "path": "Ess.Raw.Mark.removeRadar",
+     "sig": "Ess.Raw.Mark.removeRadar"
+    },
+    {
+     "path": "Ess.Raw.Mark.removeWorld",
+     "sig": "Ess.Raw.Mark.removeWorld(handle)"
     },
     {
      "path": "Ess.Raw.Mark.showPlayerMarkers",
@@ -1791,6 +1907,10 @@
      "path": "Ess.Safe.string",
      "sig": "Ess.Safe.string(ok, val, fallback)",
      "doc": "Only trusts a native return as a string if it really is one, since some calls return unexpected types (bare userdata) on edge cases. Pass Ess.Safe.call's own (ok, val) straight through; fallback defaults to \"?\"."
+    },
+    {
+     "path": "Ess.Safe.template",
+     "sig": "Ess.Safe.template(name)"
     }
    ]
   },
@@ -1824,6 +1944,10 @@
      "path": "Ess.Save.gate",
      "sig": "Ess.Save.gate(key)",
      "doc": "Adds a holder that suppresses savegames/autosaves while at least one holder is active; sHolderKey defaults to \"default\" if omitted. Idempotent per key \u2014 gating twice with the same key is one holder, needing only one matching ungate() to clear."
+    },
+    {
+     "path": "Ess.Save.holders",
+     "sig": "Ess.Save.holders()"
     },
     {
      "path": "Ess.Save.isGated",
@@ -2138,6 +2262,10 @@
      "doc": "Formats a raw seconds value (e.g. from elapsed()) into a HUD-ready display string via Junk.FormatTime."
     },
     {
+     "path": "Ess.Time.mainStamp",
+     "sig": "Ess.Time.mainStamp()"
+    },
+    {
      "path": "Ess.Time.mark",
      "sig": "Ess.Time.mark(s)",
      "doc": "Re-marks an existing stamp handle in place (Sys.TimeStampMark). Every confirmed call site re-marks a stamp previously produced by stamp()/mainStamp() rather than creating a new one each time."
@@ -2214,6 +2342,14 @@
      "doc": "Modal yes/no dialog constructor and singleton (re-calling while open reconfigures and re-shows the same widget). Options: text, title (default \"CONFIRM\"), yes/no (default \"YES\"/\"NO\"), onResult(bool) called exactly once. Left/Right/Up/Down flip the highlighted choice, Enter commits, Esc always resolves false, and the highlight defaults to NO."
     },
     {
+     "path": "Ess.UI.Focus",
+     "sig": "Ess.UI.Focus(w)"
+    },
+    {
+     "path": "Ess.UI.Focused",
+     "sig": "Ess.UI.Focused()"
+    },
+    {
      "path": "Ess.UI.Input",
      "sig": "Ess.UI.Input",
      "doc": "One-shot typed-prompt constructor and singleton. Options: prompt (default \"INPUT -- ENTER SUBMIT   ESC CANCEL\"), text (default \"\"), max (default 120), onSubmit(text), onCancel(). Enter submits, Esc cancels and discards, Backspace deletes one character; long entries truncate from the front past ~40 characters."
@@ -2245,6 +2381,10 @@
     {
      "path": "Ess.UI.fmt_time",
      "sig": "Ess.UI.fmt_time"
+    },
+    {
+     "path": "Ess.UI.navName",
+     "sig": "Ess.UI.navName(vk)"
     },
     {
      "path": "Ess.UI.wrap",
@@ -2335,6 +2475,10 @@
      "doc": "Spawns a template and returns a ghost object (ghost.guid, ghost:update(nx,ny,nz), ghost:remove()). Object.SetPosition silently fails to move a spawned human, so update() tries SetPosition then re-reads the real position; if still off by more than ~3 units it despawns/respawns the template instead, updating ghost.guid so callers always read the current handle."
     },
     {
+     "path": "Ess.Vehicle.orbitFlight",
+     "sig": "Ess.Vehicle.orbitFlight(heli, cx,cy,cz, {radius=, height=, orbits=, onDone=})"
+    },
+    {
      "path": "Ess.Vehicle.riders",
      "sig": "Ess.Vehicle.riders(veh)",
      "doc": "Returns all riders in a vehicle. Returns an empty table if none/unreadable, never nil."
@@ -2361,6 +2505,7 @@
   "Ess.Bones.waitForReady",
   "Ess.Camera",
   "Ess.Camera.beginCinematic",
+  "Ess.Camera.blend",
   "Ess.Camera.endCinematic",
   "Ess.Camera.fade",
   "Ess.Camera.followHardpoint",
@@ -2376,6 +2521,7 @@
   "Ess.Camera.staleAxisDecay",
   "Ess.Camera.stopShake",
   "Ess.Cinematic",
+  "Ess.Cinematic.active",
   "Ess.Cinematic.define",
   "Ess.Cinematic.isPlaying",
   "Ess.Cinematic.play",
@@ -2391,8 +2537,25 @@
   "Ess.Contract",
   "Ess.Contract.Abort",
   "Ess.Contract.Accept",
+  "Ess.Contract.Chase",
+  "Ess.Contract.Collect",
+  "Ess.Contract.Defend",
+  "Ess.Contract.Destroy",
+  "Ess.Contract.Enter",
+  "Ess.Contract.Escort",
+  "Ess.Contract.Extract",
+  "Ess.Contract.Group",
+  "Ess.Contract.Hold",
+  "Ess.Contract.Interact",
+  "Ess.Contract.List",
+  "Ess.Contract.Protect",
+  "Ess.Contract.Race",
+  "Ess.Contract.Reach",
   "Ess.Contract.Register",
   "Ess.Contract.Status",
+  "Ess.Contract.StayInArea",
+  "Ess.Contract.Survive",
+  "Ess.Contract.Verify",
   "Ess.Easy",
   "Ess.Easy.AIOrders",
   "Ess.Easy.AIOrders.attack",
@@ -2413,6 +2576,7 @@
   "Ess.Easy.Console.close",
   "Ess.Easy.Console.open",
   "Ess.Easy.Console.play",
+  "Ess.Easy.Console.search",
   "Ess.Easy.Contract",
   "Ess.Easy.Contract.destroy",
   "Ess.Easy.Contract.reach",
@@ -2523,6 +2687,7 @@
   "Ess.Input",
   "Ess.Input.VkToChar",
   "Ess.Input.clear",
+  "Ess.Input.held",
   "Ess.Input.hijackController",
   "Ess.Input.poll",
   "Ess.Input.usingController",
@@ -2567,6 +2732,7 @@
   "Ess.Math.normDeg",
   "Ess.Math.pointAhead",
   "Ess.Math.remap",
+  "Ess.Math.rotateOffset",
   "Ess.Math.round",
   "Ess.Math.sign",
   "Ess.Math.smoothstep",
@@ -2587,10 +2753,13 @@
   "Ess.Net.Set",
   "Ess.Net.Shared",
   "Ess.Net.Track",
+  "Ess.Net.getv",
   "Ess.Net.hijackCallback",
+  "Ess.Net.setv",
   "Ess.Object",
   "Ess.Object.addLabel",
   "Ess.Object.alive",
+  "Ess.Object.damage",
   "Ess.Object.disablePhysics",
   "Ess.Object.displayName",
   "Ess.Object.distance",
@@ -2648,6 +2817,7 @@
   "Ess.Player.slot",
   "Ess.Player.targetUnderReticle",
   "Ess.Player.teleport",
+  "Ess.Player.viewYaw",
   "Ess.Points",
   "Ess.Points.bucket",
   "Ess.Points.ideal",
@@ -2670,6 +2840,9 @@
   "Ess.Raw.Mark.pda",
   "Ess.Raw.Mark.pulse",
   "Ess.Raw.Mark.radar",
+  "Ess.Raw.Mark.removePda",
+  "Ess.Raw.Mark.removeRadar",
+  "Ess.Raw.Mark.removeWorld",
   "Ess.Raw.Mark.showPlayerMarkers",
   "Ess.Raw.Mark.world",
   "Ess.Raw.Mark.worldDisc",
@@ -2683,12 +2856,14 @@
   "Ess.Safe.call",
   "Ess.Safe.quiet",
   "Ess.Safe.string",
+  "Ess.Safe.template",
   "Ess.Sandbox",
   "Ess.Sandbox.begin",
   "Ess.Sandbox.finish",
   "Ess.Sandbox.isActive",
   "Ess.Save",
   "Ess.Save.gate",
+  "Ess.Save.holders",
   "Ess.Save.isGated",
   "Ess.Save.ungate",
   "Ess.SaveVar",
@@ -2749,6 +2924,7 @@
   "Ess.Time.cooldown",
   "Ess.Time.elapsed",
   "Ess.Time.format",
+  "Ess.Time.mainStamp",
   "Ess.Time.mark",
   "Ess.Time.restoreScale",
   "Ess.Time.scale",
@@ -2763,6 +2939,8 @@
   "Ess.UI.Board",
   "Ess.UI.Chat",
   "Ess.UI.Confirm",
+  "Ess.UI.Focus",
+  "Ess.UI.Focused",
   "Ess.UI.Input",
   "Ess.UI.List",
   "Ess.UI.Menu",
@@ -2770,6 +2948,7 @@
   "Ess.UI.Toast",
   "Ess.UI.comma",
   "Ess.UI.fmt_time",
+  "Ess.UI.navName",
   "Ess.UI.wrap",
   "Ess.Vec",
   "Ess.Vec.add",
@@ -2788,8 +2967,9 @@
   "Ess.Vehicle.exit",
   "Ess.Vehicle.flyTo",
   "Ess.Vehicle.followGhost",
+  "Ess.Vehicle.orbitFlight",
   "Ess.Vehicle.riders",
   "Ess.Vehicle.seatOf"
  ],
- "essVersion": "0.2.1"
+ "essVersion": "0.3.0"
 }
