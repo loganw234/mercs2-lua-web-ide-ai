@@ -20,6 +20,8 @@
 
   var logRing = [];
   var pendingFiles = [];       /* [{name, text}] attached to the NEXT question, any count */
+  var lastEditorSent = {};     /* sessionId -> the editor text last shown to the model, so
+                                  after the first full send we attach only a diff (see buildContext) */
   var busy = false, abortCtl = null, packText = null;
   var sendSel = true;          /* the Selection chip: per-question, defaults on */
   var stick = true;            /* auto-scroll is pinned to the bottom */
@@ -47,17 +49,81 @@
     catch (e) { return ""; }
   }
 
-  function buildContext() {
+  function sessionKey() {
+    try {
+      var s = (IDE.chats && IDE.chats.current) ? IDE.chats.current() : null;
+      return (s && s.id != null) ? String(s.id) : "_";
+    } catch (e) { return "_"; }
+  }
+
+  /* A compact unified diff (reusing lineDiff's LCS), with unchanged runs elided to a
+     "@@ N unchanged @@" marker keeping a couple of context lines around each change.
+     Returns "" when identical, or null when the inputs are too big to diff. */
+  function editorDiff(oldText, newText, ctx) {
+    var ops = lineDiff(oldText, newText);
+    if (!ops) return null;
+    ctx = (ctx == null) ? 2 : ctx;
+    var keep = [], i, d, changed = false;
+    for (i = 0; i < ops.length; i++) {
+      if (ops[i].t !== " ") {
+        changed = true;
+        for (d = -ctx; d <= ctx; d++) { var k = i + d; if (k >= 0 && k < ops.length) keep[k] = true; }
+      }
+    }
+    if (!changed) return "";
+    var out = [];
+    i = 0;
+    while (i < ops.length) {
+      if (keep[i]) { out.push(ops[i].t + ops[i].s); i++; }
+      else {
+        var j = i; while (j < ops.length && !keep[j]) j++;
+        out.push("@@ " + (j - i) + " unchanged line" + (j - i === 1 ? "" : "s") + " @@");
+        i = j;
+      }
+    }
+    return out.join("\n");
+  }
+
+  /* The editor-context block. First time in a chat the WHOLE script is attached so the
+     model has it in context; after that we attach only a diff against what it last saw,
+     so a long conversation carries the script once plus its edits — not a fresh full copy
+     every message. `commit` records the new baseline (the real send does; the live budget
+     estimate does not). */
+  function editorContextPart(commit) {
+    var src = editorText();
+    if (!src.trim()) return "";
+    var name = scriptName();
+    var tag = "--- current script" + (name ? ": " + name : "");
+    var sid = sessionKey();
+    var rec = lastEditorSent.hasOwnProperty(sid) ? lastEditorSent[sid] : null;
+    /* Only diff against a baseline for the SAME script; switching files re-baselines to full. */
+    var prev = (rec && rec.name === name) ? rec.text : null;
+    var part;
+    function full() {
+      var s = src.length > EDITOR_MAX ? src.slice(0, EDITOR_MAX) + "\n-- [truncated]" : src;
+      return tag + " ---\n```lua\n" + s + "\n```\n--- end script ---";
+    }
+    if (prev === null) {
+      part = full();                              /* first send (or a new file): push the whole script */
+    } else if (prev === src) {
+      part = tag + " (unchanged since last shown) ---";
+    } else {
+      var diff = editorDiff(prev, src, 2);
+      if (diff === null) part = full();           /* too big to diff — resend whole */
+      else if (diff === "") part = tag + " (unchanged since last shown) ---";
+      else part = tag + " — your edits since last shown (unified diff; unchanged runs elided) ---\n" +
+        "```diff\n" + diff + "\n```\n--- end edits ---";
+    }
+    if (commit) lastEditorSent[sid] = { name: name, text: src };
+    return part;
+  }
+
+  function buildContext(commit) {
     var c = IDE.provider.get();
     var parts = [];
     if (c.sendEditor) {
-      var src = editorText();
-      if (src.trim()) {
-        if (src.length > EDITOR_MAX) src = src.slice(0, EDITOR_MAX) + "\n-- [truncated]";
-        var name = scriptName();
-        parts.push("--- current script" + (name ? ": " + name : "") +
-          " ---\n```lua\n" + src + "\n```\n--- end script ---");
-      }
+      var ep = editorContextPart(commit);
+      if (ep) parts.push(ep);
     }
     var sel = sendSel ? selectionText() : "";
     if (sel.trim()) {
@@ -532,7 +598,7 @@
     box.innerHTML = "";
     var name = scriptName();
     box.appendChild(chipEl("script", "⌘ " + (name || "Script"), !!c.sendEditor,
-      "Attach the current script to each question"));
+      "Keep the assistant aware of your script — sent in full once, then only your edits as a diff"));
     var sel = selectionText();
     if (sel.trim()) {
       var lines = sel.split("\n").length;
@@ -581,7 +647,7 @@
     } else {
       var q = (opts.text != null ? opts.text : (input.value || "")).trim();
       if (!q) return;
-      var ctx = buildContext();
+      var ctx = buildContext(true);
       /* Note attached files in the DISPLAYED message so the user can see what
          went along, then clear the queue -- attachments are per-question. */
       var fileNote = pendingFiles.length
@@ -1039,7 +1105,7 @@
   function ideUseTokens() {
     var tools = (window.IDE.agent && IDE.agent.tools) ?
       Math.round(JSON.stringify(IDE.agent.tools()).length / 4) : 0;
-    var ctx = Math.round((buildContext() || "").length / 4);
+    var ctx = Math.round((buildContext(false) || "").length / 4);
     return { tools: tools, ctx: ctx, total: tools + ctx };
   }
 

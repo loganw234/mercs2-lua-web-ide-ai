@@ -46,7 +46,13 @@ so adding a sidebar panel needs no edit there again.
 This is the whole point of putting it in the IDE rather than linking to the wiki
 chat. Each question can carry:
 
-- **the editor buffer** (capped at 60k chars)
+- **the editor buffer** (capped at 60k chars) — sent **in full the first time**, then
+  as a **unified diff** of your edits since the model last saw it (unchanged runs elided;
+  an unchanged buffer collapses to a one-line marker). So the model stays current on your
+  script across a long chat without a fresh full copy bloating every message. The baseline
+  is per-chat and per-file (switching scripts, or a diff too large to compute, re-sends the
+  whole thing); in agent mode the `get_editor` tool always returns the full live buffer on
+  demand.
 - **the last 40 game-log lines**, from a 120-line ring buffer fed off `IDE.bus`
 
 Both are toggleable in settings. The pack is always sent as the **first** system
