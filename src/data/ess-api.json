@@ -614,6 +614,10 @@
      "doc": "Ignores all airstrike/support stock and unlock requirements so any support call-in is free. bOn defaults to true; pass false to turn it back off."
     },
     {
+     "path": "Ess.Easy.Player.ghost",
+     "sig": "Ess.Easy.Player.ghost()"
+    },
+    {
      "path": "Ess.Easy.Player.giveAllRewards",
      "sig": "Ess.Easy.Player.giveAllRewards()",
      "doc": "Dispenses every unlock reward at once (MrxRewardData.DispenseAllRewards)."
@@ -808,6 +812,10 @@
      "path": "Ess.Easy.World.hellscape",
      "sig": "Ess.Easy.World.hellscape()",
      "doc": "One-liner that triggers a chaotic 'hellscape' world effect; used as the Shift-held variant of the F8 hotkey in the hotkey_toolkit.lua recipe."
+    },
+    {
+     "path": "Ess.Easy.World.noPursuit",
+     "sig": "Ess.Easy.World.noPursuit()"
     },
     {
      "path": "Ess.Easy.World.removeMapBoundary",
@@ -1455,14 +1463,26 @@
      "sig": "Ess.Object.health"
     },
     {
+     "path": "Ess.Object.heightAboveGround",
+     "sig": "Ess.Object.heightAboveGround(g)"
+    },
+    {
      "path": "Ess.Object.impulse",
      "sig": "Ess.Object.impulse",
      "doc": "Wraps Object.ApplyImpulse, the confirmed launch/knock-around primitive; real call sites scale the impulse by the object's mass since heavier things need a bigger push. bLocal defaults to true (impulse in the object's own space). This is the bare call \u2014 see Ess.Impulse for mass-scaling + directional + preset helpers."
     },
     {
+     "path": "Ess.Object.invincible",
+     "sig": "Ess.Object.invincible"
+    },
+    {
      "path": "Ess.Object.kill",
      "sig": "Ess.Object.kill",
      "doc": "Destroys the object, leaving a corpse/wreck (distinct from remove, which deletes outright). Confirmed not instantaneous: alive(uGuid) still reads true in the same tick as the kill and flips to false a moment later \u2014 poll alive() over a couple ticks rather than checking immediately after."
+    },
+    {
+     "path": "Ess.Object.localToWorld",
+     "sig": "Ess.Object.localToWorld(g, lx,ly,lz)"
     },
     {
      "path": "Ess.Object.maxHealth",
@@ -1523,6 +1543,14 @@
      "doc": "Sets an object's yaw. Whether the unit is degrees or radians is unconfirmed on this engine \u2014 a read-modify-write cycle using Object.yaw() stays self-consistent regardless."
     },
     {
+     "path": "Ess.Object.size",
+     "sig": "Ess.Object.size(g)"
+    },
+    {
+     "path": "Ess.Object.snapToGround",
+     "sig": "Ess.Object.snapToGround(g, offset)"
+    },
+    {
      "path": "Ess.Object.spawn",
      "sig": "Ess.Object.spawn(template, x,y,z, yaw)",
      "doc": "Spawns via Pg.Spawn. Refuses a blank/whitespace template outright (logs and returns nil, since a blank template would otherwise hard-crash the engine past pcall's ability to catch it). Sets yaw after spawn if given."
@@ -1533,6 +1561,14 @@
      "doc": "Spawns sTemplate nDist units (default 18) in front of player i (default local), nHeight units up (default 0 \u2014 raise it for aircraft/a midair drop), facing the same way the player faces. Hides the yaw-to-sin/cos trig via Ess.Math.pointAhead."
     },
     {
+     "path": "Ess.Object.speed",
+     "sig": "Ess.Object.speed(g)"
+    },
+    {
+     "path": "Ess.Object.speedSq",
+     "sig": "Ess.Object.speedSq(g)"
+    },
+    {
      "path": "Ess.Object.valid",
      "sig": "Ess.Object.valid",
      "doc": "Wraps Object.IsValid, truthy()-coerced so an engine 0/1 return can't fool a naive Lua truthiness check."
@@ -1541,6 +1577,10 @@
      "path": "Ess.Object.vehicleOf",
      "sig": "Ess.Object.vehicleOf",
      "doc": "Unifies 4 overlapping entry points across 2 namespaces (Object.InSeat/InVehicle, Player.GetControlledObject, Vehicle.GetFromRider) into the confirmed idiom Vehicle.GetFromRider(char) \u2014 works for driver or passenger."
+    },
+    {
+     "path": "Ess.Object.velocity",
+     "sig": "Ess.Object.velocity(g)"
     },
     {
      "path": "Ess.Object.visible",
@@ -1595,6 +1635,10 @@
      "path": "Ess.On.insideArea",
      "sig": "Ess.On.insideArea(x,y,z,r, fn)",
      "doc": "insideArea(x,y,z,r, fn [,i]) -> stop(). Polls every 0.25s and calls fn(px, y, pz) on every tick the player is inside the radius (a live zone callback), doing nothing on ticks they're outside. Never auto-stops \u2014 call the returned stop() yourself."
+    },
+    {
+     "path": "Ess.On.labeled",
+     "sig": "Ess.On.labeled(label, r, fn)"
     },
     {
      "path": "Ess.On.playerHurt",
@@ -1729,6 +1773,10 @@
    "doc": "Nearby-object collection, one dispatcher",
    "calls": [
     {
+     "path": "Ess.Probe.allByName",
+     "sig": "Ess.Probe.allByName(name)"
+    },
+    {
      "path": "Ess.Probe.describeSafe",
      "sig": "Ess.Probe.describeSafe(guid)",
      "doc": "Builds a one-line \"what is this\" description (name, position, health, faction) for logging/debugging, with every field individually pcall-guarded so one bad field can't blank out the whole description."
@@ -1747,6 +1795,61 @@
      "path": "Ess.Probe.nearest",
      "sig": "Ess.Probe.nearest(...)",
      "doc": "The single closest match from nearby (same args, same player-excluded-by-default behavior). Returns nil if nothing matched in range."
+    }
+   ]
+  },
+  {
+   "name": "Ess.Pursuit",
+   "group": "Humans & combat",
+   "doc": "The wanted/heat system, with its two live-confirmed traps encoded",
+   "calls": [
+    {
+     "path": "Ess.Pursuit.capLevel",
+     "sig": "Ess.Pursuit.capLevel(n)"
+    },
+    {
+     "path": "Ess.Pursuit.clear",
+     "sig": "Ess.Pursuit.clear()"
+    },
+    {
+     "path": "Ess.Pursuit.clearRestrictions",
+     "sig": "Ess.Pursuit.clearRestrictions()"
+    },
+    {
+     "path": "Ess.Pursuit.custom",
+     "sig": "Ess.Pursuit.custom(faction, dur, settings)"
+    },
+    {
+     "path": "Ess.Pursuit.level",
+     "sig": "Ess.Pursuit.level()"
+    },
+    {
+     "path": "Ess.Pursuit.levelTimes",
+     "sig": "Ess.Pursuit.levelTimes(n1, n2)"
+    },
+    {
+     "path": "Ess.Pursuit.lock",
+     "sig": "Ess.Pursuit.lock(faction, level)"
+    },
+    {
+     "path": "Ess.Pursuit.restrictAll",
+     "sig": "Ess.Pursuit.restrictAll(on)"
+    },
+    {
+     "path": "Ess.Pursuit.restrictFaction",
+     "sig": "Ess.Pursuit.restrictFaction(faction, on)"
+    },
+    {
+     "path": "Ess.Pursuit.seconds",
+     "sig": "Ess.Pursuit.seconds(faction, n)"
+    },
+    {
+     "path": "Ess.Pursuit.start",
+     "sig": "Ess.Pursuit.start(faction, level)"
+    },
+    {
+     "path": "Ess.Pursuit.state",
+     "sig": "Ess.Pursuit.state()"
     }
    ]
   },
@@ -1859,7 +1962,7 @@
   {
    "name": "Ess.Relations",
    "group": "Encounter toolkit (standalone gameplay scripting)",
-   "doc": ".apply(pairs, label) \u2192 handle, .restore(handle), .isActive(handle), .getFeeling/.setFeeling (per-individual)",
+   "doc": ".apply(pairs, label) \u2192 handle, .restore(handle), .isActive(handle), .getFeeling/.setFeeling (per-individual), .getPerceivability/.setPerceivability (per-individual AI detectability \u2014 reversible; the stat behind Easy ghost)",
    "calls": [
     {
      "path": "Ess.Relations.apply",
@@ -1870,6 +1973,10 @@
      "path": "Ess.Relations.getFeeling",
      "sig": "Ess.Relations.getFeeling",
      "doc": "Wraps Ai.GetFeeling for an individual-pair relationship value, distinct from the per-faction apply/restore. A freshly spawned character's feeling reads back as a stale 0 if queried in the same tick as the spawn, so wait at least one tick first."
+    },
+    {
+     "path": "Ess.Relations.getPerceivability",
+     "sig": "Ess.Relations.getPerceivability"
     },
     {
      "path": "Ess.Relations.isActive",
@@ -1885,6 +1992,10 @@
      "path": "Ess.Relations.setFeeling",
      "sig": "Ess.Relations.setFeeling",
      "doc": "Wraps Ai.SetFeeling for an individual-pair relationship value. Used e.g. to neutralize hostility on one specific subject before starting a scripted \"Follow\" role, without touching that subject's whole faction stance."
+    },
+    {
+     "path": "Ess.Relations.setPerceivability",
+     "sig": "Ess.Relations.setPerceivability"
     }
    ]
   },
@@ -2402,6 +2513,10 @@
      "sig": "Ess.Vec.add"
     },
     {
+     "path": "Ess.Vec.cross",
+     "sig": "Ess.Vec.cross"
+    },
+    {
      "path": "Ess.Vec.dir",
      "sig": "Ess.Vec.dir(from,to)",
      "doc": "Unit direction from A to B (normalize(sub(B, A)))."
@@ -2443,7 +2558,7 @@
   {
    "name": "Ess.Vehicle",
    "group": "Identity & world query",
-   "doc": "Seats/riders/entry",
+   "doc": "Seats/riders/entry/upkeep",
    "calls": [
     {
      "path": "Ess.Vehicle.driver",
@@ -2458,6 +2573,10 @@
      "path": "Ess.Vehicle.enterSeatExcluding",
      "sig": "Ess.Vehicle.enterSeatExcluding(char, veh, excl)",
      "doc": "Boards a vehicle while never taking a given seat type (e.g. a co-op partner boarding after the driver seat is taken). Loops seat types {\"d\",\"g\",\"p\",\"c\"} in priority order via Vehicle.GetSeatByType + EnterBySeatGuid, skipping any type named in excludeSeats. Verified against the live-confirmed-working DestroyerTool.lua."
+    },
+    {
+     "path": "Ess.Vehicle.evictAll",
+     "sig": "Ess.Vehicle.evictAll(veh)"
     },
     {
      "path": "Ess.Vehicle.exit",
@@ -2475,8 +2594,20 @@
      "doc": "Spawns a template and returns a ghost object (ghost.guid, ghost:update(nx,ny,nz), ghost:remove()). Object.SetPosition silently fails to move a spawned human, so update() tries SetPosition then re-reads the real position; if still off by more than ~3 units it despawns/respawns the template instead, updating ghost.guid so callers always read the current handle."
     },
     {
+     "path": "Ess.Vehicle.isFlipped",
+     "sig": "Ess.Vehicle.isFlipped(veh)"
+    },
+    {
+     "path": "Ess.Vehicle.land",
+     "sig": "Ess.Vehicle.land(heliOrPilot)"
+    },
+    {
      "path": "Ess.Vehicle.orbitFlight",
      "sig": "Ess.Vehicle.orbitFlight(heli, cx,cy,cz, {radius=, height=, orbits=, onDone=})"
+    },
+    {
+     "path": "Ess.Vehicle.repair",
+     "sig": "Ess.Vehicle.repair(veh)"
     },
     {
      "path": "Ess.Vehicle.riders",
@@ -2605,6 +2736,7 @@
   "Ess.Easy.Objective.survive",
   "Ess.Easy.Player",
   "Ess.Easy.Player.freeSupport",
+  "Ess.Easy.Player.ghost",
   "Ess.Easy.Player.giveAllRewards",
   "Ess.Easy.Player.giveGrapplingHook",
   "Ess.Easy.Player.skin",
@@ -2643,6 +2775,7 @@
   "Ess.Easy.World.brightness",
   "Ess.Easy.World.clearWanted",
   "Ess.Easy.World.hellscape",
+  "Ess.Easy.World.noPursuit",
   "Ess.Easy.World.removeMapBoundary",
   "Ess.Easy.World.resetAtmosphere",
   "Ess.Easy.World.tint",
@@ -2769,8 +2902,11 @@
   "Ess.Object.hasLabel",
   "Ess.Object.heal",
   "Ess.Object.health",
+  "Ess.Object.heightAboveGround",
   "Ess.Object.impulse",
+  "Ess.Object.invincible",
   "Ess.Object.kill",
+  "Ess.Object.localToWorld",
   "Ess.Object.maxHealth",
   "Ess.Object.playerControlled",
   "Ess.Object.pollVehicleChange",
@@ -2783,10 +2919,15 @@
   "Ess.Object.setPos",
   "Ess.Object.setVisible",
   "Ess.Object.setYaw",
+  "Ess.Object.size",
+  "Ess.Object.snapToGround",
   "Ess.Object.spawn",
   "Ess.Object.spawnAhead",
+  "Ess.Object.speed",
+  "Ess.Object.speedSq",
   "Ess.Object.valid",
   "Ess.Object.vehicleOf",
+  "Ess.Object.velocity",
   "Ess.Object.visible",
   "Ess.Object.yaw",
   "Ess.Objective",
@@ -2797,6 +2938,7 @@
   "Ess.On.exitArea",
   "Ess.On.healthBelow",
   "Ess.On.insideArea",
+  "Ess.On.labeled",
   "Ess.On.playerHurt",
   "Ess.On.tick",
   "Ess.On.vehicle",
@@ -2822,10 +2964,24 @@
   "Ess.Points.bucket",
   "Ess.Points.ideal",
   "Ess.Probe",
+  "Ess.Probe.allByName",
   "Ess.Probe.describeSafe",
   "Ess.Probe.getFaction",
   "Ess.Probe.nearby",
   "Ess.Probe.nearest",
+  "Ess.Pursuit",
+  "Ess.Pursuit.capLevel",
+  "Ess.Pursuit.clear",
+  "Ess.Pursuit.clearRestrictions",
+  "Ess.Pursuit.custom",
+  "Ess.Pursuit.level",
+  "Ess.Pursuit.levelTimes",
+  "Ess.Pursuit.lock",
+  "Ess.Pursuit.restrictAll",
+  "Ess.Pursuit.restrictFaction",
+  "Ess.Pursuit.seconds",
+  "Ess.Pursuit.start",
+  "Ess.Pursuit.state",
   "Ess.Quest",
   "Ess.Quest.new",
   "Ess.RNG",
@@ -2849,9 +3005,11 @@
   "Ess.Relations",
   "Ess.Relations.apply",
   "Ess.Relations.getFeeling",
+  "Ess.Relations.getPerceivability",
   "Ess.Relations.isActive",
   "Ess.Relations.restore",
   "Ess.Relations.setFeeling",
+  "Ess.Relations.setPerceivability",
   "Ess.Safe",
   "Ess.Safe.call",
   "Ess.Safe.quiet",
@@ -2952,6 +3110,7 @@
   "Ess.UI.wrap",
   "Ess.Vec",
   "Ess.Vec.add",
+  "Ess.Vec.cross",
   "Ess.Vec.dir",
   "Ess.Vec.dot",
   "Ess.Vec.length",
@@ -2964,12 +3123,16 @@
   "Ess.Vehicle.driver",
   "Ess.Vehicle.enterBestSeat",
   "Ess.Vehicle.enterSeatExcluding",
+  "Ess.Vehicle.evictAll",
   "Ess.Vehicle.exit",
   "Ess.Vehicle.flyTo",
   "Ess.Vehicle.followGhost",
+  "Ess.Vehicle.isFlipped",
+  "Ess.Vehicle.land",
   "Ess.Vehicle.orbitFlight",
+  "Ess.Vehicle.repair",
   "Ess.Vehicle.riders",
   "Ess.Vehicle.seatOf"
  ],
- "essVersion": "0.3.0"
+ "essVersion": "0.3.1"
 }
