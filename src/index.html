@@ -102,6 +102,7 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
         <div class="ai-head">
           <select id="aiProfileQuick" class="ai-profile-quick" title="Switch provider profile" hidden></select>
           <button id="aiModelChip" class="ai-model" title="Active model — click to change"></button>
+          <button id="aiPackChip" class="ai-pack" title="Reference pack in use — click to change"></button>
           <span class="aihead-acts">
             <button id="aiNew" class="ai-icon" title="New chat">＋</button>
             <button id="aiHistBtn" class="ai-icon" title="Chat history">🗨</button>
@@ -247,6 +248,22 @@ try{var __t=localStorage.getItem("m2ide.theme");if(__t==="light"||__t==="dark")d
       <label class="ai-check"><input id="aiSendEditor" type="checkbox"> Send editor buffer</label>
       <label class="ai-check"><input id="aiSendLog" type="checkbox"> Send recent game log</label>
       <label class="ai-check"><input id="aiAgent" type="checkbox"> Agent mode (let it search the docs &amp; examples, inspect the game, and propose edits — changes always ask first)</label>
+
+      <details class="settings-adv">
+        <summary>Advanced — tune this profile for its model</summary>
+        <p class="ai-note">These apply to <b>this profile only</b>, so a 40k-context local model and a hosted long-context one can each be set up for what suits them. Defaults are good for most setups.</p>
+        <label>Max reply tokens <small>(also the budget headroom reserved for the answer)</small><input id="aiMaxTokens" type="number" min="256" step="256" spellcheck="false"></label>
+        <label>Editor buffer<select id="aiEditorMode">
+          <option value="diff">Send in full once, then just edits (default)</option>
+          <option value="full">Always send the whole script</option>
+        </select></label>
+        <label class="ai-check"><input id="aiTrimHistory" type="checkbox"> Auto-trim old messages to fit the context window <small>(needs the window set above)</small></label>
+        <label>Game-log lines per message <small>(after the first, only new lines are sent)</small><input id="aiLogSend" type="number" min="0" max="200" step="5" spellcheck="false"></label>
+        <div class="settings-subhead">Agent mode</div>
+        <label>Max tool steps per answer<input id="aiMaxSteps" type="number" min="1" max="30" step="1" spellcheck="false"></label>
+        <label>Tool results kept in full <small>(older ones are shortened to save context)</small><input id="aiKeepRaw" type="number" min="1" max="10" step="1" spellcheck="false"></label>
+        <label class="ai-check"><input id="aiPromptCache" type="checkbox"> Prompt caching <small>(Anthropic — cache the reference pack across turns; leave on)</small></label>
+      </details>
 
       <div class="ai-warn">Your key is stored in this browser and sent straight to the provider you choose. Nothing is proxied through mercs2.tools.</div>
       <div id="aiSaveWarn" class="ai-savewarn" hidden></div>

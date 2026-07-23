@@ -82,7 +82,16 @@
     maxTokens: 4000,
     sendEditor: true,
     sendLog: true,
-    agentMode: false
+    agentMode: false,
+    /* Advanced, per-profile context tuning — sensible defaults, exposed in settings so a
+       profile can be matched to its model (a 40k local model wants different knobs than a
+       hosted 1M one). */
+    editorMode: "diff",   /* "diff" = full script once then diffs; "full" = whole script every turn */
+    trimHistory: true,    /* auto-trim old messages to the model's context window */
+    logSend: 40,          /* game-log lines attached per message */
+    keepRawResults: 2,    /* agent: tool results kept verbatim (older ones summarized) */
+    maxSteps: 10,         /* agent: max tool-call steps per run */
+    promptCache: true     /* Anthropic: cache_control breakpoint on the reference pack */
   };
 
   /* Provider PROFILES. Users keep several named setups -- a free local model, a
@@ -239,7 +248,7 @@
         "anthropic-dangerous-direct-browser-access": "true"
       },
       body: JSON.stringify({
-        model: c.model, system: anthropicSystem(system), messages: rest,
+        model: c.model, system: anthropicSystem(c, system), messages: rest,
         max_tokens: c.maxTokens, stream: true
       }),
       signal: opts.signal
@@ -317,8 +326,8 @@
      cache_control breakpoint: mark the whole system block (the reference pack, the big stable
      prefix — 11k–241k tokens) so a warm turn re-reads it from cache instead of re-billing it.
      Below Anthropic's ~1k-token minimum, caching does nothing, so leave the plain string. */
-  function anthropicSystem(system) {
-    if (system && system.length >= 4096) {
+  function anthropicSystem(c, system) {
+    if (c.promptCache !== false && system && system.length >= 4096) {
       return [{ type: "text", text: system, cache_control: { type: "ephemeral" } }];
     }
     return system;
@@ -357,7 +366,7 @@
 
   function completeAnthropic(c, messages, tools, opts) {
     var conv = toAnthropic(messages);
-    var body = { model: c.model, system: anthropicSystem(conv.system), messages: conv.messages,
+    var body = { model: c.model, system: anthropicSystem(c, conv.system), messages: conv.messages,
                  max_tokens: c.maxTokens, stream: false };
     if (tools && tools.length) {
       body.tools = tools.map(function (t) {

@@ -706,13 +706,18 @@
      them now), older ones shrink to a stub that keeps the pairing intact (same role/id) and
      a hint of what was there, so the model can re-call the tool if it truly needs the rest.
      The real `convo` (and the grounding set) stays whole. */
-  var KEEP_RAW_RESULTS = 2;
+  var KEEP_RAW_RESULTS = 2;   /* default; overridable per profile (settings) */
   var STUB_CHARS = 220;
+  function keepRaw() {
+    var c = IDE.provider.get(); var n = c && c.keepRawResults;
+    return (typeof n === "number" && n >= 1) ? n : KEEP_RAW_RESULTS;
+  }
   function compactConvo(convo) {
+    var keep = keepRaw();
     var toolIdx = [];
     for (var i = 0; i < convo.length; i++) if (convo[i] && convo[i].role === "tool") toolIdx.push(i);
-    if (toolIdx.length <= KEEP_RAW_RESULTS) return convo;
-    var stubUntil = toolIdx[toolIdx.length - KEEP_RAW_RESULTS]; /* keep this one + newer raw */
+    if (toolIdx.length <= keep) return convo;
+    var stubUntil = toolIdx[toolIdx.length - keep]; /* keep this one + newer raw */
     return convo.map(function (m, i) {
       if (!m || m.role !== "tool" || i >= stubUntil) return m;
       var full = String(m.content || "");
@@ -728,6 +733,8 @@
     var convo = messages.slice();
     var steps = [];
     var nudged = false;
+    var cfgSteps = IDE.provider.get().maxSteps;
+    var MAX = (typeof cfgSteps === "number" && cfgSteps >= 1) ? cfgSteps : MAX_STEPS;  /* per-profile cap */
 
     /* Everything the model has legitimately been shown: the reference pack in
        the system message, plus every tool result so far. */
@@ -766,7 +773,7 @@
           }
         }
 
-        if (!res.toolCalls.length || n >= MAX_STEPS) {
+        if (!res.toolCalls.length || n >= MAX) {
           /* Out of budget with calls still pending: tell the model plainly
              rather than letting it answer as if the calls had succeeded. */
           if (res.toolCalls.length) {

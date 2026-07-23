@@ -131,6 +131,14 @@ select.btn{padding:6px 8px}
 .settings-section{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);
   margin:16px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--edge)}
 .settings-section:first-child{margin-top:0}
+.settings-adv{margin-top:14px;border:1px solid var(--edge);border-radius:8px;background:var(--bar)}
+.settings-adv>summary{cursor:pointer;padding:9px 12px;font-size:11px;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--accent);font-weight:600}
+.settings-adv[open]>summary{border-bottom:1px solid var(--edge)}
+.settings-adv>label,.settings-adv>p,.settings-adv>.settings-subhead{margin-left:12px;margin-right:12px}
+.settings-adv>label:last-child{margin-bottom:12px}
+.settings-subhead{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);
+  margin:12px 0 6px}
 .modal-acts{display:flex;gap:8px;align-items:center;margin-top:16px;
   padding-top:12px;border-top:1px solid var(--edge)}
 .ai-note{color:var(--dim);font-size:11px;margin:0 0 10px}
@@ -426,6 +434,11 @@ a.btn{text-decoration:none;display:inline-block}
   padding: 4px 10px; cursor: pointer; }
 .ai-model:hover { color: var(--ink); border-color: var(--accent); }
 .ai-model.unset { color: var(--warn); border-color: var(--warn); border-style: dashed; }
+.ai-pack { flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font: 10px/1 var(--efont); color: var(--accent);
+  background: transparent; border: 1px solid var(--edge2); border-radius: 20px;
+  padding: 4px 9px; cursor: pointer; letter-spacing: .02em; }
+.ai-pack:hover { color: var(--ink); border-color: var(--accent); }
 .ai-icon { width: 26px; height: 26px; display: inline-flex; align-items: center;
   justify-content: center; font-size: 13px; line-height: 1; color: var(--dim);
   background: transparent; border: 0; border-radius: 6px; cursor: pointer; }

@@ -107,7 +107,9 @@
       var s = src.length > EDITOR_MAX ? src.slice(0, EDITOR_MAX) + "\n-- [truncated]" : src;
       return tag + " ---\n```lua\n" + s + "\n```\n--- end script ---";
     }
-    if (prev === null) {
+    if (IDE.provider.get().editorMode === "full") {
+      part = full();                              /* profile opts out of diffs — always whole script */
+    } else if (prev === null) {
       part = full();                              /* first send (or a new file): push the whole script */
     } else if (prev === src) {
       part = tag + " (unchanged since last shown) ---";
@@ -133,10 +135,12 @@
     if (newCount <= 0) {
       part = "--- game log (no new lines since last shown) ---";
     } else {
+      var cap = IDE.provider.get().logSend;
+      cap = (typeof cap === "number" && cap >= 0) ? cap : LOG_SEND;
       var inRing = Math.min(newCount, logRing.length);
       var lines = logRing.slice(logRing.length - inRing);
       var elided = 0;
-      if (lines.length > LOG_SEND) { elided = lines.length - LOG_SEND; lines = lines.slice(-LOG_SEND); }
+      if (lines.length > cap) { elided = lines.length - cap; lines = lines.slice(-cap); }
       var head = (seen === 0)
         ? "--- recent game log (newest last) ---"
         : "--- game log — new lines since last shown (newest last) ---";
@@ -217,7 +221,7 @@
     if (pack) msgs.push({ role: "system", content: pack });
     var c = IDE.provider.get();
     var budget = (c.modelCtx && c.modelCtx > 0) ? c.modelCtx : 0;
-    if (!budget) {
+    if (!budget || c.trimHistory === false) {   /* no window set, or the profile turned trimming off */
       for (var i = 0; i < history.length; i++) msgs.push({ role: history[i].role, content: history[i].content });
       return { msgs: msgs, dropped: 0 };
     }
@@ -621,6 +625,14 @@
     return profs.length;
   }
 
+  function packLabel() {
+    var c = IDE.provider.get();
+    if (c.packUrl) return "URL pack";
+    var info = window.MERCS_PACK_INFO || [];
+    for (var i = 0; i < info.length; i++) if (info[i].key === c.packTier) return info[i].label + " pack";
+    return (c.packTier || "small") + " pack";
+  }
+
   function refreshModel() {
     var el = $("aiModelChip");
     if (el) {
@@ -631,6 +643,13 @@
       var p = IDE.provider.preset(c.preset);
       el.title = (ok ? "Model: " + c.model + (p ? "  (" + p.label + ")" : "")
                      : "No provider configured") + " — click to change";
+    }
+    var pc = $("aiPackChip");
+    if (pc) {
+      var cc = IDE.provider.get();
+      pc.textContent = "◆ " + packLabel();
+      pc.title = "Reference pack sent as context: " + packLabel() +
+        (cc.modelCtx ? "  ·  model window " + fmtTokens(cc.modelCtx) : "") + " — click to change";
     }
     /* header quick-switch: only surfaces once there's more than one profile */
     var q = $("aiProfileQuick");
@@ -1193,6 +1212,14 @@
     $("aiSendEditor").checked = !!c.sendEditor;
     $("aiSendLog").checked = !!c.sendLog;
     $("aiAgent").checked = !!c.agentMode;
+    /* Advanced (per-profile) */
+    if ($("aiMaxTokens")) $("aiMaxTokens").value = c.maxTokens || 4000;
+    if ($("aiEditorMode")) $("aiEditorMode").value = c.editorMode || "diff";
+    if ($("aiTrimHistory")) $("aiTrimHistory").checked = c.trimHistory !== false;
+    if ($("aiLogSend")) $("aiLogSend").value = (c.logSend == null ? 40 : c.logSend);
+    if ($("aiMaxSteps")) $("aiMaxSteps").value = c.maxSteps || 10;
+    if ($("aiKeepRaw")) $("aiKeepRaw").value = c.keepRawResults || 2;
+    if ($("aiPromptCache")) $("aiPromptCache").checked = c.promptCache !== false;
     var p = IDE.provider.preset(c.preset);
     $("aiNote").textContent = (p && p.note) ? p.note : "";
   }
@@ -1296,9 +1323,17 @@
       packUrl: $("aiPackUrl").value.trim(),
       sendEditor: $("aiSendEditor").checked,
       sendLog: $("aiSendLog").checked,
-      agentMode: $("aiAgent").checked
+      agentMode: $("aiAgent").checked,
+      maxTokens: $("aiMaxTokens") ? (parseInt($("aiMaxTokens").value, 10) || 4000) : 4000,
+      editorMode: $("aiEditorMode") ? $("aiEditorMode").value : "diff",
+      trimHistory: $("aiTrimHistory") ? $("aiTrimHistory").checked : true,
+      logSend: $("aiLogSend") ? (parseInt($("aiLogSend").value, 10) || 0) : 40,
+      maxSteps: $("aiMaxSteps") ? (parseInt($("aiMaxSteps").value, 10) || 10) : 10,
+      keepRawResults: $("aiKeepRaw") ? (parseInt($("aiKeepRaw").value, 10) || 2) : 2,
+      promptCache: $("aiPromptCache") ? $("aiPromptCache").checked : true
     });
     packText = null;   /* tier or packUrl may have changed */
+    refreshModel();    /* keep the header model + pack pills in sync as settings change */
     /* Surface a real persistence failure instead of hiding it: private mode,
        storage quota, or a file:// origin the browser won't grant storage to.
        This is the difference between "my settings vanish on reload" being a
@@ -1331,7 +1366,9 @@
      way, lose it all. The Save button stays as a reassuring explicit action. */
   function wireAutosave() {
     var fields = ["aiPreset", "aiBase", "aiModel", "aiKey", "aiPackTier",
-                  "aiModelCtx", "aiPackUrl", "aiSendEditor", "aiSendLog", "aiAgent"];
+                  "aiModelCtx", "aiPackUrl", "aiSendEditor", "aiSendLog", "aiAgent",
+                  "aiMaxTokens", "aiEditorMode", "aiTrimHistory", "aiLogSend",
+                  "aiMaxSteps", "aiKeepRaw", "aiPromptCache"];
     fields.forEach(function (id) {
       var el = $(id);
       if (!el) return;
@@ -1389,6 +1426,7 @@
     $("aiNew").onclick = newChat;
     $("aiGear").onclick = openSettings;
     $("aiModelChip").onclick = openSettings;
+    if ($("aiPackChip")) $("aiPackChip").onclick = openSettings;
     $("aiSetupBtn").onclick = openSettings;
     $("aiHistBtn").onclick = function () {
       if (histShown()) { hideHist(); return; }
